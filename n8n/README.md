@@ -16,13 +16,23 @@ It has two nodes: **Webhook** → **Call AI Provider** (a Code node).
 
 ## 2. Set your key (server-side)
 
-The **Call AI Provider** code node reads the key from an n8n environment variable —
-it is **never** committed to source or shipped to the browser. Set it in n8n:
+The **Call AI Provider** code node reads the key from an n8n **Variable**, so it is
+**never** committed to source or shipped to the browser.
+
+**n8n Cloud (recommended):** go to **Settings → Variables → New variable** and add:
 
 - `JANASHAKTI_GEMINI_KEY` — your Google AI Studio key
 
-Add it as an n8n **environment variable** (read in the node via `$env.JANASHAKTI_GEMINI_KEY`).
-If your n8n plan exposes **Variables** instead, swap `$env.` for `$vars.` in the node.
+The node already reads it as `$vars.JANASHAKTI_GEMINI_KEY` — nothing else to wire up.
+Variables ship on the Pro tier, and the 14-day Cloud trial includes them.
+
+**No Variables on your plan?** Open the **Call AI Provider** node and replace
+`$vars.JANASHAKTI_GEMINI_KEY` with the literal key. It stays inside your n8n instance —
+but **never re-export this workflow with the key in it and commit it** (that is exactly
+the leak GitHub blocked before).
+
+**Self-hosted n8n:** you can instead set an OS environment variable and read it via
+`$env.JANASHAKTI_GEMINI_KEY`. (`$env` does **not** resolve on n8n Cloud.)
 
 ## 3. Activate the workflow
 
