@@ -45,7 +45,7 @@ The app you can navigate, end to end.
 - **Reusable components (24)** — `BottomNav`, `TopNav`, `IssueCard` (memo), `SeverityBadge` (memo), `PressureMeter` (memo), `StatsCard` (memo), `EmptyState`, `LoadingScreen`, `LoadingSkeleton`, `ShowMore`, `Toast` + `ToastProvider`, `Avatar`, `IndiaFlag`, `NationTagline`, `ErrorBoundary`, `InstallBanner`, `NotificationBell`, `LocationPicker`, `LocationProvider`, `AffiliationPicker`, `AgentPipelineOverlay`, `BeforeAfterSlider`, `ChartCarousel` (plus `ResolutionCelebration`, `VoiceAssistant` added later).
 - **4 AI Agents with Gemini** — `issueAnalyzer` (Agent 1, Vision + function-calling), `duplicateDetector` (Agent 2), `authorityRouter` (Agent 3), `resolutionPredictor` (Agent 4) — wired through `orchestrator.js`.
 - **Custom hooks (7)** — `useAuth`, `useUser`, `useIssues`, `useAgents`, `useLocation` (`useGeoLocation`), `useNotifications`, `usePagination`.
-- **Utility modules** — `gemini.js` (the central `fetchAI` dispatch + model fallback chain + `logAgent`), `n8n.js` (webhook trigger), `social.js` (share links). *(Plus `openai.js` / `aiProxy.js` for the provider switch.)*
+- **Utility modules** — `gemini.js` (the central `fetchAI` dispatch + model fallback chain + `logAgent`), `n8n.js` (webhook trigger), `social.js` (share links). *(Plus `aiProxy.js` for the optional server-side proxy.)*
 - **PWA configuration** — manifest, Workbox service worker (NetworkFirst for Firestore), `InstallBanner`.
 - **Theme system** — colours, typography, spacing, component styles finalised.
 - **Constants** — `issueTypes.js` (issue taxonomy, severity, status pipeline, civic-score points, levels, badges, escalation levels), `departments.js` (department map + SLAs), `cities.js`, `mapStyle.js`.

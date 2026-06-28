@@ -1,5 +1,5 @@
-// AI proxy client — routes model calls through an n8n webhook so the OpenAI /
-// Gemini API key lives on the server (in n8n), NOT in the shipped client bundle.
+// AI proxy client — routes model calls through an n8n webhook so the Gemini API
+// key lives on the server (in n8n), NOT in the shipped client bundle.
 //
 // Enabled only when VITE_N8N_AI_WEBHOOK is set. Otherwise the app falls back to
 // calling the provider directly (see fetchAI in gemini.js).
@@ -8,13 +8,12 @@ const AI_WEBHOOK = import.meta.env.VITE_N8N_AI_WEBHOOK;
 export const isProxyEnabled = () => !!AI_WEBHOOK && AI_WEBHOOK !== '';
 
 // parts: Gemini-style [{ text }, { inline_data: { mime_type, data } }]
-// provider: 'gpt' | 'gemini' — the n8n workflow picks the model accordingly.
 // Returns cleaned raw text (JSON fences stripped); caller does JSON.parse if needed.
-export const fetchViaProxy = async (parts, provider) => {
+export const fetchViaProxy = async (parts) => {
   const res = await fetch(AI_WEBHOOK, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ provider, parts }),
+    body: JSON.stringify({ provider: 'gemini', parts }),
   });
 
   if (!res.ok) throw new Error(`AI proxy HTTP ${res.status}`);

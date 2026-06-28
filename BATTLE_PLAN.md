@@ -260,7 +260,7 @@ firebase deploy --only firestore:rules
 |---------|-----|
 | Blank screen | Check browser console for errors |
 | Firebase error | Verify .env keys match your Firebase project |
-| Gemini fails | Check API key; app auto-falls-back across the gemini-2.5-flash chain. Or set VITE_AI_PROVIDER=gpt to use OpenAI |
+| Gemini fails | Check API key; app auto-falls-back across the gemini-2.5-flash chain |
 | Map blank | Add VITE_GOOGLE_MAPS_KEY to .env |
 | Auth fails | Enable Google/Anonymous in Firebase Auth |
 | Deploy fails | Run `firebase login` first |

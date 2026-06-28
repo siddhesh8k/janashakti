@@ -141,7 +141,7 @@ All Gemini calls route through `fetchAI()` in `utils/gemini.js` and use Gemini's
 **Model fallback chain** (verified against the live key, June 2026; falls through on 404/429/503):
 `gemini-2.5-flash → gemini-2.5-flash-lite → gemini-2.0-flash` (app) ·
 `gemini-2.5-flash → gemini-2.5-flash-lite → gemini-2.0-flash-lite` (Node testing agents).
-*All AI is provider-agnostic via `fetchAI`: an optional n8n proxy or OpenAI `gpt-4o-mini` can be switched in by env var, with Gemini as the default.*
+*All AI routes through `fetchAI`: an optional n8n proxy (keeps the key server-side) can be switched in by env var, with direct Gemini as the default.*
 
 ### 2. Firebase Authentication
 

@@ -158,7 +158,7 @@ flowchart LR
 
 **Beyond the agents, Gemini also powers:** RTI applications, press releases, CSR reports, city insights, social captions, the voice assistant, and the 3 AI testing agents.
 **Model fallback chain:** `gemini-2.5-flash → gemini-2.5-flash-lite → gemini-2.0-flash` (falls through on 404/429/503).
-**Provider switch:** optional n8n proxy → OpenAI `gpt-4o-mini` → Gemini (default), via `VITE_AI_PROVIDER`.
+**Serving path:** optional n8n proxy (keeps the key server-side) → direct Gemini (default), via `VITE_N8N_AI_WEBHOOK`.
 
 ---
 
@@ -315,9 +315,7 @@ Copy `.env.example` → `.env` and fill in. **Never commit `.env`.** All keys ar
 | `VITE_FIREBASE_MESSAGING_SENDER_ID` | ✅ | Firebase config |
 | `VITE_FIREBASE_APP_ID` | ✅ | Firebase config |
 | `VITE_FIREBASE_MEASUREMENT_ID` | ➖ | Analytics (optional) |
-| `VITE_AI_PROVIDER` | ➖ | `gemini` (default) or `gpt` |
 | `VITE_GEMINI_API_KEY` | ✅ | Google AI Studio key — powers all AI |
-| `VITE_OPENAI_API_KEY` | ➖ | Only when `VITE_AI_PROVIDER=gpt` |
 | `VITE_GOOGLE_MAPS_KEY` | ✅ | Google Maps JS + Geocoding |
 | `VITE_CLOUDINARY_CLOUD_NAME` | ➖ | Short report-video hosting |
 | `VITE_CLOUDINARY_UPLOAD_PRESET` | ➖ | Cloudinary **unsigned** preset |

@@ -649,7 +649,7 @@ sequenceDiagram
 - **Language** (`constants/voiceLang.js`): EN / HI — switches STT locale, TTS voice,
   Gemini answer language, suggested questions, and every panel string.
 - **Routing:** answers go through `callGeminiPlainText` → `fetchAI`, so the assistant
-  honours the same n8n-proxy / OpenAI / Gemini dispatch order as the agents.
+  honours the same n8n-proxy / direct-Gemini dispatch order as the agents.
 - **Privacy:** voice is processed locally; the panel states "Voice processed on-device.
   No audio stored."
 
@@ -821,8 +821,7 @@ with a built-in fallback (`constants/representatives.js`). Write-locked in the r
 ### 6.1 Google Gemini (Google AI Studio) — primary AI
 
 All AI routes through `utils/gemini.js → fetchAI()`. **Dispatch order:** n8n AI proxy
-(if `VITE_N8N_AI_WEBHOOK` set) → OpenAI `gpt-4o-mini` (if `VITE_AI_PROVIDER=gpt`) →
-direct Gemini chain (default).
+(if `VITE_N8N_AI_WEBHOOK` set) → direct Gemini chain (default).
 
 - **Endpoint:** `https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key=…`
 - **Model fallback chain** (falls through on 404/429/503):

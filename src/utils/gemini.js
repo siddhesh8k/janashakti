@@ -1,14 +1,9 @@
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '../firebase';
-import { fetchOpenAI, getOpenAIModel } from './openai';
 import { isProxyEnabled, fetchViaProxy } from './aiProxy';
 import { buildRTIApplication, formatINDate } from './rti';
 
 const API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
-
-// Provider switch — set VITE_AI_PROVIDER to 'gpt' (OpenAI) or 'gemini' in .env.
-const PROVIDER = (import.meta.env.VITE_AI_PROVIDER || 'gemini').toLowerCase();
-const USE_GPT = PROVIDER === 'gpt' || PROVIDER === 'openai';
 
 // Current supported models (verified 200 OK against this key, June 2026).
 // Ordered most-reliable first; the chain falls through on 404/429/503.
@@ -90,17 +85,13 @@ const fetchGemini = async (body) => {
 
 export const getLastModel = () => lastUsedModel;
 
-// Unified provider dispatch. Both branches take Gemini-style "parts"
-// and return cleaned raw text, so all callers stay provider-agnostic.
-// Priority: n8n proxy (key server-side) → direct OpenAI → direct Gemini.
+// Unified AI dispatch. Takes Gemini-style "parts" and returns cleaned raw text,
+// so all callers stay agnostic of where the call is served.
+// Priority: n8n proxy (key server-side) → direct Gemini.
 const fetchAI = async (parts) => {
   if (isProxyEnabled()) {
-    lastUsedModel = USE_GPT ? `${getOpenAIModel()} (proxy)` : 'gemini (proxy)';
-    return await fetchViaProxy(parts, USE_GPT ? 'gpt' : 'gemini');
-  }
-  if (USE_GPT) {
-    lastUsedModel = getOpenAIModel();
-    return await fetchOpenAI(parts);
+    lastUsedModel = 'gemini (proxy)';
+    return await fetchViaProxy(parts);
   }
   return await fetchGemini(parts);
 };
@@ -168,10 +159,10 @@ const fetchGeminiFunction = async (declaration, parts) => {
   throw new Error('All Gemini models failed (function calling)');
 };
 
-// Provider guard: function calling is Gemini-only here. On OpenAI/proxy this throws
-// so the caller falls back to its existing JSON path.
+// Function calling needs the direct Gemini endpoint. When routing through the n8n
+// proxy (which returns text only) this throws so the caller falls back to its JSON path.
 const ensureGeminiProvider = () => {
-  if (isProxyEnabled() || USE_GPT) throw new Error('function-calling: unsupported provider');
+  if (isProxyEnabled()) throw new Error('function-calling: unsupported via proxy');
 };
 
 export const callGeminiFunction = async (declaration, prompt) => {

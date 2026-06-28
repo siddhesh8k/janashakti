@@ -1,11 +1,10 @@
 # JanaShakti AI Proxy (n8n)
 
-Routes all model calls through n8n so the **OpenAI / Gemini key lives on the
-server, not in the client bundle**. The browser only ever talks to your n8n
-webhook.
+Routes all model calls through n8n so the **Gemini key lives on the server, not
+in the client bundle**. The browser only ever talks to your n8n webhook.
 
 ```
-Browser (fetchAI) ──POST {provider, parts}──► n8n Webhook ──► Code node (has the key) ──► OpenAI / Gemini ──► { text } ──► Browser
+Browser (fetchAI) ──POST {parts}──► n8n Webhook ──► Code node (has the key) ──► Gemini ──► { text } ──► Browser
 ```
 
 ## 1. Import the workflow
@@ -15,15 +14,14 @@ Browser (fetchAI) ──POST {provider, parts}──► n8n Webhook ──► Co
 
 It has two nodes: **Webhook** → **Call AI Provider** (a Code node).
 
-## 2. Set your keys (server-side)
+## 2. Set your key (server-side)
 
-The **Call AI Provider** code node reads the keys from n8n environment variables —
-they are **never** committed to source or shipped to the browser. Set them in n8n:
+The **Call AI Provider** code node reads the key from an n8n environment variable —
+it is **never** committed to source or shipped to the browser. Set it in n8n:
 
 - `JANASHAKTI_GEMINI_KEY` — your Google AI Studio key
-- `JANASHAKTI_OPENAI_KEY` — your OpenAI key
 
-Add them as n8n **environment variables** (read in the node via `$env.JANASHAKTI_GEMINI_KEY`).
+Add it as an n8n **environment variable** (read in the node via `$env.JANASHAKTI_GEMINI_KEY`).
 If your n8n plan exposes **Variables** instead, swap `$env.` for `$vars.` in the node.
 
 ## 3. Activate the workflow
@@ -48,14 +46,10 @@ text, routing, prediction, RTI, captions, insights) now goes through n8n.
 `fetchAI()` in [`src/utils/gemini.js`](../src/utils/gemini.js) picks, in order:
 
 1. **n8n proxy** — if `VITE_N8N_AI_WEBHOOK` is set (key server-side ✅)
-2. **Direct OpenAI** — if `VITE_AI_PROVIDER=gpt`
-3. **Direct Gemini** — otherwise
+2. **Direct Gemini** — otherwise
 
 So leaving `VITE_N8N_AI_WEBHOOK` blank keeps the old direct-call behavior; the
 app never breaks if the proxy is down — just remove/clear the var to fall back.
-
-`VITE_AI_PROVIDER` (`gpt` | `gemini`) is still forwarded to n8n as the
-`provider` field, so the same workflow serves both models.
 
 ## Notes
 
@@ -64,5 +58,5 @@ app never breaks if the proxy is down — just remove/clear the var to fall back
 - **Payload size:** photos are compressed client-side (~640px) before sending, so
   vision requests stay well under n8n's payload limit.
 - **Once this is live, rotate the key that was previously in the client bundle.**
-- The client no longer needs `VITE_OPENAI_API_KEY` once the proxy is in use —
+- The client no longer needs `VITE_GEMINI_API_KEY` once the proxy is in use —
   you can remove it from `.env` (and from the deployed build) entirely.
