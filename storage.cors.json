@@ -1,0 +1,13 @@
+[
+  {
+    "origin": [
+      "http://localhost:5173",
+      "http://localhost:4173",
+      "https://janashakti-9ded8.web.app",
+      "https://janashakti-9ded8.firebaseapp.com"
+    ],
+    "method": ["GET", "POST", "PUT", "HEAD"],
+    "responseHeader": ["Content-Type", "Authorization", "Content-Length", "User-Agent", "x-goog-resumable"],
+    "maxAgeSeconds": 3600
+  }
+]

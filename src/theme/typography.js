@@ -1,0 +1,16 @@
+export const typography = {
+  h1:    { fontSize: '26px', fontWeight: '700', color: '#f0f6ff', lineHeight: 1.3 },
+  h2:    { fontSize: '20px', fontWeight: '700', color: '#f0f6ff', lineHeight: 1.3 },
+  h3:    { fontSize: '16px', fontWeight: '600', color: '#f0f6ff', lineHeight: 1.4 },
+  body:  { fontSize: '14px', fontWeight: '400', color: '#94a3b8', lineHeight: 1.6 },
+  bodyM: { fontSize: '14px', fontWeight: '500', color: '#f0f6ff', lineHeight: 1.6 },
+  sm:    { fontSize: '13px', fontWeight: '400', color: '#94a3b8', lineHeight: 1.5 },
+  xs:    { fontSize: '11px', fontWeight: '400', color: '#4a6280', lineHeight: 1.4 },
+  label: { fontSize: '11px', fontWeight: '500', color: '#4a6280',
+           letterSpacing: '0.7px', textTransform: 'uppercase' },
+  score: { fontSize: '44px', fontWeight: '800', color: '#00d4ff' },
+  brand: { fontSize: '22px', fontWeight: '800', color: '#00d4ff', letterSpacing: '-0.5px' },
+  hindi: { fontSize: '13px', fontWeight: '400', color: '#86efac' },
+  tag:   { fontSize: '10px', fontWeight: '600', color: '#4a6280',
+           letterSpacing: '1.2px', textTransform: 'uppercase' },
+};

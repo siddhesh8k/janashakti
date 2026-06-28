@@ -1,0 +1,69 @@
+{
+  "indexes": [
+    {
+      "collectionGroup": "issues",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "userId", "order": "ASCENDING" },
+        { "fieldPath": "createdAt", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "issues",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "status", "order": "ASCENDING" },
+        { "fieldPath": "issueType", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "issues",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "severity", "order": "ASCENDING" },
+        { "fieldPath": "createdAt", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "issues",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "status", "order": "ASCENDING" },
+        { "fieldPath": "createdAt", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "issues",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "status", "order": "ASCENDING" },
+        { "fieldPath": "createdAt", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "issues",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "adoptedBy.id", "order": "ASCENDING" },
+        { "fieldPath": "status", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "issues",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "adoptedBy.id", "order": "ASCENDING" },
+        { "fieldPath": "issueType", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "agents_log",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "agentName", "order": "ASCENDING" },
+        { "fieldPath": "success", "order": "ASCENDING" }
+      ]
+    }
+  ],
+  "fieldOverrides": []
+}

@@ -1,0 +1,139 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function isSignedIn() {
+      return request.auth != null;
+    }
+    function isOwner(userId) {
+      return request.auth.uid == userId;
+    }
+
+    // An authority is a uid present in the /authorities allowlist. Used to gate the
+    // trust-sensitive status/resolution fields (see authorityFields). In production
+    // this allowlist should be provisioned via the Admin SDK / custom claims; for the
+    // hackathon demo a user may self-enroll (see the /authorities rule below).
+    function isAuthority() {
+      return exists(/databases/$(database)/documents/authorities/$(request.auth.uid));
+    }
+
+    // Low-trust community signals ANY signed-in user may touch on someone else's
+    // issue: confirmations, escalation (auto, on view), and the journalist claim.
+    function communityFields() {
+      return ['confirmations', 'confirmedBy', 'pressureScore', 'socialQueued',
+              'escalationLevel', 'wallOfShame', 'updatedAt',
+              'storyClaimedBy', 'storyClaimedAt'];
+    }
+
+    // Trust-sensitive fields (status pipeline + resolution proof + agent outputs)
+    // — only the issue owner or an authority may write these. This is the superset
+    // an authority may touch (community signals + the trust-sensitive set).
+    function authorityFields() {
+      return ['confirmations', 'confirmedBy', 'pressureScore', 'socialQueued',
+              'escalationLevel', 'wallOfShame', 'updatedAt',
+              'storyClaimedBy', 'storyClaimedAt',
+              'status', 'statusHistory', 'resolutionPhotoUrl', 'resolutionVerified',
+              'resolutionGenuine', 'resolutionConfidence', 'resolutionNote',
+              'resolvedAt', 'resolutionCelebrated',
+              'routedTo', 'prediction'];
+    }
+
+    // A story claim is only valid when the issue is currently unclaimed OR the
+    // previous 48h exclusive window has expired.
+    function claimWindowOpen() {
+      return !('storyClaimedBy' in resource.data)
+        || resource.data.storyClaimedBy == null
+        || resource.data.storyClaimedAt == null
+        || request.time > resource.data.storyClaimedAt + duration.value(48, 'h');
+    }
+
+    // True only if this update changes the story claim fields.
+    function touchesClaim() {
+      return request.resource.data.diff(resource.data).affectedKeys()
+               .hasAny(['storyClaimedBy', 'storyClaimedAt']);
+    }
+
+    match /issues/{issueId} {
+      allow read: if true;
+      allow create: if isSignedIn()
+        && request.resource.data.userId == request.auth.uid;
+      // Owner may change anything on their own issue. An authority may change the
+      // status/resolution + community fields. Everyone else is limited to low-trust
+      // community signals — and a story claim must respect the 48h window.
+      allow update: if isSignedIn() && (
+        isOwner(resource.data.userId)
+        || (
+          isAuthority()
+          && request.resource.data.diff(resource.data).affectedKeys()
+               .hasOnly(authorityFields())
+        )
+        || (
+          request.resource.data.diff(resource.data).affectedKeys()
+            .hasOnly(communityFields())
+          && (!touchesClaim() || claimWindowOpen())
+        )
+      );
+      allow delete: if isSignedIn() && isOwner(resource.data.userId);
+    }
+
+    // Private profile — owner only (holds email, mobile, etc.)
+    match /users/{userId} {
+      allow read, write: if isSignedIn() && isOwner(userId);
+    }
+
+    // Public, display-only mirror used by the Wall of Fame leaderboard.
+    // Anyone may read. Signed-in write is allowed so the demo citizen roster can be
+    // seeded from the browser (seedDemo.js); the app itself only writes the user's
+    // own mirror doc. For production, lock to `isOwner(userId)` and seed via Admin SDK.
+    match /publicProfiles/{userId} {
+      allow read: if true;
+      allow write: if isSignedIn();
+    }
+
+    // Adopted-zone organizations — public read.
+    // Hackathon: signed-in write so the org list can be seeded from the browser
+    // console (seedOrganizations.js). For production, lock to `if false` and seed
+    // via the Admin SDK, since org data is curated and should not be user-editable.
+    match /organizations/{orgId} {
+      allow read: if true;
+      allow write: if isSignedIn();
+    }
+
+    // Elected-representative / ward data, sourced from data.gov.in (OGD) and ingested
+    // via the Admin SDK (scripts/importRepresentatives.mjs). Public read; writes are
+    // locked — this is curated reference data, never user-editable from the client.
+    match /representatives/{wardId} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    match /agents_log/{logId} {
+      allow read: if true;
+      allow write: if isSignedIn();
+    }
+
+    // Per-issue orchestrated pipeline summaries (step traces) for the Agents
+    // Showcase. Public read; signed-in write (the app writes these during submit).
+    match /agent_runs/{runId} {
+      allow read: if true;
+      allow write: if isSignedIn();
+    }
+
+    // Demo seed marker (meta/seed) — public read so the in-app seed button knows
+    // whether the DB has been seeded; signed-in write so the seeder can stamp it.
+    match /meta/{docId} {
+      allow read: if true;
+      allow write: if isSignedIn();
+    }
+
+    // Authority allowlist — uids here may update the trust-sensitive issue fields
+    // (status/resolution). Public read so the UI can show authority state. For the
+    // demo a signed-in user may enroll ONLY themselves (create their own uid doc);
+    // they cannot enroll others or remove anyone. PRODUCTION: provision via Admin
+    // SDK / custom claims and set create back to `if false`.
+    match /authorities/{authorityId} {
+      allow read: if true;
+      allow create: if isSignedIn() && request.auth.uid == authorityId;
+      allow update, delete: if false;
+    }
+  }
+}
