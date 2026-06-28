@@ -1,0 +1,140 @@
+{
+  "name": "JanaShakti - Social Post",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "janashakti-social",
+        "options": {}
+      },
+      "id": "41c405af-9308-4ee2-8a8f-8fec7cf0e839",
+      "name": "Receive Issue Data",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        240,
+        208
+      ],
+      "webhookId": "ce24d4c0-81ab-4293-88d0-d7ef27a2c22e"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const issueId = $input.item.json.body.issueId;\nconst issueType = $input.item.json.body.issueType;\nconst severity = $input.item.json.body.severity;\nconst location = $input.item.json.body.location;\nconst confirmations = $input.item.json.body.confirmations;\nconst socialConsent = $input.item.json.body.socialConsent;\nconst userXHandle = $input.item.json.body.userXHandle;\n\n// If socialConsent is \"none\", return early with status \"skipped\"\nif (socialConsent === 'none') {\n  return { status: 'skipped', tweetText: '', emailSubject: '', emailBody: '' };\n}\n\n// Build tweet text\nlet tweetText = `🚨 [${severity.toUpperCase()}] ${issueType} reported at ${location}. ${confirmations} citizens confirmed. Track & verify: https://janashakti.web.app/issue/${issueId} #JanaShakti #CivicAlert`;\n\n// Add user handle if socialConsent is \"tag\" and userXHandle exists\nif (socialConsent === 'tag' && userXHandle) {\n  tweetText += ` Reported by @${userXHandle}`;\n}\n\n// Ensure tweet is under 280 characters\nif (tweetText.length > 280) {\n  tweetText = tweetText.substring(0, 277) + '...';\n}\n\n// Build email notification\nconst emailSubject = 'Social Post Triggered';\nconst emailBody = tweetText;\n\nreturn {\n  status: 'ready',\n  tweetText,\n  emailSubject,\n  emailBody,\n  socialConsent\n};"
+      },
+      "id": "623bce6b-0d3b-4c14-aa5c-caaf1c053e49",
+      "name": "Build Tweet & Email",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        464,
+        208
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "combinator": "and",
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ $json.socialConsent }}",
+              "rightValue": "none",
+              "operator": {
+                "type": "string",
+                "operation": "notEquals"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "3a80306b-82a9-4f7f-9eec-d8feb7ad9528",
+      "name": "Check Social Consent",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        688,
+        208
+      ]
+    },
+    {
+      "parameters": {
+        "sendTo": "alerts@example.com",
+        "subject": "={{ $json.emailSubject }}",
+        "emailType": "text",
+        "message": "={{ $json.emailBody }}",
+        "options": {}
+      },
+      "id": "45d96ef1-717e-46da-9955-3ee71e5bfdb7",
+      "name": "Send Email Notification",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        912,
+        208
+      ],
+      "webhookId": "d61d81ae-76b7-4af9-90cf-4d9789512be4",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "ciadJVd2CN53S2s5",
+          "name": "Gmail OAuth2 API"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Receive Issue Data": {
+      "main": [
+        [
+          {
+            "node": "Build Tweet & Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Tweet & Email": {
+      "main": [
+        [
+          {
+            "node": "Check Social Consent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Social Consent": {
+      "main": [
+        [
+          {
+            "node": "Send Email Notification",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "d2b3cfdb-8ea2-4976-959d-acab06281880",
+  "meta": {
+    "instanceId": "567115f6378514b22ed626b89e16dc383eccb316a42b5f6abc5d866c2e7baf8c"
+  },
+  "nodeGroups": [],
+  "id": "uFNsA5xNTQiHaas3",
+  "tags": []
+}

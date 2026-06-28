@@ -1,0 +1,132 @@
+{
+  "name": "JanaShakti - Issue Intelligence",
+  "nodes": [
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": {
+          "status": "received"
+        },
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "id": "d539b254-5af2-4452-ba98-7e1034662f96",
+      "name": "Respond to Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        912,
+        304
+      ]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "janashakti-issue",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "41eff51d-deff-49ce-b1f9-bcf8990a3272",
+      "name": "Receive Issue Report",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        240,
+        304
+      ],
+      "webhookId": "58186065-1f6f-4f46-b73e-79c7497c3b67"
+    },
+    {
+      "parameters": {
+        "jsCode": "const data = $input.first().json.body;\n\nconst subject = `[${data.severity}] ${data.issueType} reported — ${data.complaintId}`;\n\nconst htmlBody = `\n<html>\n<head>\n  <style>\n    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }\n    .container { max-width: 600px; margin: 0 auto; padding: 20px; }\n    .header { background-color: #2563eb; color: white; padding: 20px; border-radius: 8px 8px 0 0; }\n    .content { background-color: #f9fafb; padding: 20px; border: 1px solid #e5e7eb; }\n    .field { margin-bottom: 15px; }\n    .label { font-weight: bold; color: #1f2937; }\n    .value { color: #4b5563; margin-top: 5px; }\n    .severity-high { color: #dc2626; font-weight: bold; }\n    .severity-medium { color: #f59e0b; font-weight: bold; }\n    .severity-low { color: #10b981; font-weight: bold; }\n    .button { display: inline-block; background-color: #2563eb; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; margin-top: 20px; }\n    .footer { margin-top: 20px; padding-top: 20px; border-top: 1px solid #e5e7eb; font-size: 12px; color: #6b7280; }\n  </style>\n</head>\n<body>\n  <div class=\"container\">\n    <div class=\"header\">\n      <h2>🚨 New Issue Reported via JanaShakti</h2>\n    </div>\n    <div class=\"content\">\n      <div class=\"field\">\n        <div class=\"label\">Issue Type:</div>\n        <div class=\"value\">${data.issueType}</div>\n      </div>\n      <div class=\"field\">\n        <div class=\"label\">Severity:</div>\n        <div class=\"value severity-${data.severity.toLowerCase()}\">${data.severity}</div>\n      </div>\n      <div class=\"field\">\n        <div class=\"label\">Location:</div>\n        <div class=\"value\">📍 ${data.location}</div>\n      </div>\n      <div class=\"field\">\n        <div class=\"label\">Description:</div>\n        <div class=\"value\">${data.description}</div>\n      </div>\n      <div class=\"field\">\n        <div class=\"label\">Photo:</div>\n        <div class=\"value\"><a href=\"${data.photoUrl}\" target=\"_blank\">View Photo</a></div>\n      </div>\n      <div class=\"field\">\n        <div class=\"label\">Reporter:</div>\n        <div class=\"value\">${data.reporterName}</div>\n      </div>\n      <div class=\"field\">\n        <div class=\"label\">Confirmations:</div>\n        <div class=\"value\">${data.confirmations} citizen(s) confirmed this issue</div>\n      </div>\n      <div class=\"field\">\n        <div class=\"label\">Complaint ID:</div>\n        <div class=\"value\">${data.complaintId}</div>\n      </div>\n      <div class=\"field\">\n        <div class=\"label\">Issue ID:</div>\n        <div class=\"value\">${data.issueId}</div>\n      </div>\n      <a href=\"${data.issueUrl}\" class=\"button\">Track Issue</a>\n    </div>\n    <div class=\"footer\">\n      <p>This is an automated notification from JanaShakti Issue Intelligence System.</p>\n    </div>\n  </div>\n</body>\n</html>\n`;\n\nreturn [{ json: { to: \"your-email@example.com\", subject, htmlBody } }];"
+      },
+      "id": "c8092c52-6f38-4a74-af44-d7e7d86b0b58",
+      "name": "Format Email",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        464,
+        304
+      ]
+    },
+    {
+      "parameters": {
+        "sendTo": "=alerts@example.com",
+        "subject": "={{ $json.subject }}",
+        "message": "={{ $json.htmlBody }}",
+        "options": {
+          "senderName": "JanaShakti Alerts"
+        }
+      },
+      "id": "fb201e16-10ad-4bd6-bbb2-ed30f21b7976",
+      "name": "Send Email",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        688,
+        304
+      ],
+      "webhookId": "4d4308d1-f334-413b-82ad-7e2a9f7c3dc3",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "ciadJVd2CN53S2s5",
+          "name": "Gmail OAuth2 API"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Receive Issue Report": {
+      "main": [
+        [
+          {
+            "node": "Format Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Email": {
+      "main": [
+        [
+          {
+            "node": "Send Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Email": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false,
+    "timeSavedMode": "fixed",
+    "callerPolicy": "workflowsFromSameOwner",
+    "executionTimeout": 180
+  },
+  "versionId": "c1508daa-f551-4065-b2ca-94b1b2625659",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "567115f6378514b22ed626b89e16dc383eccb316a42b5f6abc5d866c2e7baf8c"
+  },
+  "nodeGroups": [],
+  "id": "FqVtj8YKRQu1HAtQ",
+  "tags": []
+}

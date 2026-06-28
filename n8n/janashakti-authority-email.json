@@ -1,0 +1,124 @@
+{
+  "name": "JanaShakti - Authority Email",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "janashakti-authority",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "a5f116c0-dd2f-4aa1-ac87-716354bd6255",
+      "name": "Receive Complaint Data",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        240,
+        304
+      ],
+      "webhookId": "0a389f8b-7e2b-4f73-aba7-6f7c38599b6e"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const body = $input.item.json.body;\nconst issueDetails = body.issueDetails;\n\nconst emailBody = `Dear ${body.departmentName},\n\nSubject: Formal Civic Complaint via JanaShakti Platform\n\nWe are writing to formally report a civic issue that requires your immediate attention:\n\nIssue ID: ${body.issueId}\nType: ${issueDetails.type}\nSeverity: ${issueDetails.severity}\nLocation: ${issueDetails.location}\n\nDescription:\n${issueDetails.description}\n\nReported by: ${issueDetails.reporterName}\n\nPhoto Evidence: ${issueDetails.photoUrl}\nTracking URL: ${issueDetails.issueUrl}\n\nKindly take immediate action. This complaint is auto-tracked and citizens are monitoring progress.\n\nRegards,\nJanaShakti Platform`;\n\nreturn {\n  to: 'authority@example.com',\n  subject: 'Subject: Formal Civic Complaint via JanaShakti Platform',\n  body: emailBody\n};"
+      },
+      "id": "99d599fc-2d64-4934-834f-6e176e7cd18f",
+      "name": "Generate Formal Email",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        464,
+        304
+      ]
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $json }}",
+        "subject": "={{ $json.subject }}",
+        "emailType": "text",
+        "message": "={{ $json.body }}",
+        "options": {}
+      },
+      "id": "9937e685-36d8-40ac-a06a-9d7764b943e9",
+      "name": "Send Authority Email",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        688,
+        304
+      ],
+      "webhookId": "2a530e93-1ef4-4c18-aebf-053b73ce5d10",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "ciadJVd2CN53S2s5",
+          "name": "Gmail OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { \"success\": true, \"message\": \"Email sent successfully\" } }}",
+        "options": {}
+      },
+      "id": "11d7af70-0434-4de3-84d1-5fce44b8a5a3",
+      "name": "Return Success",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        912,
+        304
+      ]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Receive Complaint Data": {
+      "main": [
+        [
+          {
+            "node": "Generate Formal Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate Formal Email": {
+      "main": [
+        [
+          {
+            "node": "Send Authority Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Authority Email": {
+      "main": [
+        [
+          {
+            "node": "Return Success",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "1d4a91b2-0ae1-49c1-896d-5885c59f9450",
+  "meta": {
+    "instanceId": "567115f6378514b22ed626b89e16dc383eccb316a42b5f6abc5d866c2e7baf8c"
+  },
+  "nodeGroups": [],
+  "id": "vKp22xGbEZeXnKPE",
+  "tags": []
+}

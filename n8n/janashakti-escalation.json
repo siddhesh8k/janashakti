@@ -1,0 +1,183 @@
+{
+  "name": "JanaShakti - Escalation",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "escalation",
+        "options": {
+          "responseCode": {
+            "values": {}
+          }
+        }
+      },
+      "id": "8e863f76-a577-48f7-bb12-8df1b4ceffdf",
+      "name": "Escalation Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        240,
+        208
+      ],
+      "webhookId": "dc25c3d4-6b4b-4fa6-894a-f1efe08b7034"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const d = $input.first().json;\n\n// Dynamic recipient — escalates to higher authority each time\nconst to = d.escalateToEmail || 'escalations@example.com';\n\nconst escalationLevel = d.escalationLevel || 0;\nconst isMediaAlert = escalationLevel >= 3;\nconst daysOpen = d.daysOpen || 0;\nconst confirmations = d.confirmations || 0;\n\n// Escalation level context\nconst levelInfo = {\n  0: { authority: 'Ward Officer', deadline: '7 days', action: 'Site inspection and initial assessment' },\n  1: { authority: 'Department Head', deadline: '7 days', action: 'Review ward officer inaction and assign repair team' },\n  2: { authority: 'Commissioner Office', deadline: '7 days', action: 'Direct intervention — formal review of department failure' },\n  3: { authority: 'Media & Public Alert', deadline: 'Immediate', action: 'Public accountability — media notification triggered' },\n};\n\nconst current = levelInfo[escalationLevel] || levelInfo[0];\nconst previous = levelInfo[Math.max(0, escalationLevel - 1)] || levelInfo[0];\n\n// Severity emoji + color context\nconst severityTag = {\n  Critical: '🔴 CRITICAL',\n  High: '🟠 HIGH',\n  Medium: '🟡 MEDIUM',\n  Low: '🟢 LOW',\n}[d.severity] || '⚪ UNKNOWN';\n\n// Urgency classification\nconst urgency = escalationLevel >= 3 ? '🚨 EMERGENCY'\n  : escalationLevel >= 2 ? '⚠️ URGENT'\n  : escalationLevel >= 1 ? '📢 ESCALATED'\n  : '📋 ROUTINE';\n\nconst subject = `${urgency} ${d.issueType || 'Civic Issue'} — Escalation Level ${escalationLevel} — ${d.complaintId || d.issueId || 'N/A'}`;\n\nlet body = `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n${urgency} ESCALATION ALERT — JanaShakti Platform\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\nCOMPLAINT DETAILS\n─────────────────\nComplaint ID:    ${d.complaintId || d.issueId || 'N/A'}\nIssue Type:      ${d.issueType || 'Unknown'}\nSeverity:        ${severityTag}\nLocation:        ${d.location || 'Not specified'}\nCity:            ${d.city || 'Not specified'}\n\nSTATUS\n──────\nDays Open:             ${daysOpen} days\nCitizen Confirmations: ${confirmations}\nPressure Score:        ${confirmations * 10}/100\n\nESCALATION CHAIN\n────────────────\nPrevious Level:  Level ${Math.max(0, escalationLevel - 1)} — ${d.previousLevel || previous.authority}\nCurrent Level:   Level ${escalationLevel} — ${d.escalatedTo || current.authority}\nAction Required: ${current.action}\nResponse Window: ${current.deadline}\n\nESCALATION HISTORY\n──────────────────\nDay 0:  ➡️  Ward Officer (initial assignment)${escalationLevel >= 1 ? `\nDay 7:  ⬆️  Department Head (ward officer non-response)` : ''}${escalationLevel >= 2 ? `\nDay 14: ⬆️  Commissioner Office (department failure)` : ''}${escalationLevel >= 3 ? `\nDay 30: 🚨  Media & Public Alert (systemic non-action)` : ''}\n\n⚠️ This issue has been UNRESOLVED for ${daysOpen} days despite ${confirmations} citizen confirmations.\n`;\n\nif (escalationLevel >= 2) {\n  body += `\nLEGAL NOTICE\n────────────\nCitizens have the right to file:\n- RTI Application under Section 6(1) of RTI Act 2005\n- Complaint with National Consumer Helpline (1915)\n- Grievance on CPGRAMS (centralized public grievance portal)\n${escalationLevel >= 3 ? '• High Court writ petition under Article 226 for systemic non-action' : ''}\nAn AI-generated RTI application is available on the JanaShakti platform.\n`;\n}\n\nif (isMediaAlert) {\n  body += `\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n🚨 MEDIA ALERT — PUBLIC ACCOUNTABILITY\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\nThis civic issue has been IGNORED for ${daysOpen}+ days and qualifies\nfor public media escalation under JanaShakti's accountability protocol.\n\nThe following actions have been triggered:\n✅ Added to Wall of Shame (public visibility)\n✅ Press release auto-generated for journalists\n✅ Social media alert queued for @JanaShaktiApp\n✅ Story marked as available in Journalist Dashboard\n${confirmations >= 10 ? '✅ High community pressure — trending issue' : ''}\n\nResponsible Department: ${d.departmentName || 'Municipal Corporation'}\nDepartment was formally notified: Yes (via automated email)\nResponse received: None\n`;\n}\n\nbody += `\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nTrack this issue: https://janashakti.web.app/issue/${d.issueId || ''}\n\nThis is an automated escalation from JanaShakti (जनशक्ति) —\nIndia's AI-powered civic accountability platform.\n\nPowered by Google Gemini AI | Firebase | n8n Automation\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`;\n\nreturn [{ json: { to, subject, body, isMediaAlert, escalationLevel, urgency, complaintId: d.complaintId || d.issueId } }];"
+      },
+      "id": "280645fc-2560-43a7-94aa-207a82417172",
+      "name": "Build Escalation Email",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        464,
+        208
+      ]
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $json.to }}",
+        "subject": "={{ $json.subject }}",
+        "emailType": "text",
+        "message": "={{ $json.body }}",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "id": "b304530d-989e-4345-a283-d19cd635edd8",
+      "name": "Send Escalation Email",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        688,
+        208
+      ],
+      "webhookId": "1ddaa052-1963-478d-931f-b560d279b9f5",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "ciadJVd2CN53S2s5",
+          "name": "Gmail OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "combinator": "and",
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ $(\"Build Escalation Email\").item.json.escalationLevel }}",
+              "rightValue": 3,
+              "operator": {
+                "type": "number",
+                "operation": "gte"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "5310488b-13a3-4325-9687-3eb603b1e4c9",
+      "name": "Check Media Alert Level",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        912,
+        208
+      ]
+    },
+    {
+      "parameters": {
+        "sendTo": "media@example.com",
+        "subject": "MEDIA ALERT: Civic issue ignored for 30+ days",
+        "emailType": "text",
+        "message": "={{ \"MEDIA ALERT\\n\\nA civic issue has been escalated to the highest level due to prolonged inaction.\\n\\nComplaint ID: \" + $(\"Build Escalation Email\").item.json.complaintId + \"\\n\\nThis issue has been unresolved for over 30 days and has received significant citizen confirmations. Public disclosure may be warranted.\\n\\nPlease review for potential media coverage.\" }}",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "id": "b7bca43b-a8d3-4f3f-a791-3920ced9c47c",
+      "name": "Send Media Alert",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        1136,
+        208
+      ],
+      "webhookId": "d1801f6c-7c19-4fca-a8ef-8c2c0957b4bf",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "ciadJVd2CN53S2s5",
+          "name": "Gmail OAuth2 API"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Escalation Webhook": {
+      "main": [
+        [
+          {
+            "node": "Build Escalation Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Escalation Email": {
+      "main": [
+        [
+          {
+            "node": "Send Escalation Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Escalation Email": {
+      "main": [
+        [
+          {
+            "node": "Check Media Alert Level",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Media Alert Level": {
+      "main": [
+        [
+          {
+            "node": "Send Media Alert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "0b2de63c-d187-4ea4-a55c-0d1782806a4b",
+  "meta": {
+    "instanceId": "567115f6378514b22ed626b89e16dc383eccb316a42b5f6abc5d866c2e7baf8c"
+  },
+  "nodeGroups": [],
+  "id": "bxEDrSWzo31nqRwl",
+  "tags": []
+}

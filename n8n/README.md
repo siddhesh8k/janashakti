@@ -14,10 +14,10 @@ Each workflow name maps to a `VITE_N8N_*` webhook URL in `.env`:
 
 | Workflow | Webhook path | `.env` var | `triggerN8N` name | Fires when |
 |---|---|---|---|---|
-| Issue Intelligence | `janashakti-issue` | `VITE_N8N_ISSUE_WEBHOOK` | `issue_intelligence` | every new issue report |
-| Authority Email | `janashakti-authority` | `VITE_N8N_AUTH_WEBHOOK` | `authority_email` | Agent 3 routes an issue to a department |
-| Social Post | `janashakti-social` | `VITE_N8N_SOCIAL_WEBHOOK` | `social_post` | Critical severity / confirmations cross the threshold |
-| Escalation | `escalation` | `VITE_N8N_ESCALATE_WEBHOOK` | `escalation` | an issue ages past an escalation tier |
+| [Issue Intelligence](./janashakti-issue-intelligence.json) | `janashakti-issue` | `VITE_N8N_ISSUE_WEBHOOK` | `issue_intelligence` | every new issue report |
+| [Authority Email](./janashakti-authority-email.json) | `janashakti-authority` | `VITE_N8N_AUTH_WEBHOOK` | `authority_email` | Agent 3 routes an issue to a department |
+| [Social Post](./janashakti-social-post.json) | `janashakti-social` | `VITE_N8N_SOCIAL_WEBHOOK` | `social_post` | Critical severity / confirmations cross the threshold |
+| [Escalation](./janashakti-escalation.json) | `escalation` | `VITE_N8N_ESCALATE_WEBHOOK` | `escalation` | an issue ages past an escalation tier |
 
 All four send mail via the same **Gmail OAuth2** credential.
 
@@ -65,11 +65,13 @@ location, escalationLevel, previousLevel, escalatedTo, confirmations, daysOpen` 
 
 ## Setup (per workflow, in n8n Cloud)
 
-1. **Import / open** the workflow in n8n.
+1. **Import** the workflow's JSON file (n8n → Workflows → Import from File), or open your
+   existing copy.
 2. **Select the Gmail credential** — each Gmail node uses an OAuth2 credential
    (*Gmail OAuth2 API*); pick yours after import.
-3. **Set the recipient address(es)** in the Gmail node(s) — these are configured in n8n,
-   not sent by the app. (Use your real ops / authority / escalation inboxes.)
+3. **Set the recipient address(es)** in the Gmail node(s) — the committed files ship with
+   `@example.com` placeholders; replace them with your real ops / authority / escalation
+   inboxes. (Recipients live in n8n, not in the payload.)
 4. **Activate** the workflow (toggle top-right). The webhook path is fixed (see the table
    above), so the Production URL stays `https://<your-instance>.app.n8n.cloud/webhook/<path>`.
 5. Make sure the matching `VITE_N8N_*_WEBHOOK` in `.env` points at that URL, then restart
