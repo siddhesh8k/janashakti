@@ -38,14 +38,22 @@ export async function checkAndEscalate(issue) {
       updatedAt: serverTimestamp(),
     });
 
+    // Payload matches the n8n "Escalation" workflow's Code node, which reads
+    // escalationLevel / previousLevel / escalatedTo / severity / confirmations.
+    // from/to are kept as aliases so either workflow variant works.
     triggerN8N('escalation', {
       issueId: issue.id,
       complaintId: issue.complaintId || null,
       issueType: issue.issueType,
+      severity: issue.severity,
       location: issue.locationText,
+      escalationLevel: newLevel,
+      previousLevel: ESCALATION_LEVELS[currentLevel]?.name,
+      escalatedTo,
+      confirmations: issue.confirmations || 0,
+      daysOpen,
       from: ESCALATION_LEVELS[currentLevel]?.name,
       to: escalatedTo,
-      daysOpen,
     }).catch(() => {});
 
     return { escalated: true, from: currentLevel, to: newLevel, escalatedTo, daysOpen };
