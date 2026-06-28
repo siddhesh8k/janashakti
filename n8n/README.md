@@ -1,72 +1,101 @@
-# JanaShakti AI Proxy (n8n)
+# JanaShakti — n8n Automation Workflows
 
-Routes all model calls through n8n so the **Gemini key lives on the server, not
-in the client bundle**. The browser only ever talks to your n8n webhook.
-
-```
-Browser (fetchAI) ──POST {parts}──► n8n Webhook ──► Code node (has the key) ──► Gemini ──► { text } ──► Browser
-```
-
-## 1. Import the workflow
-
-1. Open n8n Cloud → **Workflows → Import from File**.
-2. Choose [`janashakti-ai-proxy.json`](./janashakti-ai-proxy.json).
-
-It has two nodes: **Webhook** → **Call AI Provider** (a Code node).
-
-## 2. Set your key (server-side)
-
-The **Call AI Provider** code node reads the key from an n8n **Variable**, so it is
-**never** committed to source or shipped to the browser.
-
-**n8n Cloud (recommended):** go to **Settings → Variables → New variable** and add:
-
-- `JANASHAKTI_GEMINI_KEY` — your Google AI Studio key
-
-The node already reads it as `$vars.JANASHAKTI_GEMINI_KEY` — nothing else to wire up.
-Variables ship on the Pro tier, and the 14-day Cloud trial includes them.
-
-**No Variables on your plan?** Open the **Call AI Provider** node and replace
-`$vars.JANASHAKTI_GEMINI_KEY` with the literal key. It stays inside your n8n instance —
-but **never re-export this workflow with the key in it and commit it** (that is exactly
-the leak GitHub blocked before).
-
-**Self-hosted n8n:** you can instead set an OS environment variable and read it via
-`$env.JANASHAKTI_GEMINI_KEY`. (`$env` does **not** resolve on n8n Cloud.)
-
-## 3. Activate the workflow
-
-1. Toggle the workflow **Active** (top-right). It uses the fixed path `janashakti-ai`,
-   so the Production URL is:
-   `https://siddheshkadam08.app.n8n.cloud/webhook/janashakti-ai`
-
-## 4. Point the app at it
-
-In `janashakti/.env`:
+JanaShakti offloads its notification/automation side-effects to **n8n Cloud**. The app
+never blocks on these: `triggerN8N(name, payload)` in
+[`src/utils/n8n.js`](../src/utils/n8n.js) POSTs a JSON payload to a webhook and is
+**fire-and-forget + try/catch-wrapped**, so a webhook being down, slow, or misconfigured
+never affects the user flow.
 
 ```
-VITE_N8N_AI_WEBHOOK=https://<your-instance>.app.n8n.cloud/webhook/janashakti-ai
+App event ──triggerN8N(name, payload)──► n8n Webhook ──► Code node ──► Gmail (+ IF branches)
 ```
 
-Restart the dev server. That's it — every AI call (issue analysis, complaint
-text, routing, prediction, RTI, captions, insights) now goes through n8n.
+Each workflow name maps to a `VITE_N8N_*` webhook URL in `.env`:
 
-## How the switch works
+| Workflow | Webhook path | `.env` var | `triggerN8N` name | Fires when |
+|---|---|---|---|---|
+| Issue Intelligence | `janashakti-issue` | `VITE_N8N_ISSUE_WEBHOOK` | `issue_intelligence` | every new issue report |
+| Authority Email | `janashakti-authority` | `VITE_N8N_AUTH_WEBHOOK` | `authority_email` | Agent 3 routes an issue to a department |
+| Social Post | `janashakti-social` | `VITE_N8N_SOCIAL_WEBHOOK` | `social_post` | Critical severity / confirmations cross the threshold |
+| Escalation | `escalation` | `VITE_N8N_ESCALATE_WEBHOOK` | `escalation` | an issue ages past an escalation tier |
 
-`fetchAI()` in [`src/utils/gemini.js`](../src/utils/gemini.js) picks, in order:
+All four send mail via the same **Gmail OAuth2** credential.
 
-1. **n8n proxy** — if `VITE_N8N_AI_WEBHOOK` is set (key server-side ✅)
-2. **Direct Gemini** — otherwise
+---
 
-So leaving `VITE_N8N_AI_WEBHOOK` blank keeps the old direct-call behavior; the
-app never breaks if the proxy is down — just remove/clear the var to fall back.
+## The workflows
+
+### 1. Issue Intelligence — `janashakti-issue`
+Emails an HTML summary of each new report to the ops inbox.
+**Flow:** Webhook → *Format Email* (Code, builds the HTML) → *Send Email* (Gmail) →
+*Respond to Webhook*.
+**Payload** (from `ReportScreen.jsx`): `issueId, complaintId, issueType, severity,
+location, description, photoUrl, reporterName, confirmations, issueUrl`.
+Note: `photoUrl` is a base64 data URL (or empty) — link to `issueUrl` rather than
+embedding it.
+
+### 2. Authority Email — `janashakti-authority`
+Sends a formal complaint email to the responsible department.
+**Flow:** Webhook → *Generate Formal Email* (Code) → *Send Authority Email* (Gmail) →
+*Return Success*.
+**Payload** (from `src/agents/authorityRouter.js`): `issueId, departmentName,
+emailSubject, issueDetails:{ type, severity, description, location, address, photoUrl,
+reporterName, reporterEmail, complaintText, issueUrl }`.
+The recipient is set inside the workflow (no email is sent in the payload).
+
+### 3. Social Post — `janashakti-social`
+Builds the post text and emails a notification. Honors consent
+(`issue.socialConsent`): `none` → skip, `anonymous` → no handle, `tag` → mention the
+user's `@handle`.
+**Flow:** Webhook → *Build Tweet & Email* (Code) → *Check Social Consent* (IF) →
+*Send Email Notification* (Gmail).
+**Payload** (from `ReportScreen.jsx` / `IssueDetail.jsx`): `issueId, issueType, severity,
+location, description, photoUrl, confirmations, socialConsent, userXHandle`.
+
+### 4. Escalation — `escalation`
+Emails an escalation notice when an issue moves up a tier; at the top tier
+(`daysOpen >= 30`, level ≥ 3) it also fires a media alert.
+**Flow:** Webhook → *Build Escalation Email* (Code) → *Send Escalation Email* (Gmail) →
+*Check Media Alert Level* (IF) → *Send Media Alert* (Gmail).
+**Payload** (from `src/utils/escalation.js`): `issueId, complaintId, issueType, severity,
+location, escalationLevel, previousLevel, escalatedTo, confirmations, daysOpen` (plus
+`from`/`to` aliases).
+
+---
+
+## Setup (per workflow, in n8n Cloud)
+
+1. **Import / open** the workflow in n8n.
+2. **Select the Gmail credential** — each Gmail node uses an OAuth2 credential
+   (*Gmail OAuth2 API*); pick yours after import.
+3. **Set the recipient address(es)** in the Gmail node(s) — these are configured in n8n,
+   not sent by the app. (Use your real ops / authority / escalation inboxes.)
+4. **Activate** the workflow (toggle top-right). The webhook path is fixed (see the table
+   above), so the Production URL stays `https://<your-instance>.app.n8n.cloud/webhook/<path>`.
+5. Make sure the matching `VITE_N8N_*_WEBHOOK` in `.env` points at that URL, then restart
+   the dev server.
+
+A webhook path can only be **active on one workflow at a time** — if you re-import a
+workflow, deactivate the old copy first.
+
+---
 
 ## Notes
 
-- **CORS:** the Webhook node already sets *Allowed Origins* to `*`. Tighten it to
-  your app's domain for production.
-- **Payload size:** photos are compressed client-side (~640px) before sending, so
-  vision requests stay well under n8n's payload limit.
-- **Once this is live, rotate the key that was previously in the client bundle.**
-- The client no longer needs `VITE_GEMINI_API_KEY` once the proxy is in use —
-  you can remove it from `.env` (and from the deployed build) entirely.
+- **Resilience:** every `triggerN8N` call is fire-and-forget and try/catch-wrapped, so a
+  webhook outage never breaks the app. Leaving a `VITE_N8N_*_WEBHOOK` blank simply skips
+  that automation.
+- **CORS:** webhook nodes allow all origins (`*`) for the demo — tighten to your app's
+  domain for production.
+- **Payload size:** photos are compressed client-side (~640px) before sending, so vision
+  payloads stay well under n8n's limits. Large photos are sent as an empty `photoUrl`.
+
+## Optional: AI proxy (removed)
+
+There was a 5th, optional workflow — an **AI proxy** (`janashakti-ai`) that routed Gemini
+calls through n8n to keep the API key server-side. The app currently calls **Gemini
+directly** (`VITE_N8N_AI_WEBHOOK` unset), so the proxy template was removed from the repo.
+It is recoverable from git history, and the client-side plumbing
+([`src/utils/aiProxy.js`](../src/utils/aiProxy.js) + the proxy branch in
+[`src/utils/gemini.js`](../src/utils/gemini.js)) is still in place if you ever want to
+enable it: set `VITE_N8N_AI_WEBHOOK` and have the workflow return `{ "text": "..." }`.
