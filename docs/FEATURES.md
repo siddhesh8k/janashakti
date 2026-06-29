@@ -9,7 +9,7 @@ This document catalogues **what JanaShakti does**, **why each feature matters**,
 
 ## 2.1 App Identity
 
-**JanaShakti** (जनशक्ति — *People's Power*) is a mobile-first, installable **Progressive Web App** that turns a single photo of a civic problem — a pothole, an overflowing bin, a dead streetlight — into a fully-formed, AI-analysed, authority-routed, community-verifiable complaint with a legal paper trail and an automatic escalation clock. It closes the loop that every Indian civic-complaint app leaves open: **after you report, nothing happens**. JanaShakti answers that with a 5-agent Gemini pipeline that classifies and drafts the complaint, an automation layer (n8n) that emails the right department and posts to social media, a time-based escalation engine that climbs from Ward Officer → Department Head → Commissioner → Media, and a transparency layer that ranks elected representatives by their actual resolution rate. It is built **end-to-end on Google's stack** — Gemini, Firebase, Google Maps — with **no custom backend**.
+**JanaShakti** (जनशक्ति — *People's Power*) is a mobile-first, installable **Progressive Web App** that turns a single photo of a civic problem — a pothole, an overflowing bin, a dead streetlight — into a fully-formed, AI-analysed, authority-routed, community-verifiable complaint with a legal paper trail and an automatic escalation clock. It closes the loop that every Indian civic-complaint app leaves open: **after you report, nothing happens**. JanaShakti answers that with a 5-agent Gemini pipeline that classifies and drafts the complaint, an automation layer (n8n) that emails the right department and posts to social media, a time-based escalation engine that climbs from Ward Officer → Department Head → Commissioner → Media, and a transparency layer that ranks elected representatives by their actual resolution rate. Once an issue is **Resolved**, a 6th Gemini agent scores its real-world **ESG (Environmental / Social / Governance)** impact and maps it to the UN **Sustainable Development Goals (SDGs)**. It is built **end-to-end on Google's stack** — Gemini, Firebase, Google Maps — with **no custom backend**.
 
 **Target users**
 
@@ -46,6 +46,9 @@ Orchestrated by `agents/orchestrator.js` (`orchestrateIssue`), each agent's outp
 | **3 · Authority Router** | `authorityRouter.js` | Gemini text + n8n | department, officer title, email subject, urgency, SLA hours, escalation path |
 | **4 · Resolution Predictor** | `resolutionPredictor.js` | Gemini text | priority score, predicted days, escalation risk, recommendation, factors |
 | **5 · Resolution Verifier** | `resolutionVerifier.js` | Gemini Vision | is the fix photo genuine & resolved? (flags, never blocks) |
+| **6 · ESG Impact Scorer** | `esgScorer.js` | Gemini text | post-resolution ESG score across E/S/G + UN SDG mapping |
+
+> **Note:** Agent 6 runs at **resolution time** — fired when an issue is marked Resolved — not in the photo-submit pipeline orchestrated above.
 
 - **Agent pipeline logging** — Every agent call writes to the `agents_log` collection via `logAgent()` (input, output, latency, success, `geminiModel`), and each full run writes a step trace to `agent_runs`. *Why:* total transparency — the **Agents Showcase** screen renders live traces, and `useAgents` aggregates success counts. *How:* `addDoc` with `serverTimestamp()`.
 - **Model fallback chain** — All AI routes through `fetchAI()` in `utils/gemini.js`, which falls through `gemini-2.5-flash → gemini-2.5-flash-lite → gemini-2.0-flash` on any 404/429/503. *Why:* rate-limit resilience — a quota spike on one model silently rolls to the next instead of failing the submit.
@@ -158,6 +161,20 @@ Features no other civic platform has shipped together.
 
 *Why it matters:* open civic data **and** privacy compliance — exportable transparency without exposing a single citizen.
 
+### ESG & SDG Impact Intelligence
+
+- **Agent 6 — ESG Impact Scorer** — `agents/esgScorer.js` (`scoreESGImpact`) fires **after** an issue is marked Resolved (from `AuthorityDashboard` on resolve; an owner-triggered fallback on `IssueDetail`) and uses Gemini (`callGeminiText`) to score the resolved issue across **Environmental / Social / Governance** pillars (`e_score` / `s_score` / `g_score`, each out of 10) with a plain-English impact line + metric per pillar.
+- **Deterministic overall blend** — The OVERALL score is **not** trusted from the model: it's computed deterministically as **E × 0.35 + S × 0.35 + G × 0.30** (`ESG_WEIGHTS`), clamped 0–10. *Why:* a defensible, tamper-resistant headline score.
+- **UN SDG mapping** — `ISSUE_SDG_MAP` (`constants/esg.js`) maps each issue type to **UN Sustainable Development Goals**, returning `sdg_tags` + `sdg_names` + a one-sentence highlight, rendered with official UN colours (`SDG_COLORS`).
+- **Atomic reporter impact** — The scorer saves `esgScore` + `esgScoredAt` onto the issue doc and **atomically increments** the reporter's ESG stats (`esgIssuesResolved`, `totalPeopleImpacted`, `sdgsContributed`) — owner-write only, per Firestore rules.
+- **Impact estimates** — `IMPACT_ESTIMATES` carries per-type environmental + social estimates (e.g. **Water Leakage ≈ 45,000 litres/month + 340 households**), and `ESG_GRADES` maps scores to **A+ / A / B+ / B / C / D** with colours.
+- **Analytics ESG tab** — `AnalyticsDashboard` adds an **ESG tab** with a City ESG grade card, SDG Contributions progress bars, City ESG Rankings leaderboard (`CityESGCard.jsx`), and Top Environmental Impact. `IssueDetail` shows an `ESGScoreCard` (E/S/G breakdown, SDG pills via `SDGBadge.jsx`, highlight, overall grade) plus an **"ESG Report"** share modal with shareable impact text.
+- **City ESG grade everywhere** — `HomeScreen` surfaces a City ESG grade chip that opens the Analytics ESG tab; `AgentsShowcase` adds the Agent 6 card, an **"ESG Scored"** live stat, and extends the pipeline flow **Resolved → ESG Score → SDG Tagged**.
+- **Profile ESG impact + badges** — `ProfileScreen` gains an **ESG Impact** section (Water Saved / Waste Addressed / People Impacted metrics + contributed-SDG pills + the 5 ESG badges).
+- **Corporate BRSR report** — `generateCorporateESGReport()` produces a Gemini plain-text, **SEBI-BRSR-style** corporate ESG impact report for the Area Adoption (CSR) program.
+
+*Why it matters:* it turns a *closed* civic complaint into measurable, framework-aligned impact — proving to citizens, cities, and corporate sponsors that resolutions deliver real environmental and social value mapped to global goals.
+
 ---
 
 ## 2.4 Gamification System
@@ -186,6 +203,16 @@ Features no other civic platform has shipped together.
 | Verifier | 5+ issues verified |
 | City Champion | civic score ≥ 300 |
 | Legend | civic score ≥ 500 |
+
+### ESG Badges (5) — `ESG_BADGES`
+
+| Badge | Unlock condition |
+|---|---|
+| Water Warrior | 3+ Water Leakage issues reported |
+| Green Guardian | 5+ ESG-resolved issues |
+| Justice Seeker | 1+ RTI filed |
+| Social Champion | 100+ people impacted |
+| SDG Contributor | 3+ distinct SDGs contributed |
 
 ### Levels (5) — `LEVEL_THRESHOLDS`
 
@@ -241,7 +268,7 @@ Three **Gemini-powered** Node dev agents (`tests/agents/`) that write, run, and 
 
 AI-generated tests live under `tests/ai/**` and are **isolated** from `npm test`, so a flaky AI test can never red the deterministic suite. Models: `gemini-2.5-flash → gemini-2.5-flash-lite → gemini-2.0-flash-lite`.
 
-**Latest run:** 403 tests passing (100%) across 51 files (17 deterministic + 34 AI-generated) at ~47% line / 71% branch coverage — see `tests/reports/latest.html`.
+**Latest run:** 401 tests passing (100%) across 51 files (17 deterministic + 34 AI-generated) at ~47% line / 70% branch coverage — see `tests/reports/latest.html`.
 
 ---
 

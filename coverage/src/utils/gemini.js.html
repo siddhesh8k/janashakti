@@ -25,7 +25,7 @@
             <div class='fl pad1y space-right2'>
                 <span class="strong">0% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>0/221</span>
+                <span class='fraction'>0/214</span>
             </div>
         
             
@@ -46,7 +46,7 @@
             <div class='fl pad1y space-right2'>
                 <span class="strong">0% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>0/221</span>
+                <span class='fraction'>0/214</span>
             </div>
         
             
@@ -312,25 +312,11 @@
 <a name='L247'></a><a href='#L247'>247</a>
 <a name='L248'></a><a href='#L248'>248</a>
 <a name='L249'></a><a href='#L249'>249</a>
-<a name='L250'></a><a href='#L250'>250</a>
-<a name='L251'></a><a href='#L251'>251</a>
-<a name='L252'></a><a href='#L252'>252</a>
-<a name='L253'></a><a href='#L253'>253</a>
-<a name='L254'></a><a href='#L254'>254</a>
-<a name='L255'></a><a href='#L255'>255</a>
-<a name='L256'></a><a href='#L256'>256</a>
-<a name='L257'></a><a href='#L257'>257</a>
-<a name='L258'></a><a href='#L258'>258</a>
-<a name='L259'></a><a href='#L259'>259</a></td><td class="line-coverage quiet"><span class="cline-any cline-no">&nbsp;</span>
+<a name='L250'></a><a href='#L250'>250</a></td><td class="line-coverage quiet"><span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
@@ -413,10 +399,6 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
@@ -581,15 +563,10 @@
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js"><span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" ><span class="branch-0 cbranch-no" title="branch not covered" >import { collection, addDoc, serverTimestamp } from 'firebase/firestore';</span></span></span>
 import { db } from '../firebase';
-import { fetchOpenAI, getOpenAIModel } from './openai';
 import { isProxyEnabled, fetchViaProxy } from './aiProxy';
 import { buildRTIApplication, formatINDate } from './rti';
 &nbsp;
 <span class="cstat-no" title="statement not covered" >const API_KEY = import.meta.env.VITE_GEMINI_API_KEY;</span>
-&nbsp;
-<span class="cstat-no" title="statement not covered" >// Provider switch — set VITE_AI_PROVIDER to 'gpt' (OpenAI) or 'gemini' in .env.</span>
-<span class="cstat-no" title="statement not covered" >const PROVIDER = (import.meta.env.VITE_AI_PROVIDER || 'gemini').toLowerCase();</span>
-<span class="cstat-no" title="statement not covered" >const USE_GPT = PROVIDER === 'gpt' || PROVIDER === 'openai';</span>
 &nbsp;
 <span class="cstat-no" title="statement not covered" >// Current supported models (verified 200 OK against this key, June 2026).</span>
 <span class="cstat-no" title="statement not covered" >// Ordered most-reliable first; the chain falls through on 404/429/503.</span>
@@ -671,17 +648,13 @@ import { buildRTIApplication, formatINDate } from './rti';
 &nbsp;
 <span class="cstat-no" title="statement not covered" >export const getLastModel = () =&gt; lastUsedModel;</span>
 &nbsp;
-<span class="cstat-no" title="statement not covered" >// Unified provider dispatch. Both branches take Gemini-style "parts"</span>
-<span class="cstat-no" title="statement not covered" >// and return cleaned raw text, so all callers stay provider-agnostic.</span>
-<span class="cstat-no" title="statement not covered" >// Priority: n8n proxy (key server-side) → direct OpenAI → direct Gemini.</span>
+<span class="cstat-no" title="statement not covered" >// Unified AI dispatch. Takes Gemini-style "parts" and returns cleaned raw text,</span>
+<span class="cstat-no" title="statement not covered" >// so all callers stay agnostic of where the call is served.</span>
+<span class="cstat-no" title="statement not covered" >// Priority: n8n proxy (key server-side) → direct Gemini.</span>
 <span class="cstat-no" title="statement not covered" >const fetchAI = async (parts) =&gt; {</span>
 <span class="cstat-no" title="statement not covered" >  if (isProxyEnabled()) {</span>
-<span class="cstat-no" title="statement not covered" >    lastUsedModel = USE_GPT ? `${getOpenAIModel()} (proxy)` : 'gemini (proxy)';</span>
-<span class="cstat-no" title="statement not covered" >    return await fetchViaProxy(parts, USE_GPT ? 'gpt' : 'gemini');</span>
-<span class="cstat-no" title="statement not covered" >  }</span>
-<span class="cstat-no" title="statement not covered" >  if (USE_GPT) {</span>
-<span class="cstat-no" title="statement not covered" >    lastUsedModel = getOpenAIModel();</span>
-<span class="cstat-no" title="statement not covered" >    return await fetchOpenAI(parts);</span>
+<span class="cstat-no" title="statement not covered" >    lastUsedModel = 'gemini (proxy)';</span>
+<span class="cstat-no" title="statement not covered" >    return await fetchViaProxy(parts);</span>
 <span class="cstat-no" title="statement not covered" >  }</span>
 <span class="cstat-no" title="statement not covered" >  return await fetchGemini(parts);</span>
 <span class="cstat-no" title="statement not covered" >};</span>
@@ -749,10 +722,10 @@ import { buildRTIApplication, formatINDate } from './rti';
 <span class="cstat-no" title="statement not covered" >  throw new Error('All Gemini models failed (function calling)');</span>
 <span class="cstat-no" title="statement not covered" >};</span>
 &nbsp;
-<span class="cstat-no" title="statement not covered" >// Provider guard: function calling is Gemini-only here. On OpenAI/proxy this throws</span>
-<span class="cstat-no" title="statement not covered" >// so the caller falls back to its existing JSON path.</span>
+<span class="cstat-no" title="statement not covered" >// Function calling needs the direct Gemini endpoint. When routing through the n8n</span>
+<span class="cstat-no" title="statement not covered" >// proxy (which returns text only) this throws so the caller falls back to its JSON path.</span>
 <span class="cstat-no" title="statement not covered" >const ensureGeminiProvider = () =&gt; {</span>
-<span class="cstat-no" title="statement not covered" >  if (isProxyEnabled() || USE_GPT) throw new Error('function-calling: unsupported provider');</span>
+<span class="cstat-no" title="statement not covered" >  if (isProxyEnabled()) throw new Error('function-calling: unsupported via proxy');</span>
 <span class="cstat-no" title="statement not covered" >};</span>
 &nbsp;
 <span class="cstat-no" title="statement not covered" >export const callGeminiFunction = async (declaration, prompt) =&gt; {</span>
@@ -844,7 +817,7 @@ import { buildRTIApplication, formatINDate } from './rti';
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-06-28T20:36:58.673Z
+                at 2026-06-29T09:36:06.598Z
             </div>
         <script src="../../prettify.js"></script>
         <script>

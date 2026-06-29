@@ -15,7 +15,7 @@ credits, and the security model.
 | **Language** | JSX only (React 18) — zero TypeScript |
 | **Build** | Vite 5 + `vite-plugin-pwa` (Workbox) |
 | **Data** | Google Firebase — Auth + Cloud Firestore + Hosting |
-| **AI** | Google Gemini 2.5 Flash (via Google AI Studio) — 5-agent pipeline |
+| **AI** | Google Gemini 2.5 Flash (via Google AI Studio) — 6-agent pipeline |
 | **Maps** | Google Maps JavaScript API + Geocoding API |
 | **Automation** | n8n Cloud — 4 webhook workflows |
 | **Media** | Photos inline as base64 in Firestore · short videos on Cloudinary |
@@ -33,7 +33,7 @@ credits, and the security model.
 ## 1. System Architecture Overview
 
 JanaShakti is a four-tier system. A user action in the **React PWA** writes to
-**Cloud Firestore**; the write is orchestrated through a **5-agent Gemini pipeline**;
+**Cloud Firestore**; the write is orchestrated through a **6-agent Gemini pipeline**;
 side effects (authority email, social amplification, escalation) are dispatched to
 **n8n Cloud** webhooks. Real-time `onSnapshot` listeners stream every change back to
 the UI.
@@ -141,13 +141,13 @@ sequenceDiagram
 
 | Route | Screen | Bottom nav | Notes |
 |---|---|---|---|
-| `/` | `HomeScreen` | ✅ | Auth lives here (Google / Guest / Email) |
+| `/` | `HomeScreen` | ✅ | Auth lives here (Google / Guest / Email) · City ESG grade chip → `/analytics` ESG tab |
 | `/report` | `ReportScreen` | ✅ | Raised green camera FAB |
 | `/map` | `MapScreen` | ✅ | Google Maps markers + adopted zones |
-| `/profile` | `ProfileScreen` | ✅ | Score, badges, affiliation |
-| `/issue/:id` | `IssueDetail` | ❌ (back) | Verify, RTI, share, escalation, elected-rep card |
-| `/analytics` | `AnalyticsDashboard` | ❌ (back) | Recharts + AI insights |
-| `/authority` | `AuthorityDashboard` | ❌ (back) | Status / resolution (gated) · per-department filter |
+| `/profile` | `ProfileScreen` | ✅ | Score, badges, affiliation · ESG Impact metrics + contributed SDGs + ESG badges |
+| `/issue/:id` | `IssueDetail` | ❌ (back) | Verify, RTI, share, escalation, elected-rep card · ESG card + SDG pills + ESG Report share |
+| `/analytics` | `AnalyticsDashboard` | ❌ (back) | Recharts + AI insights · ESG tab (`location.state.tab==='esg'`) |
+| `/authority` | `AuthorityDashboard` | ❌ (back) | Status / resolution (gated) · per-department filter · fires Agent 6 on resolve |
 | `/agents` | `AgentsShowcase` | ❌ (back) | Live agent traces |
 | `/leaderboard` | `Leaderboard` | ❌ (back) | Wall of Fame + CSR report + Representative scorecard |
 | `/journalist` | `JournalistDashboard` | ❌ (back) | Story-ready + press release |
@@ -190,6 +190,7 @@ flowchart LR
         a3[authorityRouter]
         a4[resolutionPredictor]
         a5[resolutionVerifier]
+        a6[esgScorer]
     end
 
     subgraph Utils
@@ -215,8 +216,9 @@ flowchart LR
     Map --> uIssues & uGeo --> geo & orgU
     Profile --> uAuth & uUser & uIssues --> orgU & pub
     Detail --> uGeo --> conf & esc & soc & n8n & gem
+    Detail --> a6
     Analytics --> uIssues & uPage --> gem
-    Authority --> uIssues & uPage --> a5 & gem
+    Authority --> uIssues & uPage --> a5 & a6 & gem
     AgentsS --> uAgents
     Leader --> uPage --> orgU & orgStats & csr & pub
     Journo --> uPage --> story & press
@@ -227,7 +229,7 @@ flowchart LR
     Leader --> reps
 
     orch --> a2 & a3 & a4
-    a1 & a2 & a3 & a4 & a5 --> gem
+    a1 & a2 & a3 & a4 & a5 & a6 --> gem
     a3 --> n8n
     esc --> n8n
 ```
@@ -236,13 +238,13 @@ flowchart LR
 
 | Screen | Hooks | Agents / AI | Utils | n8n | Firestore writes |
 |---|---|---|---|---|---|
-| **HomeScreen** | useAuth, useUser, useIssues, useAgents | — | firebase auth fns | — | — |
+| **HomeScreen** | useAuth, useUser, useIssues, useAgents | — | firebase auth fns, esg (City ESG grade chip → `/analytics` ESG tab) | — | — |
 | **ReportScreen** | useAuth, useSharedLocation | `analyzeIssue` (A1) → `orchestrateIssue` (A2-A4) | gemini, cloudinary, media, validation, social, complaint, complaintId, publicProfile, confirmIssue, representatives (ward→rep tag) | `issue_intelligence`, `social_post` (+ `authority_email` via A3) | `issues` (addDoc incl. `wardInfo`), `users` (score), `publicProfiles` |
-| **IssueDetail** | useSharedLocation | `generateRTI` (Gemini) | escalation, geo, social, confirmIssue, publicProfile, cloudinary, n8n, representatives (rep card) | `social_post`, `escalation` | `issues` (verify/escalate/celebrate), `users` (score) |
+| **IssueDetail** | useSharedLocation | `generateRTI` (Gemini), `scoreESGImpact` (A6, owner-gated fallback on Resolved) | escalation, geo, social, confirmIssue, publicProfile, cloudinary, n8n, representatives (rep card), esg (ESG card + SDG pills + ESG Report share) | `social_post`, `escalation` | `issues` (verify/escalate/celebrate, `esgScore`), `users` (score, ESG stats) |
 | **MapScreen** | useIssues, useSharedLocation | — | googleMaps, geo, organizations, mapStyle | — | — (read-only) |
-| **ProfileScreen** | useAuth, useUser, useIssues | — | organizations, publicProfile, issueTypes | — | `users` (affiliation, count reconcile), `publicProfiles` |
-| **AnalyticsDashboard** | useIssues, usePagination | `generateCityInsights` (Gemini) | trend, cities, exportToExcel, ChartCarousel | — | — (read-only) |
-| **AuthorityDashboard** | useIssues, usePagination | `verifyResolution` (A5) | authority, departments (per-dept filter), gemini (compress), validation, exportToExcel | — | `issues` (status/resolution), `authorities` (enroll) |
+| **ProfileScreen** | useAuth, useUser, useIssues | — | organizations, publicProfile, issueTypes, esg (ESG Impact metrics, contributed SDGs, ESG badges) | — | `users` (affiliation, count reconcile), `publicProfiles` |
+| **AnalyticsDashboard** | useIssues, usePagination | `generateCityInsights` (Gemini) | trend, cities, exportToExcel, ChartCarousel, esg (ESG tab: City ESG grade, SDG Contributions, City Rankings, Top Environmental Impact) | — | — (read-only) |
+| **AuthorityDashboard** | useIssues, usePagination | `verifyResolution` (A5), `scoreESGImpact` (A6, on resolve) | authority, departments (per-dept filter), gemini (compress), validation, exportToExcel, esg | — | `issues` (status/resolution, `esgScore`), `authorities` (enroll) |
 | **AgentsShowcase** | useAgents | — (displays traces) | — | — | — (read-only) |
 | **Leaderboard** | usePagination | `generateCSRReport` (Gemini) | organizations, orgStats, publicProfile, levelFor, representatives (calculateScorecard), exportToExcel | — | `publicProfiles` (self-heal own score) |
 | **JournalistDashboard** | usePagination | `generatePressRelease` (Gemini) | story, exportToExcel | — | `issues` (storyClaimedBy/At) |
@@ -256,7 +258,7 @@ flowchart LR
 | `useAuth` | `onAuthStateChanged` | `{ user, userProfile, loading }` | reads `users/{uid}`; updates daily streak; `syncPublicProfile` |
 | `useUser(uid)` | `onSnapshot` | `{ profile, loading }` | live `users/{uid}` |
 | `useIssues({userId, severity, status, limitCount})` | `onSnapshot` | `{ issues, loading, error }` | composite-indexed `issues` query |
-| `useAgents` | `getCountFromServer` ×5 + `getDocs` | `{ stats, recentRuns, loading }` | aggregates `agents_log`; reads `agent_runs` |
+| `useAgents` | `getCountFromServer` ×6 + `getDocs` | `{ stats, recentRuns, loading }` | aggregates `agents_log` (incl. `esg_scorer`); reads `agent_runs` |
 | `useGeoLocation` | `watchPosition` | `{ location, locationText, accuracy, error }` | calls Google reverse-geocode |
 | `useSharedLocation` | `LocationProvider` context | same shape as `useGeoLocation` | one app-wide GPS watch shared by all screens (de-dupes the former per-screen watches) |
 | `useNotifications(uid)` | derives from `useIssues` | `{ items }` | none (client-derived from statusHistory + flags) |
@@ -268,7 +270,8 @@ flowchart LR
 (memo), `PressureMeter` (memo), `StatsCard` (memo), `EmptyState`, `LoadingScreen`,
 `LoadingSkeleton`, `ShowMore`, `Toast`, `Avatar`, `IndiaFlag`, `NationTagline`,
 `ResolutionCelebration`, `AgentPipelineOverlay`, `BeforeAfterSlider`, `ChartCarousel`
-(swipeable analytics charts).
+(swipeable analytics charts), `ESGScoreCard` (memo), `SDGBadge` (memo), `CityESGCard`
+(memo).
 
 **Stateful / integrated:** `ToastProvider` (context + `useToast`), `LocationProvider`
 (single app-wide geolocation watch + background cache prewarm; exposes `useSharedLocation`),
@@ -285,11 +288,12 @@ data, English/Hindi, location-aware), `ErrorBoundary` (class component), `Instal
 
 ## 3. AI Agent Pipeline
 
-JanaShakti ships **5 Gemini-powered agents**. Four run as a coordinated pipeline at
+JanaShakti ships **6 Gemini-powered agents**. Four run as a coordinated pipeline at
 submit time via `agents/orchestrator.js`; the fifth (Verifier) runs when an authority
-uploads resolution proof. Every agent call routes through `utils/gemini.js`
-(`callGeminiText` / `callGeminiVision` / `callGeminiVisionFunction`) and logs to the
-`agents_log` collection via `logAgent()`.
+uploads resolution proof; the sixth (ESG Impact Scorer) runs **after an issue is
+Resolved**. Every agent call routes through `utils/gemini.js`
+(`callGeminiText` / `callGeminiVision` / `callGeminiVisionFunction` /
+`callGeminiPlainText`) and logs to the `agents_log` collection via `logAgent()`.
 
 ```mermaid
 flowchart TB
@@ -315,6 +319,10 @@ flowchart TB
     Resolve([🛠️ Authority uploads fix photo]) --> A5
     A5["<b>Agent 5 — Resolution Verifier</b><br/>resolutionVerifier.js<br/>Gemini Vision → genuine? resolved?"]
     A5 -->|"verdict"| ResWrite[(setDoc: status=Resolved<br/>resolutionVerified…)]
+
+    ResWrite --> A6
+    A6["<b>Agent 6 — ESG Impact Scorer</b><br/>esgScorer.js · post-resolution<br/>Gemini text → E/S/G + SDGs<br/>overall = E×0.35+S×0.35+G×0.30"]
+    A6 -->|"esgScore"| ESGWrite[(updateDoc: esgScore + esgScoredAt<br/>+ reporter user ESG stats)]
 ```
 
 ### Agent collaboration — the key design point
@@ -395,6 +403,18 @@ flowchart LR
 | **Output** | verdict → sets `resolutionVerified`, `resolutionGenuine`, `resolutionConfidence`, `resolutionNote` |
 | **Behaviour** | **Flags, never blocks.** On any error it returns an optimistic `is_genuine/is_resolved:true` verdict so the resolve flow can't break |
 | **Firestore** | writes `agents_log` (`resolution_verifier`); dashboard writes the resolution fields |
+
+#### Agent 6 — ESG Impact Scorer (`esgScorer.js`)
+| | |
+|---|---|
+| **Trigger** | **After an issue is Resolved** — called from `AuthorityDashboard` on resolve; an owner-gated fallback effect in `IssueDetail` scores it if it was missed |
+| **Exports** | `scoreESGImpact(issue, issueId)` (per-issue scoring) and `generateCorporateESGReport(companyData)` |
+| **Input** | the resolved issue (type, severity, description, city, …) + `issueId` |
+| **Method** | `callGeminiText` returns per-pillar `e_score` / `s_score` / `g_score` (+ an `impact` + `metric` per pillar); the code then **overrides `overall_esg`** with a deterministic weighted blend **E×0.35 + S×0.35 + G×0.30** (`ESG_WEIGHTS`), clamped 0–10. SDGs are mapped from the issue type via `ISSUE_SDG_MAP` (`sdg_tags`, `sdg_names`) plus a `highlight` |
+| **Output** | `esgScore` map (per-pillar scores/impacts/metrics, blended `overall_esg`, `sdg_tags`, `sdg_names`, `highlight`) |
+| **Firestore writes** | `updateDoc(issues)` → `esgScore` + `esgScoredAt`; then increments the **reporter's** `users` doc (`esgIssuesResolved`, `totalPeopleImpacted` via `increment()`, `sdgsContributed` via `arrayUnion()`) inside its **own** try/catch — a cross-user stats write denied by the rules never nullifies the already-saved score. Logs `agents_log` (`agentName: esg_scorer`) |
+| **Corporate report** | `generateCorporateESGReport` uses `callGeminiPlainText` (plain text, not JSON) to produce a **SEBI-BRSR-style** report |
+| **Constants** | `constants/esg.js` — `ISSUE_SDG_MAP`, `SDG_COLORS`, `ESG_WEIGHTS`, `IMPACT_ESTIMATES`, `ESG_GRADES`, `ESG_BADGES` |
 
 ---
 
@@ -520,7 +540,9 @@ flowchart TB
 `AuthorityDashboard.handleResolvePhoto` (gated by the `authorities` allowlist) →
 **Agent 5** verifies the fix photo → status flips to **Resolved** → `IssueDetail`'s
 `onSnapshot` detects the transition, fires `ResolutionCelebration`, and awards the
-reporter **+25** (once, via `resolutionCelebrated` guard).
+reporter **+25** (once, via `resolutionCelebrated` guard). The resolve also fires
+**Agent 6 — ESG Impact Scorer** (with ESG toasts); an owner-gated fallback effect in
+`IssueDetail` scores the issue if the dashboard missed it.
 
 ```mermaid
 sequenceDiagram
@@ -528,6 +550,7 @@ sequenceDiagram
     participant AU as Authority
     participant AD as AuthorityDashboard
     participant A5 as Agent 5 Verifier
+    participant A6 as Agent 6 ESG Scorer
     participant F as Firestore
     participant ID as IssueDetail (reporter)
     participant RC as ResolutionCelebration
@@ -537,11 +560,14 @@ sequenceDiagram
     AD->>A5: verifyResolution(photo, issue)
     A5-->>AD: { is_genuine, is_resolved, confidence, reasoning }
     AD->>F: setDoc(issue) status=Resolved,<br/>resolutionPhotoUrl, resolutionVerified,<br/>resolutionConfidence, resolutionNote, resolvedAt,<br/>statusHistory += {Resolved}
+    AD->>A6: scoreESGImpact(issue, issueId)
+    A6->>F: updateDoc(issue) esgScore + esgScoredAt
+    A6->>F: users/{reporter} esgIssuesResolved, totalPeopleImpacted,<br/>sdgsContributed (own try/catch)
     F-->>ID: onSnapshot: status → Resolved
     ID->>RC: show celebration (confetti)
     ID->>F: users/{reporter} civicScore +25, issuesResolved +1
     ID->>F: issue.resolutionCelebrated = true (idempotent)
-    Note over ID: BeforeAfterSlider renders original vs fix<br/>+ "AI-verified · NN%" badge
+    Note over ID: BeforeAfterSlider renders original vs fix<br/>+ "AI-verified · NN%" badge<br/>ESGScoreCard + SDG pills + ESG Report share
 ```
 
 ### 4.5 Corporate / Campus Adoption Flow
@@ -705,6 +731,8 @@ noted ISO.
 | `socialQueued` | boolean | Tx flag — ensures one social trigger |
 | `routedTo` | object | Agent 3 result `{departmentName, departmentCode, wardOffice, officerTitle, emailSubject, urgencyLevel, slaHours, escalationPath, emailSent, emailSentAt}` |
 | `prediction` | object | Agent 4 result `{priority_score, predicted_days, escalation_risk, recommendation, confidence, factors[]}` |
+| `esgScore` | object\|null | Agent 6 result (post-resolution) — per-pillar `e_score`/`s_score`/`g_score` (+ impact + metric), blended `overall_esg` (E×0.35+S×0.35+G×0.30), `sdg_tags`, `sdg_names`, `highlight` |
+| `esgScoredAt` | timestamp\|null | When Agent 6 scored the resolved issue |
 | `resolutionPhotoUrl` | string\|null | Inline base64 fix photo |
 | `resolutionVerified` | boolean | Agent 5: genuine && resolved |
 | `resolutionGenuine` | boolean | Agent 5 genuineness |
@@ -725,6 +753,9 @@ noted ISO.
 | `authMethod` | string | `google` \| `anonymous` \| `email` |
 | `civicScore` | number | Gamification score |
 | `issuesReported` / `issuesVerified` / `issuesResolved` / `issuesShared` | number | Activity counters |
+| `esgIssuesResolved` / `totalPeopleImpacted` | number | ESG impact counters (Agent 6, via `increment()`); seeded 0 |
+| `sdgsContributed` | string[] | UN SDGs the user has contributed to (Agent 6, via `arrayUnion()`); seeded `[]` |
+| `rtiFiled` | number | RTI requests filed; seeded 0 |
 | `badges` | string[] | Earned badge ids (`BADGE_CONDITIONS`) |
 | `level` | string | Tier name (`LEVEL_THRESHOLDS`) |
 | `streak` / `lastActiveDate` | number / string(YYYY-MM-DD) | Daily streak |
@@ -765,7 +796,7 @@ noted ISO.
 | Field | Type | Purpose |
 |---|---|---|
 | `issueId` | string | Related issue |
-| `agentName` | string | `issue_analyzer` \| `duplicate_detector` \| `authority_router` \| `resolution_predictor` \| `resolution_verifier` |
+| `agentName` | string | `issue_analyzer` \| `duplicate_detector` \| `authority_router` \| `resolution_predictor` \| `resolution_verifier` \| `esg_scorer` |
 | `input` / `output` | object\|null | Call payloads |
 | `processingTimeMs` | number | Latency |
 | `success` | boolean | Outcome (aggregated by `useAgents`) |
@@ -829,8 +860,9 @@ All AI routes through `utils/gemini.js → fetchAI()`. **Dispatch order:** n8n A
 - **Modes:** text (`callGeminiText`), vision (`callGeminiVision`, image compressed to
   640 px / q0.4), and native **function-calling** (`callGeminiVisionFunction`, `mode: ANY`).
 - **Config:** `temperature 0.1`. JSON responses fence-stripped (` ```json `) before parse.
-- **Used by:** all 5 agents + `generateRTI`, `generateXCaption`, `generateCityInsights`,
-  `generateCSRReport`, `generatePressRelease`, and the **voice assistant**
+- **Used by:** all 6 agents + `generateRTI`, `generateXCaption`, `generateCityInsights`,
+  `generateCSRReport`, `generatePressRelease`, `generateCorporateESGReport`
+  (`callGeminiPlainText` — SEBI-BRSR-style report), and the **voice assistant**
   (`callGeminiPlainText` — raw-text answers over the live civic context).
 
 ### 6.2 Google Maps Platform
@@ -936,7 +968,7 @@ flowchart TB
     Coll -->|issues update| Who{who}
     Who -->|owner| AllowO([✅ any field])
     Who -->|isAuthority| AF{diff ⊆ authorityFields}
-    AF -->|yes| AllowA([✅ status/resolution/routedTo/prediction])
+    AF -->|yes| AllowA([✅ status/resolution/routedTo/prediction/esgScore])
     Who -->|other signed-in| CF{diff ⊆ communityFields}
     CF -->|yes + claim window| AllowC([✅ confirmations/escalation/claim])
 
@@ -951,7 +983,8 @@ flowchart TB
 - **Authority** (uid in `/authorities`) — may write **only** `authorityFields`: the
   status pipeline, resolution proof (`status, statusHistory, resolutionPhotoUrl,
   resolutionVerified/Genuine/Confidence/Note, resolvedAt, resolutionCelebrated`), and
-  the agent outputs (`routedTo, prediction`) — plus community fields.
+  the agent outputs (`routedTo, prediction, esgScore, esgScoredAt`) — plus community
+  fields.
 - **Any signed-in user** — limited to **`communityFields`** (`confirmations,
   confirmedBy, pressureScore, socialQueued, escalationLevel, wallOfShame, updatedAt,
   storyClaimedBy, storyClaimedAt`). A story claim must additionally satisfy
@@ -1039,9 +1072,9 @@ and are **excluded from `npm test`** (which runs only the deterministic `src/**`
 chains Agent 1 → Agent 3. Vitest config + coverage (`@vitest/coverage-v8`,
 `json-summary`) is in `vite.config.js`.
 
-**Latest run:** 403 tests passing (100%) across 51 files — 17 deterministic
+**Latest run:** 401 tests passing (100%) across 51 files — 17 deterministic
 (`src/**` + hand-written `tests/unit/core`) + 34 Gemini-generated under `tests/ai/`
-(unit · components · hooks · screen-smoke) — at ~47% line / 40% function / 71% branch
+(unit · components · hooks · screen-smoke) — at ~47% line / 40% function / 70% branch
 coverage (screens covered at the smoke / render-without-crash level). Snapshot:
 `tests/reports/latest.html`.
 
@@ -1054,7 +1087,7 @@ the Google-collaborated hackathon track:
 
 | Google product | Where it powers JanaShakti |
 |---|---|
-| **Gemini 2.5 Flash** (Google AI Studio) | The entire 5-agent intelligence: photo analysis, duplicate detection, authority routing, resolution prediction, and resolution verification — plus RTI letters, press releases, CSR reports, social captions, and city insights. Uses Gemini **vision**, **text**, and native **function-calling**. |
+| **Gemini 2.5 Flash** (Google AI Studio) | The entire 6-agent intelligence: photo analysis, duplicate detection, authority routing, resolution prediction, resolution verification, and post-resolution ESG impact scoring (E/S/G pillars + UN SDG mapping) — plus RTI letters, press releases, CSR reports, SEBI-BRSR-style corporate ESG reports, social captions, and city insights. Uses Gemini **vision**, **text**, and native **function-calling**. |
 | **Firebase Authentication** | Google / Anonymous / Email sign-in. |
 | **Cloud Firestore** | Real-time database of record (8 collections) with offline IndexedDB persistence. |
 | **Firebase Hosting** | Global SPA + PWA delivery with SPA rewrites and auth-popup COOP headers. |

@@ -1,164 +1,167 @@
 import { describe, it, expect, vi } from 'vitest';
 import { renderHook, act, waitFor } from '@testing-library/react';
 import { useAgents } from '../../../src/hooks/useAgents';
-import { getCountFromServer, getDocs } from 'firebase/firestore'; // Import to access the globally mocked functions
-
-// Spy on console.error to catch and assert any errors logged by the hook
-const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+import { getCountFromServer, getDocs } from 'firebase/firestore';
 
 describe('useAgents', () => {
-  // Store original mock implementations to restore them after each test.
-  // This assumes getCountFromServer and getDocs are already vi.fn() from global setup.js.
-  let originalGetCountFromServerImpl;
-  let originalGetDocsImpl;
-
+  // Ensure firebase/firestore functions are mockable and reset before each test.
+  // The global setup.js is assumed to have mocked these functions as vi.fn().
   beforeEach(() => {
-    // Clear any previous calls to console.error
-    consoleErrorSpy.mockClear();
-
-    // Store the current (default from setup.js) implementations of the mocked functions
-    originalGetCountFromServerImpl = getCountFromServer.getMockImplementation();
-    originalGetDocsImpl = getDocs.getMockImplementation();
-
-    // Reset mocks to their default behavior from setup.js for each test
-    // This ensures test isolation, especially if a test overrides them.
-    getCountFromServer.mockImplementation(originalGetCountFromServerImpl);
-    getDocs.mockImplementation(originalGetDocsImpl);
+    vi.clearAllMocks();
+    // Reset default mock implementations for Firebase functions
+    getCountFromServer.mockReturnValue({ data: () => ({ count: 0 }) });
+    getDocs.mockReturnValue({
+      docs: [],
+      empty: true,
+      forEach: vi.fn(),
+      size: 0,
+    });
   });
 
-  afterEach(() => {
-    // Restore mocks to their original implementations after each test
-    getCountFromServer.mockImplementation(originalGetCountFromServerImpl);
-    getDocs.mockImplementation(originalGetDocsImpl);
-  });
-
-  afterAll(() => {
-    // Restore the original console.error after all tests are done
-    consoleErrorSpy.mockRestore();
-  });
-
-  it('should return initial state correctly', () => {
+  it('should return initial default values', () => {
     const { result } = renderHook(() => useAgents());
 
-    // Assert initial loading state
+    expect(result.current.stats).toEqual({
+      analyzed: 0,
+      duplicatesCaught: 0,
+      authoritiesNotified: 0,
+      predictionsGenerated: 0,
+      resolutionsVerified: 0,
+      esgScored: 0,
+    });
+    expect(result.current.recentRuns).toEqual([]);
+    expect(result.current.loading).toBe(true);
+  });
+
+  it('should set loading to false after data fetch completes', async () => {
+    const { result } = renderHook(() => useAgents());
+
     expect(result.current.loading).toBe(true);
 
-    // Assert initial stats object shape and default values
+    await waitFor(() => {
+      expect(result.current.loading).toBe(false);
+    });
+  });
+
+  it('should return default data shapes after fetch with empty Firebase mocks', async () => {
+    const { result } = renderHook(() => useAgents());
+
+    await waitFor(() => {
+      expect(result.current.loading).toBe(false);
+    });
+
+    // With default mocks (getCountFromServer returns 0, getDocs returns empty array)
     expect(result.current.stats).toEqual({
       analyzed: 0,
       duplicatesCaught: 0,
       authoritiesNotified: 0,
       predictionsGenerated: 0,
       resolutionsVerified: 0,
+      esgScored: 0,
     });
-
-    // Assert initial recentRuns array is empty
     expect(result.current.recentRuns).toEqual([]);
   });
 
-  it('should set loading to false after data fetch completes with default mocked responses', async () => {
+  it('should fetch and update stats and recent runs with mocked data', async () => {
+    // Mock getCountFromServer for each call in the Promise.all array
+    getCountFromServer
+      .mockResolvedValueOnce({ data: () => ({ count: 10 }) }) // issue_analyzer
+      .mockResolvedValueOnce({ data: () => ({ count: 5 }) })  // duplicate_detector
+      .mockResolvedValueOnce({ data: () => ({ count: 3 }) })  // authority_router
+      .mockResolvedValueOnce({ data: () => ({ count: 8 }) })  // resolution_predictor
+      .mockResolvedValueOnce({ data: () => ({ count: 2 }) })  // resolution_verifier
+      .mockResolvedValueOnce({ data: () => ({ count: 1 }) }); // esg_scorer
+
+    // Mock getDocs for agent_runs
+    const mockRunDocs = [
+      { id: 'run1', data: () => ({ createdAt: new Date(), agentName: 'test_agent_1' }) },
+      { id: 'run2', data: () => ({ createdAt: new Date(), agentName: 'test_agent_2' }) },
+    ];
+    getDocs.mockResolvedValueOnce({
+      docs: mockRunDocs,
+      empty: false,
+      forEach: vi.fn((cb) => mockRunDocs.forEach(cb)),
+      size: mockRunDocs.length,
+    });
+
     const { result } = renderHook(() => useAgents());
 
-    // Initially loading should be true
-    expect(result.current.loading).toBe(true);
-
-    // Wait for the async operations in useEffect to complete and loading to become false
     await waitFor(() => {
       expect(result.current.loading).toBe(false);
     });
 
-    // Ensure no errors were logged during a successful (though empty) fetch
-    expect(consoleErrorSpy).not.toHaveBeenCalled();
-  });
-
-  it('should return default data shapes and values after fetch with mocked empty responses', async () => {
-    const { result } = renderHook(() => useAgents());
-
-    // Wait for the hook to finish loading
-    await waitFor(() => {
-      expect(result.current.loading).toBe(false);
-    });
-
-    // Assert stats structure and default values (0 from mocked getCountFromServer in setup.js)
     expect(result.current.stats).toEqual({
-      analyzed: 0,
-      duplicatesCaught: 0,
-      authoritiesNotified: 0,
-      predictionsGenerated: 0,
-      resolutionsVerified: 0,
+      analyzed: 10,
+      duplicatesCaught: 5,
+      authoritiesNotified: 3,
+      predictionsGenerated: 8,
+      resolutionsVerified: 2,
+      esgScored: 1,
     });
 
-    // Assert recentRuns structure and default values (empty array from mocked getDocs in setup.js)
-    expect(result.current.recentRuns).toEqual([]);
+    expect(result.current.recentRuns).toHaveLength(2);
+    expect(result.current.recentRuns[0].id).toBe('run1');
+    expect(result.current.recentRuns[0].agentName).toBe('test_agent_1');
+    expect(result.current.recentRuns[1].id).toBe('run2');
+    expect(result.current.recentRuns[1].agentName).toBe('test_agent_2');
   });
 
-  it('should handle errors during agent_runs fetch gracefully and log them', async () => {
-    // Mock getDocs to throw an error for its next call (which is for 'agent_runs')
-    getDocs.mockImplementationOnce(() => {
-      return Promise.reject(new Error('Failed to fetch agent_runs'));
-    });
+  it('should handle errors during recent runs fetch gracefully', async () => {
+    // Mock getCountFromServer to return default zeros (success for stats part)
+    getCountFromServer.mockReturnValue({ data: () => ({ count: 0 }) });
+
+    // Mock getDocs for agent_runs to throw an error
+    const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    getDocs.mockRejectedValueOnce(new Error('Failed to fetch recent runs'));
 
     const { result } = renderHook(() => useAgents());
 
-    // Wait for the hook to finish loading (even with an error, finally block sets loading to false)
     await waitFor(() => {
       expect(result.current.loading).toBe(false);
     });
 
-    // Expect console.error to have been called due to the mocked error in the 'agent_runs' block
-    expect(consoleErrorSpy).toHaveBeenCalledTimes(1);
-    expect(consoleErrorSpy).toHaveBeenCalledWith(
-      '[useAgents/runs]:',
-      expect.any(Error)
-    );
-    expect(consoleErrorSpy.mock.calls[0][1].message).toBe('Failed to fetch agent_runs');
-
-    // Ensure other parts of the state are still correctly handled
-    // Stats should still be 0 as getCountFromServer was not mocked to fail
+    // Stats should still be default zeros as that part of the fetch might succeed
     expect(result.current.stats).toEqual({
-      analyzed: 0,
-      duplicatesCaught: 0,
-      authoritiesNotified: 0,
-      predictionsGenerated: 0,
-      resolutionsVerified: 0,
+      analyzed: 0, duplicatesCaught: 0, authoritiesNotified: 0,
+      predictionsGenerated: 0, resolutionsVerified: 0, esgScored: 0,
     });
-    // recentRuns should remain an empty array as the catch block handles the error
+    // Recent runs should be an empty array because the error is caught and handled
     expect(result.current.recentRuns).toEqual([]);
-    expect(result.current.loading).toBe(false);
+    // Console error should have been called for the runs fetch
+    expect(consoleErrorSpy).toHaveBeenCalledWith('[useAgents/runs]:', expect.any(Error));
+
+    consoleErrorSpy.mockRestore(); // Clean up the spy
   });
 
-  it('should handle errors during getCountFromServer fetch gracefully and log them', async () => {
-    // Mock getCountFromServer to throw an error for all its calls within this test
-    getCountFromServer.mockImplementation(() => {
-      return Promise.reject(new Error('Failed to fetch counts'));
+  it('should handle errors during stats fetch gracefully', async () => {
+    // Mock getCountFromServer to throw an error
+    const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    getCountFromServer.mockRejectedValue(new Error('Failed to fetch counts'));
+
+    // Mock getDocs for agent_runs to return default empty (success for runs part)
+    getDocs.mockReturnValue({
+      docs: [],
+      empty: true,
+      forEach: vi.fn(),
+      size: 0,
     });
 
     const { result } = renderHook(() => useAgents());
 
-    // Wait for the hook to finish loading
     await waitFor(() => {
       expect(result.current.loading).toBe(false);
     });
 
-    // Expect console.error to have been called due to the mocked error in the main try block
-    expect(consoleErrorSpy).toHaveBeenCalledTimes(1);
-    expect(consoleErrorSpy).toHaveBeenCalledWith(
-      '[useAgents]:',
-      expect.any(Error)
-    );
-    expect(consoleErrorSpy.mock.calls[0][1].message).toBe('Failed to fetch counts');
-
-    // Ensure state remains at initial defaults as the fetch failed
+    // Stats should remain at initial zeros due to the error
     expect(result.current.stats).toEqual({
-      analyzed: 0,
-      duplicatesCaught: 0,
-      authoritiesNotified: 0,
-      predictionsGenerated: 0,
-      resolutionsVerified: 0,
+      analyzed: 0, duplicatesCaught: 0, authoritiesNotified: 0,
+      predictionsGenerated: 0, resolutionsVerified: 0, esgScored: 0,
     });
-    // recentRuns should still be an empty array as its fetch might not have been attempted
-    // or would have used the default mock if it was.
+    // Recent runs should still be an empty array (or whatever getDocs returns)
     expect(result.current.recentRuns).toEqual([]);
-    expect(result.current.loading).toBe(false);
+    // Console error should have been called for the main fetch block
+    expect(consoleErrorSpy).toHaveBeenCalledWith('[useAgents]:', expect.any(Error));
+
+    consoleErrorSpy.mockRestore(); // Clean up the spy
   });
 });

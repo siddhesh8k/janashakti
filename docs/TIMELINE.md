@@ -82,6 +82,7 @@ The differentiators — what makes JanaShakti more than a complaint box.
 - **Privacy-safe Excel Export** — `utils/exportToExcel.js`: allowlist sanitization, name masking, aggregate Summary sheet — on 4 dashboards.
 - **Gemini Voice Assistant** — `components/VoiceAssistant.jsx` + `utils/civicDataContext.js`: Web Speech STT/TTS, live PII-free civic context, English/Hindi, `callGeminiPlainText`.
 - **5th agent + extra screens** — `resolutionVerifier.js` (Agent 5), `NotificationsScreen`, `useNotifications`; Agent 5 wired into the Authority resolve flow.
+- **ESG & SDG Impact Intelligence** — `agents/esgScorer.js` (Agent 6 — ESG Impact Scorer): `scoreESGImpact()` + `generateCorporateESGReport()`. Once an issue is **Resolved**, Gemini scores it across Environmental / Social / Governance (overall = weighted **0.35 / 0.35 / 0.30**) and maps it to UN SDGs. Backed by `constants/esg.js` (`ISSUE_SDG_MAP`, `SDG_COLORS`, `ESG_WEIGHTS`, `IMPACT_ESTIMATES`, `ESG_GRADES`, `ESG_BADGES`) and components `ESGScoreCard` / `SDGBadge` / `CityESGCard`. Surfaced across `IssueDetail` (ESG score card + share), `AnalyticsDashboard` (new ESG tab), `ProfileScreen` (ESG impact + 5 badges), `AgentsShowcase` (Agent 6), `HomeScreen` (city ESG chip), and `AuthorityDashboard` (scores on resolve). `firestore.rules` updated so `esgScore` / `esgScoredAt` are authority fields; new-user docs seed ESG counters.
 - **Mock X page** for the demo.
 
 ---

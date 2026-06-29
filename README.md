@@ -10,7 +10,7 @@
 [![Firebase](https://img.shields.io/badge/Firebase-Auth%20%2B%20Firestore%20%2B%20Hosting-ffca28?logo=firebase&logoColor=black)](https://firebase.google.com)
 [![Gemini](https://img.shields.io/badge/Google%20Gemini-2.5%20Flash-4285F4?logo=google&logoColor=white)](https://ai.google.dev)
 [![Language](https://img.shields.io/badge/JSX-only%20·%20no%20TypeScript-16a34a)](#)
-[![Tests](https://img.shields.io/badge/tests-403%20passing-16a34a)](#-testing--ai-testing-pipeline)
+[![Tests](https://img.shields.io/badge/tests-401%20passing-16a34a)](#-testing--ai-testing-pipeline)
 
 **Report civic issues. Build community pressure. Hold authorities accountable.**
 
@@ -26,7 +26,7 @@
 
 It closes the loop that every Indian civic-complaint app leaves open: **after you report, nothing happens.** JanaShakti answers that with:
 
-- a **5-agent Google Gemini pipeline** that classifies the issue, drafts the complaint, detects duplicates, routes it to the right department, and predicts a resolution timeline;
+- a **5-agent Google Gemini pipeline** that classifies the issue, drafts the complaint, detects duplicates, routes it to the right department, and predicts a resolution timeline — plus a **6th, post-resolution agent** that scores each resolved issue's ESG (Environmental / Social / Governance) impact and maps it to the UN Sustainable Development Goals;
 - an **n8n automation layer** that emails the department and posts to social media;
 - a **time-based escalation engine** that climbs Ward Officer → Department Head → Commissioner → Media at 7 / 14 / 30 days;
 - a **transparency layer** that ranks elected representatives by their real resolution rate, equips journalists with story-ready feeds, and lets companies/colleges adopt civic zones.
@@ -108,13 +108,20 @@ Built **end-to-end on Google's stack** (Gemini · Firebase · Google Maps) with 
 
 **🏆 Civic Gamification**
 - Civic score (6 point actions)
-- 9 badges, 5 levels, daily streaks (+2/day)
+- 9 badges (+5 ESG badges), 5 levels, daily streaks (+2/day)
 
 **🎉 Resolution & Celebration**
 - Authority dashboard with status management
 - Resolution photo upload + AI verification
 - Confetti celebration + reporter reward (+25)
 - Before/After slider
+
+**🌱 ESG / SDG Impact Scoring**
+- Agent 6 scores each resolved issue on Environmental / Social / Governance (each /10) + weighted overall
+- Maps issues to UN Sustainable Development Goals (`ISSUE_SDG_MAP`)
+- City ESG grade, SDG contributions & rankings in the Analytics ESG tab
+- ESG impact metrics + contributed SDGs on profiles
+- SEBI-BRSR-style corporate ESG reports
 
 **🚀 Unique Differentiators**
 - **Corporate / College zone adoption** + AI CSR reports + LinkedIn posts
@@ -155,6 +162,7 @@ flowchart LR
 | **3 · Authority Router** | `agents/authorityRouter.js` | text + n8n | department, officer, email subject, urgency, SLA, escalation path |
 | **4 · Resolution Predictor** | `agents/resolutionPredictor.js` | text | priority score, predicted days, escalation risk, recommendation, factors |
 | **5 · Resolution Verifier** | `agents/resolutionVerifier.js` | Vision | is the fix genuine & resolved? |
+| **6 · ESG Impact Scorer** | `agents/esgScorer.js` | text | post-resolution ESG score across E/S/G + UN SDG mapping |
 
 **Beyond the agents, Gemini also powers:** RTI applications, press releases, CSR reports, city insights, social captions, the voice assistant, and the 3 AI testing agents.
 **Model fallback chain:** `gemini-2.5-flash → gemini-2.5-flash-lite → gemini-2.0-flash` (falls through on 404/429/503).
@@ -407,7 +415,7 @@ flowchart LR
 2. **Test Analyzer** — runs the suite, classifies failures (`MOCK_ISSUE / IMPORT_ERROR / LOGIC_BUG / TEST_ISSUE`) + health note.
 3. **Report Generator** — runs suite + coverage, Gemini health/risk assessment → branded HTML report.
 
-> **Latest run:** **403 tests passing (100%)** across 51 files (17 deterministic + 34 AI-generated) at ~47% line / 71% branch coverage. Testing-agent models: `gemini-2.5-flash → gemini-2.5-flash-lite → gemini-2.0-flash-lite`.
+> **Latest run:** **401 tests passing (100%)** across 51 files (17 deterministic + 34 AI-generated) at ~47% line / 70% branch coverage. Testing-agent models: `gemini-2.5-flash → gemini-2.5-flash-lite → gemini-2.0-flash-lite`.
 
 ---
 
