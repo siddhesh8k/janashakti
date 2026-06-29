@@ -30,6 +30,8 @@ import ContributorSection from '../components/collaboration/ContributorSection';
 import ActivityTimeline from '../components/collaboration/ActivityTimeline';
 import EvidenceUploader from '../components/collaboration/EvidenceUploader';
 import CommunityVerification from '../components/collaboration/CommunityVerification';
+import EvidenceGallery from '../components/collaboration/EvidenceGallery';
+import { useIssueEvidence } from '../hooks/useIssueEvidence';
 import { claimCloseReward, markNeedsVerification, isContributor } from '../utils/collaboration';
 import LoadingSkeleton from '../components/LoadingSkeleton';
 import ESGScoreCard from '../components/ESGScoreCard';
@@ -57,6 +59,7 @@ export default function IssueDetail() {
   const esgScoredRef = useRef(false);
   const [showESGModal, setShowESGModal] = useState(false);
   const { events: timelineEvents, loading: timelineLoading } = useIssueTimeline(id);
+  const { items: evidenceItems } = useIssueEvidence(id);
   const [refreshingPred, setRefreshingPred] = useState(false);
 
   useEffect(() => {
@@ -731,6 +734,7 @@ export default function IssueDetail() {
 
         <CommunityVerification issue={issue} />
         <EvidenceUploader issue={issue} events={timelineEvents} />
+        <EvidenceGallery items={evidenceItems} />
         <ActivityTimeline events={timelineEvents} loading={timelineLoading} />
 
         {/* Pressure Meter */}

@@ -9,6 +9,7 @@ import EmptyState from '../components/EmptyState';
 import LoadingSkeleton from '../components/LoadingSkeleton';
 import ShowMore from '../components/ShowMore';
 import Avatar from '../components/Avatar';
+import ReputationBadge from '../components/collaboration/ReputationBadge';
 import { useToast } from '../components/ToastProvider';
 import { usePagination } from '../hooks/usePagination';
 import { levelFor } from '../constants/issueTypes';
@@ -101,8 +102,8 @@ function CitizenRow({ user, rank, isMe }) {
         </div>
       </div>
       <div style={{ textAlign: 'right', flexShrink: 0 }}>
-        <div style={{ fontSize: '18px', fontWeight: '700', color: '#00d4ff' }}>
-          {user.civicScore || 0}
+        <div style={{ fontSize: '18px', fontWeight: '700' }}>
+          <ReputationBadge score={user.civicScore || 0} size={16} />
         </div>
         <div style={{ fontSize: '11px', color: '#4a6280' }}>
           {user.issuesReported || 0} issues

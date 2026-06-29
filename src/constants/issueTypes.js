@@ -91,7 +91,7 @@ export const BADGE_CONDITIONS = [
   { id: 'road_guardian',     name: 'Road Guardian',     condition: (p) => (p.issuesJoined || 0) >= 5 },
   { id: 'evidence_expert',   name: 'Evidence Expert',   condition: (p) => (p.evidenceUploaded || 0) >= 10 },
   { id: 'community_builder', name: 'Community Builder', condition: (p) => (p.issuesJoined || 0) >= 10 },
-  { id: 'top_verifier',      name: 'Top Verifier',      condition: (p) => (p.verificationAccuracy || 0) >= 0.8 && (p.issuesJoined || 0) >= 5 },
+  { id: 'top_verifier',      name: 'Top Verifier',      condition: (p) => (p.verificationsGiven || 0) >= 10 },
 ];
 
 export const ESCALATION_LEVELS = [
