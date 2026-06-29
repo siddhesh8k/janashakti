@@ -12,6 +12,7 @@ import { getVideoDuration, extractVideoFrame, MAX_VIDEO_DURATION } from '../util
 import { isReportBlocked, validateReport, MESSAGES } from '../utils/validation';
 import { analyzeIssue } from '../agents/issueAnalyzer';
 import { orchestrateIssue } from '../agents/orchestrator';
+import { recordIssueCreated } from '../utils/collaboration';
 import { triggerN8N } from '../utils/n8n';
 import { shouldAutoPost } from '../utils/social';
 import { buildComplaintLetter } from '../utils/complaint';
@@ -359,6 +360,8 @@ export default function ReportScreen() {
       // 4) Success — routing & prediction already ran and persisted inside the
       //    orchestrated pipeline above; just confirm and advance the user.
       setToast({ msg: `+10 pts! Complaint ${complaintId} filed`, type: 'success' });
+      // Seed the collaboration timeline (fire-and-forget; never blocks the flow).
+      recordIssueCreated(docId, user, `reported a ${issueData.issueType}`);
       setTimeout(() => navigate('/map'), 1800);
 
       // Best-effort, fire-and-forget (never awaited — must not stall the flow)

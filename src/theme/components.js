@@ -130,5 +130,6 @@ export const statusColor = (status) => ({
   'Reported':    '#475569',
   'Verified':    '#3b82f6',
   'In Progress': '#f97316',
+  'Needs Verification': '#a855f7',
   'Resolved':    '#16a34a',
 }[status] || '#475569');

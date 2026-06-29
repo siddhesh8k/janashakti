@@ -476,7 +476,7 @@ export default function Leaderboard() {
                   <div style={{
                     fontSize: '11px', fontWeight: '500', color: '#4a6280',
                     letterSpacing: '0.7px', textTransform: 'uppercase', marginBottom: '4px',
-                  }}>Civic Score</div>
+                  }}>Community Reputation</div>
                   <div style={{ fontSize: '28px', fontWeight: '700', color: '#16a34a' }}>{myScore}</div>
                 </div>
               </div>

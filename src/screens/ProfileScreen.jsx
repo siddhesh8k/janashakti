@@ -4,7 +4,7 @@ import { doc, setDoc, collection, query, where, getCountFromServer } from 'fireb
 import { Shield, ShieldCheck, Star, Award, Lock, LogOut, Eye, Trophy, Zap, Flame,
          Building2, GraduationCap, Users, Pencil,
          Twitter, MessageCircle, Linkedin, Facebook, Send,
-         Droplets, Leaf, Scale, Target } from 'lucide-react';
+         Droplets, Leaf, Scale, Target, UserCheck, Route, Paperclip, CheckCircle } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import { useUser } from '../hooks/useUser';
 import { useIssues } from '../hooks/useIssues';
@@ -27,6 +27,9 @@ const BADGE_ICONS = {
   first_step: Zap, keen_eye: Eye, guardian: Shield, community_star: Star,
   streak_hero: Trophy, social_voice: Award, verifier: Eye,
   city_champion: Shield, legend: Star, civic_authority: ShieldCheck,
+  // Collaboration-layer badges
+  neighborhood_hero: UserCheck, road_guardian: Route, evidence_expert: Paperclip,
+  community_builder: Users, top_verifier: CheckCircle,
 };
 
 // ESG badge icon strings (from constants/esg) → Lucide components.
@@ -221,7 +224,7 @@ export default function ProfileScreen() {
             {profile?.civicScore || 0}
           </div>
           <div style={{ fontSize: '11px', color: '#4a6280', textTransform: 'uppercase',
-                        letterSpacing: '0.7px', marginBottom: '12px' }}>Civic Score</div>
+                        letterSpacing: '0.7px', marginBottom: '12px' }}>Community Reputation</div>
           <div style={{ height: '6px', backgroundColor: '#1a2f4a', borderRadius: '3px',
                         overflow: 'hidden', marginBottom: '8px' }}>
             <div style={{ width: `${progressPercent}%`, height: '100%',
@@ -262,6 +265,13 @@ export default function ProfileScreen() {
           <StatsCard label="Reported" value={profile?.issuesReported || 0} color="#00d4ff" />
           <StatsCard label="Verified" value={profile?.issuesVerified || 0} color="#3b82f6" />
           <StatsCard label="Resolved" value={profile?.issuesResolved || 0} color="#16a34a" />
+        </div>
+
+        {/* Collaboration stats row */}
+        <div style={{ display: 'flex', gap: '8px', marginBottom: '16px' }}>
+          <StatsCard label="Joined" value={profile?.issuesJoined || 0} color="#00d4ff" />
+          <StatsCard label="Evidence" value={profile?.evidenceUploaded || 0} color="#a855f7" />
+          <StatsCard label="Verify Votes" value={profile?.verificationsGiven || 0} color="#16a34a" />
         </div>
 
         {/* Affiliation */}

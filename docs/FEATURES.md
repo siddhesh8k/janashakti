@@ -179,6 +179,16 @@ Features no other civic platform has shipped together.
 
 ---
 
+### Civic Collaboration Layer ("GitHub for civic issues")
+- **Join Issue** — any signed-in user joins an issue as a civic role (Resident / Volunteer / NGO / Student / Social Worker / Municipal Employee) → a public contributor (`utils/collaboration.js` → `joinIssue`).
+- **Activity timeline** — immutable, append-only `issues/{id}/timeline` subcollection renders a GitHub-style log (created → joined → evidence → update → resolution-requested → verified → resolved / reopened).
+- **Evidence** — contributors upload photos/receipts/RTI responses (compressed **base64** in `issues/{id}/evidence`, no Cloud Storage); a **Gemini-Vision relevance gate** awards points only for relevant images, capped at 5/issue.
+- **Community verification** — a contributor marks an issue **Needs Verification**; nearby users vote Yes/Partial/No, **gated to within 2 km (live GPS)** + a **24h-since-join** rule; at the threshold (≥5 votes, ≥70% positive) it flips to **Resolved** (or reopens).
+- **Community Reputation** — extends `civicScore`: +5 join, +15 accepted evidence, +10 update, +5 verify vote, +25 on-close for **active** contributors (**claim-on-view**, no cross-user writes), with penalties for spam/false evidence. New badges: Neighborhood Hero, Road Guardian, Evidence Expert, Community Builder, Top Verifier.
+- **Lead moderation** — the reporter (and Civic-Authority holders) can open/close joining and remove contributors.
+- **Anti-abuse** — Vision evidence check, 5-evidence cap, 24h-to-vote, 2 km geo-gate, reporter-can't-double-earn. (Phone/device-fingerprint defenses are future work.)
+- **Additive & free-plan** — layered on the existing app (representatives/authority/ESG untouched); base64 + subcollections, Lucide icons, Gemini Flash.
+
 ## 2.4 Gamification System
 
 ### Civic Score points (`CIVIC_SCORE_POINTS`)

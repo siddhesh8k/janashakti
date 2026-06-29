@@ -78,13 +78,15 @@ describe('Issue Types & Constants', () => {
     expect(SEVERITY_LEVELS).toEqual(['Low', 'Medium', 'High', 'Critical']);
   });
 
-  it('has 4 status pipeline stages', () => {
-    expect(STATUS_PIPELINE).toEqual(['Reported', 'Verified', 'In Progress', 'Resolved']);
+  it('has the full status pipeline (incl. community Needs Verification)', () => {
+    expect(STATUS_PIPELINE).toEqual(['Reported', 'Verified', 'In Progress', 'Needs Verification', 'Resolved']);
   });
 
-  it('civic score points are positive numbers', () => {
-    Object.values(CIVIC_SCORE_POINTS).forEach(pts => {
-      expect(pts).toBeGreaterThan(0);
+  it('civic score points are numbers (rewards positive; penalties negative)', () => {
+    Object.entries(CIVIC_SCORE_POINTS).forEach(([key, pts]) => {
+      expect(typeof pts).toBe('number');
+      if (key.startsWith('PENALTY_')) expect(pts).toBeLessThan(0);
+      else expect(pts).toBeGreaterThan(0);
     });
   });
 

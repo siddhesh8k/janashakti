@@ -21,7 +21,14 @@ service cloud.firestore {
     function communityFields() {
       return ['confirmations', 'confirmedBy', 'pressureScore', 'socialQueued',
               'escalationLevel', 'wallOfShame', 'updatedAt',
-              'storyClaimedBy', 'storyClaimedAt'];
+              'storyClaimedBy', 'storyClaimedAt',
+              // ── collaboration layer: any signed-in user may join / contribute / verify ──
+              // MVP trust model: the community can advance status (→ Needs Verification, and
+              // → Resolved/In Progress at the vote threshold) because rules can't count votes;
+              // the append-only timeline + community flagging are the deterrents. Production
+              // should gate the threshold flip via a Cloud Function.
+              'contributors', 'contributedUids', 'communityVerification',
+              'collaborationOpen', 'removedUids', 'closeRewardedBy', 'status', 'resolvedAt'];
     }
 
     // Trust-sensitive fields (status pipeline + resolution proof + agent outputs)
@@ -73,6 +80,23 @@ service cloud.firestore {
         )
       );
       allow delete: if isSignedIn() && isOwner(resource.data.userId);
+
+      // Append-only activity timeline (collaboration). Public read; a signed-in user may add
+      // their OWN events; never editable/deletable — an immutable audit log.
+      match /timeline/{eventId} {
+        allow read: if true;
+        allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
+        allow update, delete: if false;
+      }
+      // Contributor-uploaded evidence (inline base64). Public read; creator-owned on create;
+      // only the `verified` flag may be toggled later; never deleted (transparency).
+      match /evidence/{evidenceId} {
+        allow read: if true;
+        allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
+        allow update: if isSignedIn()
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['verified']);
+        allow delete: if false;
+      }
     }
 
     // Private profile — owner only (holds email, mobile, etc.)

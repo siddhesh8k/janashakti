@@ -25,6 +25,12 @@ import { statusColor } from '../theme/components';
 import { STATUS_PIPELINE, CIVIC_SCORE_POINTS, ESCALATION_LEVELS } from '../constants/issueTypes';
 import { bumpPublicProfile } from '../utils/publicProfile';
 import { confirmIssue } from '../utils/confirmIssue';
+import { useIssueTimeline } from '../hooks/useIssueTimeline';
+import ContributorSection from '../components/collaboration/ContributorSection';
+import ActivityTimeline from '../components/collaboration/ActivityTimeline';
+import EvidenceUploader from '../components/collaboration/EvidenceUploader';
+import CommunityVerification from '../components/collaboration/CommunityVerification';
+import { claimCloseReward, markNeedsVerification, isContributor } from '../utils/collaboration';
 import LoadingSkeleton from '../components/LoadingSkeleton';
 import ESGScoreCard from '../components/ESGScoreCard';
 import SDGBadge from '../components/SDGBadge';
@@ -49,6 +55,7 @@ export default function IssueDetail() {
   const awardedRef = useRef(false);
   const esgScoredRef = useRef(false);
   const [showESGModal, setShowESGModal] = useState(false);
+  const { events: timelineEvents, loading: timelineLoading } = useIssueTimeline(id);
 
   useEffect(() => {
     if (!id) return;
@@ -86,6 +93,23 @@ export default function IssueDetail() {
       await bumpPublicProfile(uid, { civicScore: CIVIC_SCORE_POINTS.ISSUE_RESOLVED });
       await updateDoc(doc(db, 'issues', data.id), { resolutionCelebrated: true });
     } catch (err) { console.error('[awardResolution]:', err); }
+  };
+
+  // Claim-on-view: an active contributor self-awards the close reward once when viewing a
+  // Resolved issue (Firestore rules forbid the resolver writing other users' reputation).
+  useEffect(() => {
+    if (issue?.status === 'Resolved' && auth.currentUser) {
+      claimCloseReward(issue.id, auth.currentUser, issue);
+    }
+  }, [issue?.status, issue?.id]);
+
+  // A contributor (or the reporter) marks the issue resolved → opens community verification.
+  const handleMarkResolved = async () => {
+    if (!auth.currentUser) { setToast({ msg: 'Sign in first', type: 'error' }); return; }
+    const res = await markNeedsVerification(id, auth.currentUser);
+    setToast(res?.ok
+      ? { msg: 'Marked resolved — the community will verify', type: 'success' }
+      : { msg: res?.error || 'Could not update', type: 'error' });
   };
 
   // Auto-escalation: check once when the issue loads.
@@ -652,6 +676,24 @@ export default function IssueDetail() {
             </div>
           </div>
         )}
+
+        {/* ── Civic collaboration layer ── */}
+        <ContributorSection issue={issue} events={timelineEvents} />
+
+        {auth.currentUser && issue.status !== 'Resolved' && issue.status !== 'Needs Verification'
+          && (issue.userId === auth.currentUser.uid || isContributor(issue, auth.currentUser.uid)) && (
+          <button onClick={handleMarkResolved} style={{
+            width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
+            backgroundColor: 'transparent', color: '#16a34a', border: '1px solid #16a34a',
+            borderRadius: '10px', padding: '12px', fontSize: '14px', fontWeight: '600',
+            cursor: 'pointer', marginBottom: '10px' }}>
+            <CheckCircle size={16} strokeWidth={1.5} /> Mark as resolved — request verification
+          </button>
+        )}
+
+        <CommunityVerification issue={issue} />
+        <EvidenceUploader issue={issue} events={timelineEvents} />
+        <ActivityTimeline events={timelineEvents} loading={timelineLoading} />
 
         {/* Pressure Meter */}
         <div style={{ backgroundColor: '#0d1b2e', borderRadius: '14px',

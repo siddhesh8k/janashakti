@@ -69,6 +69,11 @@ const createUserProfile = async (user, extra = {}) => {
         issuesVerified: 0,
         issuesResolved: 0,
         issuesShared: 0,
+        // Collaboration-layer reputation counters
+        issuesJoined: 0,
+        evidenceUploaded: 0,
+        verificationsGiven: 0,
+        verificationAccuracy: 0,
         esgIssuesResolved: 0,
         totalPeopleImpacted: 0,
         sdgsContributed: [],

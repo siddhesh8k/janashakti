@@ -25,7 +25,14 @@ export const ISSUE_TYPES = [
 
 export const SEVERITY_LEVELS = ['Low', 'Medium', 'High', 'Critical'];
 
-export const STATUS_PIPELINE = ['Reported', 'Verified', 'In Progress', 'Resolved'];
+// Status pipeline. "Needs Verification" sits before Resolved — set when a contributor
+// marks an issue resolved; the community then verifies it (collaboration layer).
+export const STATUS_PIPELINE = ['Reported', 'Verified', 'In Progress', 'Needs Verification', 'Resolved'];
+
+// Civic roles a contributor can join an issue as (collaboration layer — neutral, civic).
+export const COLLAB_ROLES = [
+  'Resident', 'Volunteer', 'NGO Member', 'Student', 'Social Worker', 'Municipal Employee', 'Other',
+];
 
 export const CIVIC_SCORE_POINTS = {
   REPORT_ISSUE:        10,
@@ -36,6 +43,15 @@ export const CIVIC_SCORE_POINTS = {
   DAILY_STREAK:         2,
   AUTHORITY_ACTION:     5,   // authority advances a status (Verify / In Progress)
   AUTHORITY_RESOLVE:   15,   // authority resolves an issue (verified fix photo)
+  // ── Collaboration layer ──
+  JOIN_ISSUE:           5,   // join an issue as a contributor
+  POST_EVIDENCE:       15,   // upload evidence accepted by the Gemini-Vision relevance check
+  POST_UPDATE:         10,   // post a helpful progress update
+  CORRECT_VOTE:         5,   // verification vote that matched the final outcome
+  CONTRIBUTOR_RESOLVED:25,   // active contributor reward when the issue closes
+  PENALTY_SPAM:       -10,
+  PENALTY_FALSE_EVIDENCE:  -15,
+  PENALTY_FAKE_RESOLUTION: -20,
 };
 
 // Civic points that unlock the "Civic Authority" badge — the gamification gate that
@@ -70,6 +86,12 @@ export const BADGE_CONDITIONS = [
   { id: 'legend',           name: 'Legend',             condition: (p) => p.civicScore >= 500 },
   // Unlocking this badge grants authority powers (verify / resolve) — see AUTHORITY_THRESHOLD.
   { id: 'civic_authority',  name: 'Civic Authority',   condition: (p) => (p.civicScore || 0) >= AUTHORITY_THRESHOLD },
+  // ── Collaboration layer badges ──
+  { id: 'neighborhood_hero', name: 'Neighborhood Hero', condition: (p) => (p.issuesResolved || 0) >= 1 },
+  { id: 'road_guardian',     name: 'Road Guardian',     condition: (p) => (p.issuesJoined || 0) >= 5 },
+  { id: 'evidence_expert',   name: 'Evidence Expert',   condition: (p) => (p.evidenceUploaded || 0) >= 10 },
+  { id: 'community_builder', name: 'Community Builder', condition: (p) => (p.issuesJoined || 0) >= 10 },
+  { id: 'top_verifier',      name: 'Top Verifier',      condition: (p) => (p.verificationAccuracy || 0) >= 0.8 && (p.issuesJoined || 0) >= 5 },
 ];
 
 export const ESCALATION_LEVELS = [
