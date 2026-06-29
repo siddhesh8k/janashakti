@@ -1,9 +1,10 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { doc, updateDoc, setDoc, collection, query, where, getCountFromServer } from 'firebase/firestore';
 import { Shield, Star, Award, Lock, LogOut, Eye, Trophy, Zap, Flame,
          Building2, GraduationCap, Users, Pencil,
-         Twitter, MessageCircle, Linkedin, Facebook, Send } from 'lucide-react';
+         Twitter, MessageCircle, Linkedin, Facebook, Send,
+         Droplets, Leaf, Scale, Target } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import { useUser } from '../hooks/useUser';
 import { useIssues } from '../hooks/useIssues';
@@ -19,11 +20,25 @@ import LoadingSkeleton from '../components/LoadingSkeleton';
 import EmptyState from '../components/EmptyState';
 import { useToast } from '../components/ToastProvider';
 import { BADGE_CONDITIONS, LEVEL_THRESHOLDS } from '../constants/issueTypes';
+import { ESG_BADGES, IMPACT_ESTIMATES, ISSUE_SDG_MAP } from '../constants/esg';
+import SDGBadge from '../components/SDGBadge';
 
 const BADGE_ICONS = {
   first_step: Zap, keen_eye: Eye, guardian: Shield, community_star: Star,
   streak_hero: Trophy, social_voice: Award, verifier: Eye,
   city_champion: Shield, legend: Star,
+};
+
+// ESG badge icon strings (from constants/esg) → Lucide components.
+const ESG_BADGE_ICONS = { Droplets, Leaf, Scale, Users, Target };
+
+// Per-badge progress accessors so a locked badge can show "X more to unlock".
+const ESG_BADGE_PROGRESS = {
+  water_warrior:   { cur: (p) => p?.issuesByType?.['Water Leakage'] || 0, target: 3 },
+  green_guardian:  { cur: (p) => p?.esgIssuesResolved || 0,               target: 5 },
+  justice_seeker:  { cur: (p) => p?.rtiFiled || 0,                        target: 1 },
+  social_champion: { cur: (p) => p?.totalPeopleImpacted || 0,             target: 100 },
+  sdg_contributor: { cur: (p) => (p?.sdgsContributed || []).length,       target: 3 },
 };
 
 export default function ProfileScreen() {
@@ -34,6 +49,26 @@ export default function ProfileScreen() {
   const { issues, loading: issuesLoading } = useIssues({
     userId: user?.uid, limitCount: 5,
   });
+  // A wider slice of the user's own issues — used only to total ESG impact (not rendered as a list).
+  const { issues: esgIssues } = useIssues({ userId: user?.uid, limitCount: 100 });
+  const esgStats = useMemo(() => {
+    const resolved = esgIssues.filter((i) => i.status === 'Resolved');
+    const countOf = (type) => resolved.filter((i) => i.issueType === type).length;
+    const water = IMPACT_ESTIMATES['Water Leakage'];
+    const waste = IMPACT_ESTIMATES.Garbage;
+    const peopleImpacted = resolved.reduce((sum, i) =>
+      sum + ((IMPACT_ESTIMATES[i.issueType] || IMPACT_ESTIMATES.Other).sValue || 0), 0);
+    const sdgs = new Set();
+    resolved.forEach((i) => {
+      (ISSUE_SDG_MAP[i.issueType] || ISSUE_SDG_MAP.Other).sdgs.forEach((s) => sdgs.add(s));
+    });
+    return {
+      waterSaved: countOf('Water Leakage') * water.eValue, waterUnit: water.eUnit,
+      wasteAddressed: countOf('Garbage') * waste.eValue,   wasteUnit: waste.eUnit,
+      peopleImpacted,
+      sdgs: Array.from(sdgs),
+    };
+  }, [esgIssues]);
   const [signingOut, setSigningOut] = useState(false);
 
   // Self-heal the "Reported" count from the real issue docs. The stored counter can
@@ -305,6 +340,79 @@ export default function ProfileScreen() {
                 </div>
               );
             })}
+          </div>
+        </div>
+
+        {/* ESG Impact */}
+        <div style={{ marginBottom: '16px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px' }}>
+            <Target size={16} color="#00d4ff" strokeWidth={1.5} />
+            <span style={{ fontSize: '15px', fontWeight: '700', color: '#f0f6ff' }}>ESG Impact</span>
+          </div>
+          {esgStats.sdgs.length > 0 && (
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: '10px' }}>
+              {esgStats.sdgs.map((s) => <SDGBadge key={s} sdgId={s} size="sm" />)}
+            </div>
+          )}
+
+          {/* Impact metrics */}
+          <div style={{ backgroundColor: '#0d1b2e', borderRadius: '14px',
+                        border: '0.5px solid #1a2f4a', padding: '14px' }}>
+            {[
+              { icon: Droplets, color: '#26BDE2', label: 'Water Saved',
+                value: `${esgStats.waterSaved.toLocaleString()} ${esgStats.waterUnit}` },
+              { icon: Leaf, color: '#4C9F38', label: 'Waste Addressed',
+                value: `${esgStats.wasteAddressed.toLocaleString()} ${esgStats.wasteUnit}` },
+              { icon: Users, color: '#DD1367', label: 'People Impacted',
+                value: esgStats.peopleImpacted.toLocaleString() },
+            ].map((m, idx) => {
+              const Mi = m.icon;
+              return (
+                <div key={m.label} style={{ display: 'flex', alignItems: 'center', gap: '10px',
+                              marginTop: idx === 0 ? 0 : '12px' }}>
+                  <Mi size={16} color={m.color} strokeWidth={1.5} style={{ flexShrink: 0 }} />
+                  <span style={{ fontSize: '13px', color: '#94a3b8' }}>{m.label}</span>
+                  <span style={{ marginLeft: 'auto', fontSize: '13px', fontWeight: '700', color: '#f0f6ff' }}>
+                    {m.value}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* ESG badges */}
+          <div style={{ marginTop: '16px' }}>
+            <span style={{ fontSize: '11px', fontWeight: '500', color: '#4a6280',
+                           textTransform: 'uppercase', letterSpacing: '0.7px' }}>ESG Badges</span>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)',
+                          gap: '8px', marginTop: '10px' }}>
+              {ESG_BADGES.map((badge) => {
+                const unlocked = profile ? badge.condition(profile) : false;
+                const Icon = ESG_BADGE_ICONS[badge.icon] || Award;
+                const prog = ESG_BADGE_PROGRESS[badge.id];
+                const remaining = prog ? Math.max(0, prog.target - prog.cur(profile)) : 0;
+                return (
+                  <div key={badge.id} style={{
+                    backgroundColor: '#0d1b2e', borderRadius: '10px',
+                    border: '0.5px solid #1a2f4a', padding: '12px',
+                    textAlign: 'center', opacity: unlocked ? 1 : 0.5,
+                  }}>
+                    {unlocked
+                      ? <Icon size={24} color={badge.color} strokeWidth={1.5} />
+                      : <Lock size={24} color="#4a6280" strokeWidth={1.5} />}
+                    <div style={{ fontSize: '10px', color: unlocked ? '#f0f6ff' : '#4a6280',
+                                  marginTop: '4px', fontWeight: '500' }}>
+                      {badge.name}
+                    </div>
+                    {!unlocked && prog && (
+                      <div style={{ fontSize: '9px', color: '#4a6280', marginTop: '2px' }}>
+                        {remaining} more to unlock
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
           </div>
         </div>
 

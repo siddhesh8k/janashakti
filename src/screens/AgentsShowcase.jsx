@@ -1,6 +1,6 @@
 import { useState, Fragment } from 'react';
 import { Bot, Search, MailCheck, BarChart3, ChevronRight, ChevronDown,
-         Zap, CheckCircle, AlertTriangle, Clock, ShieldCheck } from 'lucide-react';
+         Zap, CheckCircle, AlertTriangle, Clock, ShieldCheck, Leaf } from 'lucide-react';
 import { useAgents } from '../hooks/useAgents';
 import TopNav from '../components/TopNav';
 import StatsCard from '../components/StatsCard';
@@ -32,11 +32,18 @@ const AGENTS = [
     desc: 'When an authority uploads a fix photo, Gemini vision checks it genuinely shows the issue resolved — flagging fake or unrelated photos instead of trusting them blindly.',
     statKey: 'resolutionsVerified',
   },
+  {
+    num: 6, key: 'esg_scorer', icon: Leaf, name: 'ESG Impact Scorer', color: '#4C9F38',
+    desc: 'After every issue is resolved, Gemini 2.5 Flash analyzes the civic impact and generates an ESG score across Environmental, Social, and Governance dimensions. Issues are mapped to UN Sustainable Development Goals automatically.',
+    statKey: 'esgScored',
+    tech: 'Google AI Studio · Gemini 2.5 Flash · UN SDG Framework',
+    statText: 'issues ESG scored',
+  },
 ];
 
 const AGENT_ICON = { analyzer: Bot, detector: Search, router: MailCheck, predictor: BarChart3 };
 const AGENT_COLOR = { analyzer: '#00d4ff', detector: '#3b82f6', router: '#16a34a', predictor: '#f97316' };
-const FLOW = ['Photo', 'Analyzer', 'Detector', 'Router', 'Predictor', 'Saved'];
+const FLOW = ['Photo', 'Analyzer', 'Detector', 'Router', 'Predictor', 'Saved', 'Resolved', 'ESG Score', 'SDG Tagged'];
 
 const timeAgo = (ts) => {
   if (!ts) return '';
@@ -107,12 +114,27 @@ export default function AgentsShowcase() {
       <TopNav title="AI Intelligence" showBack />
       <div style={{ padding: '16px' }}>
 
+        {/* ESG Intelligence summary */}
+        <div style={{
+          backgroundColor: '#16a34a20', borderRadius: '14px',
+          border: '0.5px solid #16a34a40', padding: '16px', marginBottom: '16px',
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
+            <Leaf size={18} color="#4C9F38" strokeWidth={1.5} />
+            <span style={{ fontSize: '15px', fontWeight: '700', color: '#f0f6ff' }}>ESG Intelligence Active</span>
+          </div>
+          <p style={{ fontSize: '13px', color: '#94a3b8', lineHeight: 1.6 }}>
+            Every resolved issue generates verified ESG scores aligned with UN Sustainable Development Goals.
+          </p>
+        </div>
+
         {/* Live stats */}
         <div style={{ display: 'flex', gap: '6px', marginBottom: '20px' }}>
           <StatsCard label="Analyzed" value={stats.analyzed} color="#00d4ff" />
           <StatsCard label="Dupes" value={stats.duplicatesCaught} color="#3b82f6" />
           <StatsCard label="Routed" value={stats.authoritiesNotified} color="#16a34a" />
           <StatsCard label="Predicted" value={stats.predictionsGenerated} color="#f97316" />
+          <StatsCard label="ESG Scored" value={stats.esgScored} color="#4C9F38" />
         </div>
 
         {/* Agent Cards — each shows its latest live reasoning */}
@@ -175,10 +197,10 @@ export default function AgentsShowcase() {
               <div style={{ display: 'flex', justifyContent: 'space-between',
                             alignItems: 'center' }}>
                 <span style={{ fontSize: '11px', color: '#4a6280' }}>
-                  Powered by: Gemini 2.5 Flash + Firebase
+                  {agent.tech || 'Powered by: Gemini 2.5 Flash + Firebase'}
                 </span>
                 <span style={{ fontSize: '13px', fontWeight: '700', color: agent.color }}>
-                  {stats[agent.statKey]} runs
+                  {stats[agent.statKey]} {agent.statText || 'runs'}
                 </span>
               </div>
             </div>
@@ -255,18 +277,20 @@ export default function AgentsShowcase() {
             AGENT PIPELINE
           </span>
           <div style={{
-            display: 'flex', alignItems: 'center', width: '100%', gap: '4px', marginTop: '12px',
+            display: 'flex', alignItems: 'center', flexWrap: 'wrap',
+            width: '100%', gap: '4px', rowGap: '8px', marginTop: '12px',
           }}>
             {FLOW.map((step, i) => (
               <Fragment key={step}>
                 <div title={step} style={{
-                  flex: 1, minWidth: 0, textAlign: 'center',
+                  flex: 1, minWidth: '54px',
                   backgroundColor: '#112035', border: '0.5px solid #00d4ff40',
                   borderRadius: '8px', padding: '8px 4px',
                   fontSize: '11px', fontWeight: '600', color: '#00d4ff',
-                  whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '3px',
                 }}>
-                  {step}
+                  {step === 'ESG Score' && <Leaf size={11} color="#00d4ff" strokeWidth={1.5} style={{ flexShrink: 0 }} />}
+                  <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{step}</span>
                 </div>
                 {i < FLOW.length - 1 && (
                   <ChevronRight size={13} color="#00d4ff40" strokeWidth={1.5} style={{ flexShrink: 0 }} />

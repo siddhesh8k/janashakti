@@ -1,7 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Bot, Search, MailCheck, BarChart3, AlertTriangle, ChevronRight,
-         Eye, LogIn, UserPlus, Shield, ShieldCheck, Trophy, Newspaper } from 'lucide-react';
+         Eye, LogIn, UserPlus, Shield, ShieldCheck, Trophy, Newspaper,
+         Globe, TrendingUp, TrendingDown } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import { useIssues } from '../hooks/useIssues';
 import { useUser } from '../hooks/useUser';
@@ -13,6 +14,10 @@ import StatsCard from '../components/StatsCard';
 import LoadingSkeleton from '../components/LoadingSkeleton';
 import EmptyState from '../components/EmptyState';
 import { useToast } from '../components/ToastProvider';
+import { ESG_GRADES } from '../constants/esg';
+
+// Highest grade whose threshold the score clears (ESG_GRADES is sorted desc by min).
+const gradeFor = (score) => ESG_GRADES.find((g) => score >= g.min) || ESG_GRADES[ESG_GRADES.length - 1];
 
 export default function HomeScreen() {
   const navigate = useNavigate();
@@ -20,6 +25,29 @@ export default function HomeScreen() {
   const { profile } = useUser(user?.uid);
   const { issues, loading: issuesLoading } = useIssues({ limitCount: 10 });
   const { stats } = useAgents();
+  // A wider recent slice used only to compute the city ESG grade chip.
+  const { issues: esgRecent } = useIssues({ limitCount: 50 });
+  const esgCity = useMemo(() => {
+    const now = Date.now();
+    const within30d = (i) => {
+      const t = i.resolvedAt || i.updatedAt || i.createdAt;
+      const d = t?.toDate ? t.toDate() : (t ? new Date(t) : null);
+      return d ? (now - d.getTime()) <= 30 * 86400000 : false;
+    };
+    const resolved = esgRecent.filter((i) => i.status === 'Resolved' && within30d(i));
+    const scored = resolved.filter((i) => Number.isFinite(Number(i.esgScore?.overall_esg)));
+    const avg = scored.length
+      ? scored.reduce((s, i) => s + Number(i.esgScore.overall_esg), 0) / scored.length
+      : 0;
+    let trend = 'up';
+    if (scored.length >= 4) {
+      const half = Math.floor(scored.length / 2);
+      const a = scored.slice(0, half).reduce((s, i) => s + Number(i.esgScore.overall_esg), 0) / half;
+      const b = scored.slice(half).reduce((s, i) => s + Number(i.esgScore.overall_esg), 0) / (scored.length - half);
+      trend = a >= b ? 'up' : 'down';
+    }
+    return { resolvedCount: resolved.length, scoredCount: scored.length, avg, trend };
+  }, [esgRecent]);
   const [authError, setAuthError] = useState(null);
   const [showEmail, setShowEmail] = useState(false);
   const [email, setEmail] = useState('');
@@ -221,6 +249,27 @@ export default function HomeScreen() {
           <StatsCard label="Resolved" value={resolvedCount} color="#16a34a" />
           <StatsCard label="My Score" value={profile?.civicScore || 0} color="#00d4ff" />
         </div>
+
+        {/* City ESG score chip — shown once enough resolved issues exist; opens the ESG tab */}
+        {esgCity.resolvedCount >= 5 && esgCity.scoredCount >= 1 && (() => {
+          const grade = gradeFor(esgCity.avg);
+          return (
+            <button onClick={() => navigate('/analytics', { state: { tab: 'esg' } })} style={{
+              display: 'inline-flex', alignItems: 'center', gap: '8px', marginTop: '10px',
+              width: 'fit-content', backgroundColor: '#0d1b2e',
+              border: '0.5px solid #1a2f4a', borderRadius: '999px',
+              padding: '8px 14px', cursor: 'pointer',
+            }}>
+              <Globe size={16} color="#00d4ff" strokeWidth={1.5} />
+              <span style={{ fontSize: '12px', fontWeight: '600', color: '#f0f6ff' }}>
+                City ESG: <span style={{ color: grade.color }}>{grade.grade}</span>
+              </span>
+              {esgCity.trend === 'up'
+                ? <TrendingUp size={14} color="#22c55e" strokeWidth={2} />
+                : <TrendingDown size={14} color="#ef4444" strokeWidth={2} />}
+            </button>
+          );
+        })()}
 
         {/* Critical Alerts */}
         {criticalIssues.length > 0 && (

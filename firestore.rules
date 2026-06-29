@@ -34,7 +34,7 @@ service cloud.firestore {
               'status', 'statusHistory', 'resolutionPhotoUrl', 'resolutionVerified',
               'resolutionGenuine', 'resolutionConfidence', 'resolutionNote',
               'resolvedAt', 'resolutionCelebrated',
-              'routedTo', 'prediction'];
+              'routedTo', 'prediction', 'esgScore', 'esgScoredAt'];
     }
 
     // A story claim is only valid when the issue is currently unclaimed OR the

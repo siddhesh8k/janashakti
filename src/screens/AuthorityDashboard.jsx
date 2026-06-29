@@ -7,6 +7,7 @@ import { useIssues } from '../hooks/useIssues';
 import { usePagination } from '../hooks/usePagination';
 import { isAuthority, enrollAuthority } from '../utils/authority';
 import { verifyResolution } from '../agents/resolutionVerifier';
+import { scoreESGImpact } from '../agents/esgScorer';
 import TopNav from '../components/TopNav';
 import SeverityBadge from '../components/SeverityBadge';
 import StatsCard from '../components/StatsCard';
@@ -137,13 +138,28 @@ export default function AuthorityDashboard() {
         }, { merge: true });
         // Org stats are computed live from issues on the leaderboard (see
         // utils/orgStats.js), so there's no counter to bump here.
+        const resolvedId = resolving;
+        setResolving(null);
         setToast({
           msg: verified
-            ? `Issue resolved — AI-verified (${verdict.confidence}%)`
-            : 'Resolved, but the photo looks unverified — flagged for review',
+            ? '✅ Resolved! ESG impact being calculated...'
+            : '⚠️ Resolved (photo flagged for review) — calculating ESG impact...',
           type: verified ? 'success' : 'info',
         });
-        setResolving(null);
+
+        // Agent 6 — score the civic ESG impact of the now-resolved issue. The resolvedAt
+        // shim gives scoreESGImpact a "now" timestamp so it can compute days-to-resolve.
+        const resolvedIssue = {
+          ...(theIssue || {}), id: resolvedId, status: 'Resolved',
+          resolvedAt: { toDate: () => new Date() },
+        };
+        const esg = await scoreESGImpact(resolvedIssue, resolvedId);
+        if (esg && esg.overall_esg != null) {
+          setTimeout(() => setToast({
+            msg: `\u{1F33F} ESG Score: ${esg.overall_esg}/10 — Impact verified`,
+            type: 'success',
+          }), 3000);
+        }
       };
       reader.readAsDataURL(file);
     } catch (err) {

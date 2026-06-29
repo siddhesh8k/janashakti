@@ -343,6 +343,9 @@ export default function ReportScreen() {
         await setDoc(doc(db, 'users', user.uid), {
           civicScore: increment(10),
           issuesReported: increment(1),
+          // Per-type tally powers the ESG "Water Warrior" badge. Nested map + merge:true
+          // so the increment lands on issuesByType.<type> (not a literal dotted key).
+          issuesByType: { [issueData.issueType]: increment(1) },
           lastActiveDate: new Date().toISOString().split('T')[0],
         }, { merge: true });
         await bumpPublicProfile(user.uid, { civicScore: 10, issuesReported: 1 });

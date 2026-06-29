@@ -4,7 +4,7 @@ import { doc, onSnapshot, updateDoc, increment } from 'firebase/firestore';
 import { Share2, MapPin, Users, Clock, CheckCircle, Copy,
          ThumbsUp, Scale, AlertTriangle, Twitter, Linkedin,
          MessageCircle, TrendingUp, ShieldAlert, ArrowUpCircle,
-         Building2, GraduationCap, Facebook, Send, Landmark } from 'lucide-react';
+         Building2, GraduationCap, Facebook, Send, Landmark, Leaf, Target } from 'lucide-react';
 import { db, auth } from '../firebase';
 import { generateRTI } from '../utils/gemini';
 import { videoPosterUrl, cloudinaryThumb } from '../utils/cloudinary';
@@ -25,6 +25,11 @@ import { statusColor } from '../theme/components';
 import { STATUS_PIPELINE, CIVIC_SCORE_POINTS, ESCALATION_LEVELS } from '../constants/issueTypes';
 import { bumpPublicProfile } from '../utils/publicProfile';
 import { confirmIssue } from '../utils/confirmIssue';
+import LoadingSkeleton from '../components/LoadingSkeleton';
+import ESGScoreCard from '../components/ESGScoreCard';
+import SDGBadge from '../components/SDGBadge';
+import { scoreESGImpact } from '../agents/esgScorer';
+import { ISSUE_SDG_MAP } from '../constants/esg';
 
 export default function IssueDetail() {
   const { id } = useParams();
@@ -42,6 +47,8 @@ export default function IssueDetail() {
   const sharedRef = useRef(false);
   const repostedRef = useRef(false);
   const awardedRef = useRef(false);
+  const esgScoredRef = useRef(false);
+  const [showESGModal, setShowESGModal] = useState(false);
 
   useEffect(() => {
     if (!id) return;
@@ -89,6 +96,20 @@ export default function IssueDetail() {
       if (r?.escalated) setToast({ msg: `Escalated to ${r.escalatedTo}`, type: 'info' });
     });
   }, [issue]);
+
+  // ESG scoring: once an issue is Resolved and not yet scored, generate its ESG
+  // impact. scoreESGImpact writes esgScore to the issue doc; the onSnapshot listener
+  // above then refreshes local state, so the score card appears automatically.
+  useEffect(() => {
+    if (!issue || esgScoredRef.current) return;
+    if (issue.status !== 'Resolved' || issue.esgScore) return;
+    // Only the reporter (owner) auto-scores from here — they can write both the issue
+    // and their own stats. Authorities score at resolution time (AuthorityDashboard);
+    // other viewers can't write esgScore, so triggering it would just waste a call.
+    if (issue.userId !== auth.currentUser?.uid) return;
+    esgScoredRef.current = true;
+    scoreESGImpact(issue, id).catch((e) => console.error('[ESG]:', e));
+  }, [issue, id]);
 
   const handleVerify = async () => {
     const uid = auth.currentUser?.uid;
@@ -146,6 +167,12 @@ export default function IssueDetail() {
     try {
       const text = await generateRTI(issue);
       setRtiText(text);
+      // Credit the RTI on the user's own doc — powers the "Justice Seeker" ESG badge.
+      const uid = auth.currentUser?.uid;
+      if (uid) {
+        updateDoc(doc(db, 'users', uid), { rtiFiled: increment(1) })
+          .catch((e) => console.error('[RTI credit]:', e.message));
+      }
     } catch (err) {
       console.error('[RTI]:', err);
       setToast({ msg: 'RTI generation failed', type: 'error' });
@@ -200,6 +227,28 @@ export default function IssueDetail() {
       await bumpPublicProfile(uid, { civicScore: CIVIC_SCORE_POINTS.RETWEET_POST });
       setToast({ msg: '+10 Civic Points! Thanks for reposting', type: 'success' });
     } catch (err) { console.error('[Repost credit]:', err); }
+  };
+
+  // Share the AI-generated ESG impact as social-ready text (Web Share API → clipboard).
+  const shareESG = () => {
+    const e = issue?.esgScore;
+    if (!e) return;
+    const shareText =
+      `✅ Civic issue resolved in ${issue.city || 'your area'}!\n\n` +
+      `ESG Impact via @JanaShaktiApp:\n` +
+      `\u{1F33F} E Score: ${e.e_score}/10\n` +
+      `\u{1F91D} S Score: ${e.s_score}/10\n` +
+      `⚖️ G Score: ${e.g_score}/10\n\n` +
+      `${e.highlight}\n\n` +
+      `SDGs: ${(e.sdg_tags || []).join(' ')}\n\n` +
+      `#JanaShakti #ESG #SDG #CivicTech`;
+    if (navigator.share) {
+      navigator.share({ title: 'ESG Impact — JanaShakti', text: shareText }).catch(() => {});
+    } else {
+      navigator.clipboard.writeText(shareText);
+      setToast({ msg: 'ESG impact copied!', type: 'info' });
+    }
+    creditShare();
   };
 
   if (loading) return <LoadingScreen />;
@@ -283,6 +332,40 @@ export default function IssueDetail() {
             )}
           </div>
         )}
+
+        {/* ESG Impact — appears once an issue is Resolved */}
+        {issue.status === 'Resolved' && (() => {
+          const sdgInfo = ISSUE_SDG_MAP[issue.issueType] || ISSUE_SDG_MAP.Other;
+          return (
+            <div style={{ marginBottom: '16px' }}>
+              {/* SDG preview — shown even before the ESG score finishes generating */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px' }}>
+                <Target size={12} color="#4a6280" strokeWidth={1.5} />
+                <span style={{ fontSize: '11px', fontWeight: '500', color: '#4a6280',
+                               textTransform: 'uppercase', letterSpacing: '0.7px' }}>
+                  SDG Alignment
+                </span>
+              </div>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: '12px' }}>
+                {sdgInfo.sdgs.map((s, i) => (
+                  <SDGBadge key={s} sdgId={s} name={sdgInfo.names?.[i]} size="md" />
+                ))}
+              </div>
+
+              {/* ESG score card, or a loading state while Gemini scores it */}
+              {issue.esgScore ? (
+                <ESGScoreCard esgScore={issue.esgScore} />
+              ) : (
+                <div>
+                  <LoadingSkeleton type="text" count={3} />
+                  <p style={{ fontSize: '12px', color: '#4a6280', textAlign: 'center', marginTop: '4px' }}>
+                    Generating ESG impact analysis...
+                  </p>
+                </div>
+              )}
+            </div>
+          );
+        })()}
 
         {/* Header */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center',
@@ -589,6 +672,16 @@ export default function IssueDetail() {
           }}>
             <Share2 size={14} strokeWidth={1.5} /> Share
           </button>
+          {issue.esgScore && (
+            <button onClick={() => setShowESGModal(true)} style={{
+              flex: 1, padding: '10px', backgroundColor: 'transparent',
+              color: '#16a34a', border: '0.5px solid #16a34a40', borderRadius: '10px',
+              fontSize: '12px', fontWeight: '600', cursor: 'pointer',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px',
+            }}>
+              <Leaf size={14} strokeWidth={1.5} /> ESG Report
+            </button>
+          )}
         </div>
 
         {/* RTI output */}
@@ -677,6 +770,39 @@ export default function IssueDetail() {
       </div>
       {showCelebration && (
         <ResolutionCelebration issue={issue} onClose={() => setShowCelebration(false)} />
+      )}
+      {showESGModal && issue.esgScore && (
+        <div onClick={() => setShowESGModal(false)} style={{
+          position: 'fixed', inset: 0, zIndex: 1000,
+          backgroundColor: 'rgba(4,9,26,0.8)',
+          display: 'flex', alignItems: 'flex-end', justifyContent: 'center',
+        }}>
+          <div onClick={(e) => e.stopPropagation()} style={{
+            width: '100%', maxWidth: '480px', maxHeight: '88vh', overflowY: 'auto',
+            backgroundColor: '#080f1e', border: '0.5px solid #1a2f4a',
+            borderTopLeftRadius: '18px', borderTopRightRadius: '18px', padding: '16px',
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between',
+                          alignItems: 'center', marginBottom: '12px' }}>
+              <span style={{ fontSize: '16px', fontWeight: '700', color: '#f0f6ff' }}>
+                ESG Impact Report
+              </span>
+              <button onClick={() => setShowESGModal(false)} style={{
+                background: 'none', border: 'none', cursor: 'pointer',
+                color: '#94a3b8', fontSize: '22px', lineHeight: 1, padding: 0,
+              }}>×</button>
+            </div>
+            <ESGScoreCard esgScore={issue.esgScore} />
+            <button onClick={shareESG} style={{
+              width: '100%', padding: '13px', marginTop: '6px',
+              backgroundColor: '#00d4ff', color: '#04091a', border: 'none',
+              borderRadius: '10px', fontSize: '14px', fontWeight: '600', cursor: 'pointer',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
+            }}>
+              <Share2 size={16} strokeWidth={2} /> Share Impact
+            </button>
+          </div>
+        </div>
       )}
     </div>
   );

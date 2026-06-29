@@ -6,6 +6,7 @@ export function useAgents() {
   const [stats, setStats] = useState({
     analyzed: 0, duplicatesCaught: 0,
     authoritiesNotified: 0, predictionsGenerated: 0, resolutionsVerified: 0,
+    esgScored: 0,
   });
   const [recentRuns, setRecentRuns] = useState([]); // latest orchestrated pipeline runs (with step traces)
   const [loading, setLoading] = useState(true);
@@ -18,12 +19,13 @@ export function useAgents() {
         const col = collection(db, 'agents_log');
         const countOf = (name) =>
           getCountFromServer(query(col, where('agentName', '==', name), where('success', '==', true)));
-        const [a, d, r, p, v] = await Promise.all([
+        const [a, d, r, p, v, e] = await Promise.all([
           countOf('issue_analyzer'),
           countOf('duplicate_detector'),
           countOf('authority_router'),
           countOf('resolution_predictor'),
           countOf('resolution_verifier'),
+          countOf('esg_scorer'),
         ]);
         setStats({
           analyzed: a.data().count,
@@ -31,6 +33,7 @@ export function useAgents() {
           authoritiesNotified: r.data().count,
           predictionsGenerated: p.data().count,
           resolutionsVerified: v.data().count,
+          esgScored: e.data().count,
         });
 
         // Recent pipeline runs with their per-agent reasoning traces. Best-effort:

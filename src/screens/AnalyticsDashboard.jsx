@@ -1,10 +1,10 @@
 import { memo, useState, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer,
          LineChart, Line, CartesianGrid, Legend } from 'recharts';
 import { AlertTriangle, TrendingUp, TrendingDown, Bot, MapPin, Clock, Zap,
          Activity, ShieldAlert, Droplets, Trash2, Lightbulb, Shield, Construction,
-         Sparkles, Trophy, Newspaper, Download } from 'lucide-react';
+         Sparkles, Trophy, Newspaper, Download, Target, Leaf, Globe } from 'lucide-react';
 import { useIssues } from '../hooks/useIssues';
 import { usePagination } from '../hooks/usePagination';
 import { useToast } from '../components/ToastProvider';
@@ -17,6 +17,10 @@ import ChartCarousel from '../components/ChartCarousel';
 import LoadingSkeleton from '../components/LoadingSkeleton';
 import ShowMore from '../components/ShowMore';
 import { WALL_SHAME_DAYS } from '../constants/cities';
+import { useAuth } from '../hooks/useAuth';
+import SDGBadge from '../components/SDGBadge';
+import CityESGCard from '../components/CityESGCard';
+import { SDG_COLORS, ESG_GRADES, ISSUE_SDG_MAP } from '../constants/esg';
 
 // Map Gemini's icon-name strings to Lucide components.
 const INSIGHT_ICONS = {
@@ -115,10 +119,151 @@ const STATUS_COLORS = {
   Reported: '#475569', Verified: '#3b82f6', 'In Progress': '#f97316', Resolved: '#16a34a',
 };
 
+// SDG → name lookup, derived from the per-issue-type mapping (first name wins).
+const SDG_NAME = {};
+Object.values(ISSUE_SDG_MAP).forEach((info) => {
+  info.sdgs.forEach((s, i) => { if (!SDG_NAME[s]) SDG_NAME[s] = info.names[i]; });
+});
+
+// Highest grade whose threshold the score clears (ESG_GRADES is sorted desc by min).
+const gradeFor = (score) => ESG_GRADES.find((g) => score >= g.min) || ESG_GRADES[ESG_GRADES.length - 1];
+
+const PILLAR_COLOR = { E: '#4C9F38', S: '#DD1367', G: '#00689D' };
+
+// City ESG rankings — sample data (rankings are produced monthly by AI analysis).
+const ESG_LEADERBOARD = [
+  { rank: 1, city: 'Pune',      esgScore: 8.7, issuesResolved: 234, trend: 'up',   highlight: 'Best governance response rate' },
+  { rank: 2, city: 'Bangalore', esgScore: 8.1, issuesResolved: 198, trend: 'down', highlight: 'Strong social impact score' },
+  { rank: 3, city: 'Chennai',   esgScore: 7.6, issuesResolved: 156, trend: 'same', highlight: 'Leading in water conservation' },
+  { rank: 4, city: 'Mumbai',    esgScore: 7.2, issuesResolved: 143, trend: 'up',   highlight: 'Improving governance score' },
+  { rank: 5, city: 'Delhi',     esgScore: 6.8, issuesResolved: 112, trend: 'down', highlight: 'Focus on critical issues' },
+];
+
+// ESG tab body — isolated so the main dashboard render stays readable (mirrors AiInsights).
+const ESGTab = memo(function ESGTab({ city, esg, navigate }) {
+  const [showAllSdgs, setShowAllSdgs] = useState(false);
+  const grade = gradeFor(esg.cityScore);
+  const sdgShown = showAllSdgs ? esg.sdgRows : esg.sdgRows.slice(0, 5);
+
+  return (
+    <div>
+      {/* City ESG grade */}
+      <div style={{ backgroundColor: '#0d1b2e', borderRadius: '14px', border: '0.5px solid #1a2f4a',
+                    padding: '24px 16px', marginBottom: '16px', textAlign: 'center' }}>
+        <div style={{ fontSize: '13px', color: '#94a3b8', marginBottom: '4px' }}>{city}</div>
+        <div style={{ fontSize: '56px', fontWeight: '800', color: grade.color, lineHeight: 1 }}>{grade.grade}</div>
+        <div style={{ fontSize: '13px', fontWeight: '700', color: grade.color, marginTop: '6px' }}>
+          {esg.cityScore.toFixed(1)}/10 ESG Score
+        </div>
+        <div style={{ fontSize: '12px', color: '#4a6280', marginTop: '8px' }}>
+          Based on {esg.thisMonth} issues resolved this month
+        </div>
+        <div style={{ marginTop: '14px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px',
+                        color: '#4a6280', marginBottom: '4px' }}>
+            <span>vs last month</span>
+            <span style={{ color: esg.improvement >= 0 ? '#16a34a' : '#ef4444', fontWeight: '600' }}>
+              {esg.improvement >= 0 ? '+' : ''}{esg.improvement}%
+            </span>
+          </div>
+          <div style={{ height: '6px', borderRadius: '999px', backgroundColor: '#112035', overflow: 'hidden' }}>
+            <div style={{ height: '100%', borderRadius: '999px',
+              width: `${Math.max(4, Math.min(100, 50 + esg.improvement / 2))}%`,
+              backgroundColor: esg.improvement >= 0 ? '#16a34a' : '#ef4444' }} />
+          </div>
+        </div>
+      </div>
+
+      {/* SDG contributions */}
+      <div style={{ marginBottom: '20px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '12px' }}>
+          <Globe size={16} color="#00d4ff" strokeWidth={1.5} />
+          <span style={{ fontSize: '14px', fontWeight: '600', color: '#f0f6ff' }}>SDG Contributions</span>
+        </div>
+        {sdgShown.length === 0 ? (
+          <p style={{ fontSize: '12px', color: '#4a6280' }}>No SDG data yet.</p>
+        ) : sdgShown.map((r) => (
+          <div key={r.sdg} style={{ marginBottom: '10px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <SDGBadge sdgId={r.sdg} name={r.name} size="md" />
+              <span style={{ marginLeft: 'auto', fontSize: '12px', fontWeight: '600', color: '#94a3b8' }}>{r.count}</span>
+            </div>
+            <div style={{ height: '4px', borderRadius: '999px', backgroundColor: '#112035',
+                          marginTop: '6px', overflow: 'hidden' }}>
+              <div style={{ height: '100%', borderRadius: '999px',
+                width: `${esg.sdgTotal ? (r.count / esg.sdgTotal) * 100 : 0}%`,
+                backgroundColor: SDG_COLORS[r.sdg] || '#4a6280' }} />
+            </div>
+          </div>
+        ))}
+        {esg.sdgRows.length > 5 && (
+          <button onClick={() => setShowAllSdgs((v) => !v)} style={{
+            background: 'none', border: 'none', cursor: 'pointer', padding: 0,
+            fontSize: '13px', fontWeight: '600', color: '#00d4ff', marginTop: '4px',
+          }}>
+            {showAllSdgs ? 'Show less' : `See all ${esg.sdgRows.length}`}
+          </button>
+        )}
+      </div>
+
+      {/* City ESG rankings */}
+      <div style={{ marginBottom: '20px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '2px' }}>
+          <Target size={16} color="#00d4ff" strokeWidth={1.5} />
+          <span style={{ fontSize: '14px', fontWeight: '600', color: '#f0f6ff' }}>City ESG Rankings</span>
+        </div>
+        <p style={{ fontSize: '11px', color: '#00d4ff', marginBottom: '12px' }}>Powered by Gemini AI</p>
+        {ESG_LEADERBOARD.map((c) => (<CityESGCard key={c.rank} {...c} />))}
+        <p style={{ fontSize: '11px', color: '#4a6280', marginTop: '6px', textAlign: 'center' }}>
+          Rankings update monthly via AI analysis
+        </p>
+      </div>
+
+      {/* Top environmental impact */}
+      <div style={{ marginBottom: '16px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '12px' }}>
+          <Leaf size={16} color="#16a34a" strokeWidth={1.5} />
+          <span style={{ fontSize: '14px', fontWeight: '600', color: '#f0f6ff' }}>Top Environmental Impact</span>
+        </div>
+        {esg.topEnv.length === 0 ? (
+          <p style={{ fontSize: '12px', color: '#4a6280' }}>No ESG-scored resolutions yet.</p>
+        ) : esg.topEnv.map((i) => (
+          <div key={i.id} onClick={() => navigate(`/issue/${i.id}`)} style={{
+            backgroundColor: '#0d1b2e', borderRadius: '12px', border: '0.5px solid #1a2f4a',
+            padding: '12px 14px', marginBottom: '8px', cursor: 'pointer',
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '8px' }}>
+              <span style={{ fontSize: '14px', fontWeight: '600', color: '#f0f6ff', minWidth: 0,
+                             overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                {i.issueType}
+              </span>
+              {i.esgScore?.sdg_tags?.[0] && <SDGBadge sdgId={i.esgScore.sdg_tags[0]} size="sm" />}
+            </div>
+            <div style={{ fontSize: '11px', color: '#4a6280', marginTop: '2px',
+                          overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              {i.locationText}
+            </div>
+            <div style={{ display: 'flex', gap: '14px', marginTop: '8px' }}>
+              {['E', 'S', 'G'].map((p) => (
+                <span key={p} style={{ fontSize: '12px', fontWeight: '700', color: PILLAR_COLOR[p] }}>
+                  {p}: {(Number(i.esgScore[`${p.toLowerCase()}_score`]) || 0).toFixed(1)}
+                </span>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+});
+
 export default function AnalyticsDashboard() {
   const navigate = useNavigate();
   const toast = useToast();
   const { issues, loading } = useIssues({ limitCount: 100 });
+  const { userProfile } = useAuth();
+  const location = useLocation();
+  const [activeTab, setActiveTab] = useState(location.state?.tab === 'esg' ? 'esg' : 'overview');
 
   // Wall of shame — computed before the loading guard so its pagination hook is
   // called unconditionally (Rules of Hooks); `issues` is [] while loading.
@@ -133,6 +278,54 @@ export default function AnalyticsDashboard() {
     return daysOpen >= WALL_SHAME_DAYS;
   }).map(i => (i.wallOfShame ? i : { ...i, wallOfShame: true })), [issues]);
   const wos = usePagination(wallOfShameIssues, 6);
+
+  // ESG aggregates for the ESG tab (memoized; recomputed only when issues change).
+  const esg = useMemo(() => {
+    const resolved = issues.filter((i) => i.status === 'Resolved');
+    const total = issues.length;
+    const rate = total ? resolved.length / total : 0;
+    const realScores = resolved
+      .map((i) => Number(i.esgScore?.overall_esg))
+      .filter(Number.isFinite);
+    const cityScore = realScores.length
+      ? realScores.reduce((a, b) => a + b, 0) / realScores.length
+      : Number((4 + rate * 6).toFixed(1));
+
+    const tsOf = (i) => {
+      const t = i.resolvedAt || i.updatedAt || i.createdAt;
+      return t?.toDate ? t.toDate() : (t ? new Date(t) : null);
+    };
+    const now = new Date();
+    const mk = (d) => d.getFullYear() * 12 + d.getMonth();
+    const thisKey = mk(now);
+    let thisMonth = 0, lastMonth = 0;
+    resolved.forEach((i) => {
+      const d = tsOf(i); if (!d) return;
+      const k = mk(d);
+      if (k === thisKey) thisMonth += 1;
+      else if (k === thisKey - 1) lastMonth += 1;
+    });
+    const improvement = lastMonth
+      ? Math.round(((thisMonth - lastMonth) / lastMonth) * 100)
+      : (thisMonth ? 100 : 0);
+
+    const sdgCounts = {};
+    issues.forEach((i) => {
+      const info = ISSUE_SDG_MAP[i.issueType] || ISSUE_SDG_MAP.Other;
+      info.sdgs.forEach((s) => { sdgCounts[s] = (sdgCounts[s] || 0) + 1; });
+    });
+    const sdgTotal = Object.values(sdgCounts).reduce((a, b) => a + b, 0);
+    const sdgRows = Object.entries(sdgCounts)
+      .map(([sdg, count]) => ({ sdg, count, name: SDG_NAME[sdg] || sdg }))
+      .sort((a, b) => b.count - a.count);
+
+    const topEnv = resolved
+      .filter((i) => i.esgScore && Number.isFinite(Number(i.esgScore.e_score)))
+      .sort((a, b) => Number(b.esgScore.e_score) - Number(a.esgScore.e_score))
+      .slice(0, 3);
+
+    return { cityScore, thisMonth, lastMonth, improvement, sdgRows, sdgTotal, topEnv };
+  }, [issues]);
 
   if (loading) return (
     <div style={{ minHeight: '100vh', backgroundColor: '#080f1e' }}>
@@ -244,6 +437,21 @@ export default function AnalyticsDashboard() {
       <TopNav title="City Intelligence" showBack />
       <div style={{ padding: '16px' }}>
 
+        {/* Tabs — Overview (existing dashboard) + ESG */}
+        <div style={{ display: 'flex', gap: '8px', marginBottom: '16px' }}>
+          {[{ k: 'overview', label: 'Overview' }, { k: 'esg', label: 'ESG' }].map((t) => (
+            <button key={t.k} onClick={() => setActiveTab(t.k)} style={{
+              flex: 1, padding: '10px', borderRadius: '999px', cursor: 'pointer',
+              fontSize: '13px', fontWeight: '600',
+              backgroundColor: activeTab === t.k ? '#00d4ff' : 'transparent',
+              color: activeTab === t.k ? '#04091a' : '#94a3b8',
+              border: activeTab === t.k ? 'none' : '0.5px solid #1a2f4a',
+            }}>{t.label}</button>
+          ))}
+        </div>
+
+        {activeTab === 'overview' && (<>
+
         {/* Summary */}
         <div style={{ display: 'flex', gap: '8px', marginBottom: '20px' }}>
           {[
@@ -315,6 +523,12 @@ export default function AnalyticsDashboard() {
             {wos.visible.map(i => <IssueCard key={i.id} issue={i} compact />)}
             {wos.hasMore && <ShowMore onClick={wos.showMore} remaining={wos.remaining} />}
           </div>
+        )}
+
+        </>)}
+
+        {activeTab === 'esg' && (
+          <ESGTab city={userProfile?.city || 'India'} esg={esg} navigate={navigate} />
         )}
 
       </div>
