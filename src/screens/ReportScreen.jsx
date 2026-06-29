@@ -22,7 +22,7 @@ import SeverityBadge from '../components/SeverityBadge';
 import AgentPipelineOverlay from '../components/AgentPipelineOverlay';
 import LocationPicker from '../components/LocationPicker';
 import { useToast } from '../components/ToastProvider';
-import { issueColorMap, ISSUE_TYPES, SEVERITY_LEVELS } from '../constants/issueTypes';
+import { issueColorMap, ISSUE_TYPES, SEVERITY_LEVELS, CIVIC_SCORE_POINTS } from '../constants/issueTypes';
 import { bumpPublicProfile } from '../utils/publicProfile';
 import { confirmIssue } from '../utils/confirmIssue';
 
@@ -306,10 +306,10 @@ export default function ReportScreen() {
         try {
           // setDoc+merge (not updateDoc) so it still works if the user doc is missing.
           await setDoc(doc(db, 'users', user.uid), {
-            civicScore: increment(5),
+            civicScore: increment(CIVIC_SCORE_POINTS.VERIFY_ISSUE),
             issuesVerified: increment(1),
           }, { merge: true });
-          await bumpPublicProfile(user.uid, { civicScore: 5 });
+          await bumpPublicProfile(user.uid, { civicScore: CIVIC_SCORE_POINTS.VERIFY_ISSUE });
         } catch (creditErr) {
           console.error('[DupCredit]:', creditErr);
         }
@@ -341,14 +341,14 @@ export default function ReportScreen() {
         // user doc is missing (e.g. profile not yet created) — increment treats a
         // missing field as 0 and the merge creates the doc.
         await setDoc(doc(db, 'users', user.uid), {
-          civicScore: increment(10),
+          civicScore: increment(CIVIC_SCORE_POINTS.REPORT_ISSUE),
           issuesReported: increment(1),
           // Per-type tally powers the ESG "Water Warrior" badge. Nested map + merge:true
           // so the increment lands on issuesByType.<type> (not a literal dotted key).
           issuesByType: { [issueData.issueType]: increment(1) },
           lastActiveDate: new Date().toISOString().split('T')[0],
         }, { merge: true });
-        await bumpPublicProfile(user.uid, { civicScore: 10, issuesReported: 1 });
+        await bumpPublicProfile(user.uid, { civicScore: CIVIC_SCORE_POINTS.REPORT_ISSUE, issuesReported: 1 });
       } catch (scoreErr) {
         console.error('[CivicScore]:', scoreErr);
       }

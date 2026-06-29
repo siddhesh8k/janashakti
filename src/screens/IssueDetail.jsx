@@ -133,10 +133,10 @@ export default function IssueDetail() {
         return;
       }
       await updateDoc(doc(db, 'users', uid), {
-        civicScore: increment(5),
+        civicScore: increment(CIVIC_SCORE_POINTS.VERIFY_ISSUE),
         issuesVerified: increment(1),
       });
-      await bumpPublicProfile(uid, { civicScore: 5 });
+      await bumpPublicProfile(uid, { civicScore: CIVIC_SCORE_POINTS.VERIFY_ISSUE });
 
       // Guaranteed to be true for exactly one verifier — the one whose confirmation
       // crossed the threshold (socialQueued flag set inside the transaction).
