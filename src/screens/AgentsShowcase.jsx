@@ -1,6 +1,7 @@
 import { useState, Fragment } from 'react';
 import { Bot, Search, MailCheck, BarChart3, ChevronRight, ChevronDown,
-         Zap, CheckCircle, AlertTriangle, Clock, ShieldCheck, Leaf } from 'lucide-react';
+         Zap, CheckCircle, AlertTriangle, Clock, ShieldCheck, Leaf,
+         Camera, Database, Target } from 'lucide-react';
 import { useAgents } from '../hooks/useAgents';
 import TopNav from '../components/TopNav';
 import StatsCard from '../components/StatsCard';
@@ -44,6 +45,19 @@ const AGENTS = [
 const AGENT_ICON = { analyzer: Bot, detector: Search, router: MailCheck, predictor: BarChart3 };
 const AGENT_COLOR = { analyzer: '#00d4ff', detector: '#3b82f6', router: '#16a34a', predictor: '#f97316' };
 const FLOW = ['Photo', 'Analyzer', 'Detector', 'Router', 'Predictor', 'Saved', 'Resolved', 'ESG Score', 'SDG Tagged'];
+
+// Icon + colour per pipeline step (drives the scrollable flow rail).
+const STEP_META = {
+  Photo:        { icon: Camera, color: '#94a3b8' },
+  Analyzer:     { icon: Bot, color: '#00d4ff' },
+  Detector:     { icon: Search, color: '#3b82f6' },
+  Router:       { icon: MailCheck, color: '#16a34a' },
+  Predictor:    { icon: BarChart3, color: '#f97316' },
+  Saved:        { icon: Database, color: '#94a3b8' },
+  Resolved:     { icon: CheckCircle, color: '#16a34a' },
+  'ESG Score':  { icon: Leaf, color: '#4C9F38' },
+  'SDG Tagged': { icon: Target, color: '#FD9D24' },
+};
 
 const timeAgo = (ts) => {
   if (!ts) return '';
@@ -128,12 +142,13 @@ export default function AgentsShowcase() {
           </p>
         </div>
 
-        {/* Live stats */}
-        <div style={{ display: 'flex', gap: '6px', marginBottom: '20px' }}>
+        {/* Live stats — 3-col grid (2 rows) so every label stays readable + aligned on mobile */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px', marginBottom: '20px' }}>
           <StatsCard label="Analyzed" value={stats.analyzed} color="#00d4ff" />
           <StatsCard label="Dupes" value={stats.duplicatesCaught} color="#3b82f6" />
           <StatsCard label="Routed" value={stats.authoritiesNotified} color="#16a34a" />
           <StatsCard label="Predicted" value={stats.predictionsGenerated} color="#f97316" />
+          <StatsCard label="Verified" value={stats.resolutionsVerified} color="#8b5cf6" />
           <StatsCard label="ESG Scored" value={stats.esgScored} color="#4C9F38" />
         </div>
 
@@ -276,27 +291,32 @@ export default function AgentsShowcase() {
                          textTransform: 'uppercase', letterSpacing: '0.7px' }}>
             AGENT PIPELINE
           </span>
+          {/* Scrollable rail — content-width chips with per-step icons keep every label
+              fully readable on mobile (swipe horizontally), instead of truncating to "…". */}
           <div style={{
-            display: 'flex', alignItems: 'center', flexWrap: 'wrap',
-            width: '100%', gap: '4px', rowGap: '8px', marginTop: '12px',
+            display: 'flex', alignItems: 'center', gap: '6px', marginTop: '12px',
+            overflowX: 'auto', paddingBottom: '8px',
+            scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch',
           }}>
-            {FLOW.map((step, i) => (
-              <Fragment key={step}>
-                <div title={step} style={{
-                  flex: 1, minWidth: '54px',
-                  backgroundColor: '#112035', border: '0.5px solid #00d4ff40',
-                  borderRadius: '8px', padding: '8px 4px',
-                  fontSize: '11px', fontWeight: '600', color: '#00d4ff',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '3px',
-                }}>
-                  {step === 'ESG Score' && <Leaf size={11} color="#00d4ff" strokeWidth={1.5} style={{ flexShrink: 0 }} />}
-                  <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{step}</span>
-                </div>
-                {i < FLOW.length - 1 && (
-                  <ChevronRight size={13} color="#00d4ff40" strokeWidth={1.5} style={{ flexShrink: 0 }} />
-                )}
-              </Fragment>
-            ))}
+            {FLOW.map((step, i) => {
+              const meta = STEP_META[step] || { icon: Bot, color: '#00d4ff' };
+              const StepIcon = meta.icon;
+              return (
+                <Fragment key={step}>
+                  <div style={{
+                    flexShrink: 0, display: 'flex', alignItems: 'center', gap: '6px', whiteSpace: 'nowrap',
+                    backgroundColor: '#112035', border: `0.5px solid ${meta.color}55`,
+                    borderRadius: '10px', padding: '8px 12px',
+                  }}>
+                    <StepIcon size={13} color={meta.color} strokeWidth={1.5} style={{ flexShrink: 0 }} />
+                    <span style={{ fontSize: '12px', fontWeight: '600', color: '#f0f6ff' }}>{step}</span>
+                  </div>
+                  {i < FLOW.length - 1 && (
+                    <ChevronRight size={14} color="#00d4ff66" strokeWidth={2} style={{ flexShrink: 0 }} />
+                  )}
+                </Fragment>
+              );
+            })}
           </div>
         </div>
 

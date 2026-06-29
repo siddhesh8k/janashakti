@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Bot, Search, MailCheck, BarChart3, AlertTriangle, ChevronRight,
          Eye, LogIn, UserPlus, Shield, ShieldCheck, Trophy, Newspaper,
-         Globe, TrendingUp, TrendingDown } from 'lucide-react';
+         Globe, TrendingUp, TrendingDown, Leaf } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import { useIssues } from '../hooks/useIssues';
 import { useUser } from '../hooks/useUser';
@@ -192,11 +192,12 @@ export default function HomeScreen() {
   const resolvedCount = issues.filter(i => i.status === 'Resolved').length;
 
   const AGENTS = [
-    { icon: Bot, name: 'Analyzer', count: stats.analyzed },
-    { icon: Search, name: 'Detector', count: stats.duplicatesCaught },
-    { icon: MailCheck, name: 'Router', count: stats.authoritiesNotified },
-    { icon: BarChart3, name: 'Predictor', count: stats.predictionsGenerated },
-    { icon: ShieldCheck, name: 'Verifier', count: stats.resolutionsVerified },
+    { icon: Bot, name: 'Analyzer', count: stats.analyzed, color: '#00d4ff' },
+    { icon: Search, name: 'Detector', count: stats.duplicatesCaught, color: '#3b82f6' },
+    { icon: MailCheck, name: 'Router', count: stats.authoritiesNotified, color: '#16a34a' },
+    { icon: BarChart3, name: 'Predictor', count: stats.predictionsGenerated, color: '#f97316' },
+    { icon: ShieldCheck, name: 'Verifier', count: stats.resolutionsVerified, color: '#8b5cf6' },
+    { icon: Leaf, name: 'ESG Scorer', count: stats.esgScored, color: '#4C9F38' },
   ];
 
   return (
@@ -214,19 +215,24 @@ export default function HomeScreen() {
             fontSize: '13px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '2px',
           }}>See all <ChevronRight size={14} strokeWidth={1.5} /></button>
         </div>
-        <div style={{ display: 'flex', gap: '6px', paddingBottom: '4px' }}>
+        {/* Horizontally-scrollable, color-coded agent chips — full labels stay readable
+            on mobile (no truncation) and the row scales to all 6 agents. */}
+        <div style={{ display: 'flex', gap: '8px', overflowX: 'auto', paddingBottom: '6px',
+                      scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch' }}>
           {AGENTS.map(a => (
             <button key={a.name} onClick={() => navigate('/agents')} title={`${a.name} — ${a.count} runs`} style={{
-              flex: 1, minWidth: 0,
-              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px',
-              backgroundColor: '#0d1b2e', border: '0.5px solid #1a2f4a',
-              borderRadius: '999px', padding: '7px 6px', cursor: 'pointer',
-              whiteSpace: 'nowrap', overflow: 'hidden',
+              flexShrink: 0, display: 'flex', alignItems: 'center', gap: '7px', whiteSpace: 'nowrap',
+              backgroundColor: '#0d1b2e', border: `0.5px solid ${a.color}40`,
+              borderRadius: '999px', padding: '6px 12px 6px 7px', cursor: 'pointer',
             }}>
-              <a.icon size={13} color="#00d4ff" strokeWidth={1.5} style={{ flexShrink: 0 }} />
-              <span style={{ fontSize: '10px', color: '#f0f6ff', fontWeight: '500',
-                             overflow: 'hidden', textOverflow: 'ellipsis' }}>{a.name}</span>
-              <span style={{ fontSize: '10px', color: '#16a34a', fontWeight: '600', flexShrink: 0 }}>{a.count}</span>
+              <span style={{
+                width: '24px', height: '24px', borderRadius: '50%', flexShrink: 0,
+                backgroundColor: a.color + '1a', display: 'flex', alignItems: 'center', justifyContent: 'center',
+              }}>
+                <a.icon size={13} color={a.color} strokeWidth={1.5} />
+              </span>
+              <span style={{ fontSize: '12px', color: '#f0f6ff', fontWeight: '600' }}>{a.name}</span>
+              <span style={{ fontSize: '12px', color: a.color, fontWeight: '700' }}>{a.count}</span>
             </button>
           ))}
         </div>
