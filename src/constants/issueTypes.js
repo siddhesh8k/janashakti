@@ -34,7 +34,15 @@ export const CIVIC_SCORE_POINTS = {
   RETWEET_POST:        10,
   ISSUE_RESOLVED:      25,
   DAILY_STREAK:         2,
+  AUTHORITY_ACTION:     5,   // authority advances a status (Verify / In Progress)
+  AUTHORITY_RESOLVE:   15,   // authority resolves an issue (verified fix photo)
 };
+
+// Civic points that unlock the "Civic Authority" badge — the gamification gate that
+// grants authority powers (advance status / resolve an issue). Only users who reach
+// this score are treated as genuine/trusted enough to act as an authority.
+// (Mirrored in firestore.rules; keep the two in sync.)
+export const AUTHORITY_THRESHOLD = 100;
 
 export const LEVEL_THRESHOLDS = [
   { min: 0,   max: 50,        name: 'Newcomer',       icon: 'Sprout'  },
@@ -60,6 +68,8 @@ export const BADGE_CONDITIONS = [
   { id: 'verifier',         name: 'Verifier',          condition: (p) => p.issuesVerified >= 5 },
   { id: 'city_champion',    name: 'City Champion',     condition: (p) => p.civicScore >= 300 },
   { id: 'legend',           name: 'Legend',             condition: (p) => p.civicScore >= 500 },
+  // Unlocking this badge grants authority powers (verify / resolve) — see AUTHORITY_THRESHOLD.
+  { id: 'civic_authority',  name: 'Civic Authority',   condition: (p) => (p.civicScore || 0) >= AUTHORITY_THRESHOLD },
 ];
 
 export const ESCALATION_LEVELS = [

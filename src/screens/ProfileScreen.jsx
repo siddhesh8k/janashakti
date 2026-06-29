@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { doc, updateDoc, setDoc, collection, query, where, getCountFromServer } from 'firebase/firestore';
-import { Shield, Star, Award, Lock, LogOut, Eye, Trophy, Zap, Flame,
+import { Shield, ShieldCheck, Star, Award, Lock, LogOut, Eye, Trophy, Zap, Flame,
          Building2, GraduationCap, Users, Pencil,
          Twitter, MessageCircle, Linkedin, Facebook, Send,
          Droplets, Leaf, Scale, Target } from 'lucide-react';
@@ -26,7 +26,7 @@ import SDGBadge from '../components/SDGBadge';
 const BADGE_ICONS = {
   first_step: Zap, keen_eye: Eye, guardian: Shield, community_star: Star,
   streak_hero: Trophy, social_voice: Award, verifier: Eye,
-  city_champion: Shield, legend: Star,
+  city_champion: Shield, legend: Star, civic_authority: ShieldCheck,
 };
 
 // ESG badge icon strings (from constants/esg) → Lucide components.

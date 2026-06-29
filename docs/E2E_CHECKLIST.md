@@ -13,7 +13,7 @@ run it before any demo or submission. Tick each box; note the expected result.
 
 1. [ ] **Open** the live URL → sign in (Google / Guest).
 2. [ ] **Report** an issue (photo or manual) → submit → the **agent pipeline overlay** runs (Analyzer → Detector → Router → Predictor) → lands on the issue/map.
-3. [ ] Open the issue → **Authority view** → *Enable Authority Mode* → mark **Resolved** with a photo.
+3. [ ] Open the issue → **Authority view**. *Enable Authority Mode* unlocks only once you've earned the **Civic Authority** badge (100 civic points) — then mark **Resolved** with a photo.
 4. [ ] Watch the **"✅ Resolved! ESG impact being calculated…"** toast, then **"🌿 ESG Score: X/10"**.
 5. [ ] Reopen the issue → the **ESG Score card** (E/S/G + SDG pills) is shown.
 6. [ ] **Analytics → ESG tab** shows the City ESG grade + Top Environmental Impact.
@@ -46,7 +46,10 @@ If all six pass, the core loop is healthy. Full coverage below.
 - [ ] Verifying from outside 500 m is blocked with a clear message.
 - [ ] At **5 confirmations** (consent ≠ none) the social post fires once.
 
-## 5. Resolution → ESG (the new flow)
+## 5. Authority powers (earned) → Resolution → ESG
+- [ ] **Below 100 civic points:** Authority view shows a **locked "Civic Authority"** card with a progress bar — no Verify/Resolve buttons (and Firestore rules block enrolling).
+- [ ] **At ≥ 100 points:** the **Civic Authority** badge unlocks → *Enable Authority Mode* works → Verify / In Progress / Resolve buttons appear.
+- [ ] Authority actions award the acting user points (**+5** advance status, **+15** resolve).
 - [ ] Authority resolve with a fix photo → **Agent 5** verification badge (AI-verified / flagged).
 - [ ] ESG toasts appear (calculating → score).
 - [ ] **IssueDetail** shows the **ESG Score card** (E/S/G scores, impact lines, metrics), **SDG alignment pills**, and an **"ESG Report"** share button → modal → *Share Impact* (Web Share / clipboard).
@@ -55,7 +58,7 @@ If all six pass, the core loop is healthy. Full coverage below.
 ## 6. Profile ESG (`ProfileScreen`)
 - [ ] **ESG Impact** section shows Water Saved / Waste Addressed / People Impacted + contributed-SDG pills.
 - [ ] **ESG badges** render; resolving enough issues unlocks Green Guardian / SDG Contributor; filing an RTI unlocks Justice Seeker; reporting 3 Water Leakage unlocks Water Warrior.
-- [ ] Existing 9 badges + levels + streak still display.
+- [ ] Existing **10 badges** (incl. **Civic Authority**) + 5 ESG badges + levels + streak still display.
 
 ## 7. Analytics ESG tab (`AnalyticsDashboard`)
 - [ ] **Overview** tab unchanged (charts, AI insights, Wall of Shame).

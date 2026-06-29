@@ -132,7 +132,13 @@ service cloud.firestore {
     // SDK / custom claims and set create back to `if false`.
     match /authorities/{authorityId} {
       allow read: if true;
-      allow create: if isSignedIn() && request.auth.uid == authorityId;
+      // Self-enroll is gated by the gamification "Civic Authority" badge: a user may
+      // only become an authority once their civicScore reaches the threshold (100,
+      // mirrors AUTHORITY_THRESHOLD in constants/issueTypes.js). This is what makes
+      // status/resolution rights earned, not free. (Demo: scores are client-side;
+      // production should compute them server-side / provision via custom claims.)
+      allow create: if isSignedIn() && request.auth.uid == authorityId
+        && get(/databases/$(database)/documents/users/$(authorityId)).data.get('civicScore', 0) >= 100;
       allow update, delete: if false;
     }
   }

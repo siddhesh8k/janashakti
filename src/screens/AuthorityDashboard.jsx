@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
-import { doc, updateDoc, setDoc, serverTimestamp, arrayUnion } from 'firebase/firestore';
-import { AlertTriangle, Clock, CheckCircle, Camera, ThumbsUp, Timer, ShieldCheck, Download } from 'lucide-react';
+import { doc, updateDoc, setDoc, serverTimestamp, arrayUnion, increment } from 'firebase/firestore';
+import { AlertTriangle, Clock, CheckCircle, Camera, ThumbsUp, Timer, ShieldCheck, Download, Lock } from 'lucide-react';
 import { db, auth } from '../firebase';
 import { compressImage } from '../utils/gemini';
 import { useIssues } from '../hooks/useIssues';
@@ -17,6 +17,9 @@ import { useToast } from '../components/ToastProvider';
 import { isValidImageFile, MESSAGES } from '../utils/validation';
 import { DEPARTMENT_MAP } from '../constants/departments';
 import { exportToExcel } from '../utils/exportToExcel';
+import { useAuth } from '../hooks/useAuth';
+import { bumpPublicProfile } from '../utils/publicProfile';
+import { AUTHORITY_THRESHOLD, CIVIC_SCORE_POINTS } from '../constants/issueTypes';
 
 // Which department owns an issue (derived from its type, same mapping the agents/
 // import use). Falls back to the routed name, then the general dept.
@@ -27,6 +30,10 @@ const DEPARTMENTS = [...new Set(Object.values(DEPARTMENT_MAP).map(d => d.name))]
 
 export default function AuthorityDashboard() {
   const { issues, loading } = useIssues({ limitCount: 50 });
+  const { userProfile } = useAuth();
+  const civicScore = userProfile?.civicScore || 0;
+  const qualified = civicScore >= AUTHORITY_THRESHOLD;   // has earned the Civic Authority badge
+  const toUnlock = Math.max(0, AUTHORITY_THRESHOLD - civicScore);
   const [filter, setFilter] = useState('All');
   const [dept, setDept] = useState('All');
   const toastApi = useToast();
@@ -55,6 +62,17 @@ export default function AuthorityDashboard() {
     setEnrolling(false);
     if (ok) { setAuthorized(true); setToast({ msg: 'Authority mode enabled', type: 'success' }); }
     else setToast({ msg: 'Could not enable authority mode', type: 'error' });
+  };
+
+  // Acting as an authority boosts the user's own civic score — the virtuous cycle:
+  // genuine users earn authority powers, and using them earns more points.
+  const awardAuthorityPoints = async (points) => {
+    const uid = auth.currentUser?.uid;
+    if (!uid) return;
+    try {
+      await updateDoc(doc(db, 'users', uid), { civicScore: increment(points) });
+      await bumpPublicProfile(uid, { civicScore: points });
+    } catch (e) { console.error('[AuthorityReward]:', e.message); }
   };
 
   // Scope the whole dashboard (stats + list) to the selected department.
@@ -89,7 +107,8 @@ export default function AuthorityDashboard() {
           note: note || `Status updated to ${newStatus}`,
         }),
       });
-      setToast({ msg: `Status: ${newStatus}`, type: 'success' });
+      awardAuthorityPoints(CIVIC_SCORE_POINTS.AUTHORITY_ACTION);
+      setToast({ msg: `Status: ${newStatus} · +${CIVIC_SCORE_POINTS.AUTHORITY_ACTION} pts`, type: 'success' });
       setNoteFor(null);
       setNoteText('');
     } catch (err) {
@@ -140,9 +159,10 @@ export default function AuthorityDashboard() {
         // utils/orgStats.js), so there's no counter to bump here.
         const resolvedId = resolving;
         setResolving(null);
+        awardAuthorityPoints(CIVIC_SCORE_POINTS.AUTHORITY_RESOLVE);
         setToast({
           msg: verified
-            ? '✅ Resolved! ESG impact being calculated...'
+            ? `✅ Resolved! +${CIVIC_SCORE_POINTS.AUTHORITY_RESOLVE} pts · ESG impact being calculated...`
             : '⚠️ Resolved (photo flagged for review) — calculating ESG impact...',
           type: verified ? 'success' : 'info',
         });
@@ -218,30 +238,55 @@ export default function AuthorityDashboard() {
         </button>
 
         {/* Authority gate — status/resolution writes require allowlist membership */}
-        {!authorized && (
+        {!authorized && (qualified ? (
           <div style={{
-            backgroundColor: '#00d4ff14', border: '0.5px solid #00d4ff40',
+            backgroundColor: '#16a34a14', border: '0.5px solid #16a34a40',
             borderRadius: '12px', padding: '14px', marginBottom: '16px',
           }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
-              <ShieldCheck size={18} color="#00d4ff" strokeWidth={1.5} />
+              <ShieldCheck size={18} color="#16a34a" strokeWidth={1.5} />
               <span style={{ fontSize: '14px', fontWeight: '600', color: '#f0f6ff' }}>
-                Authority mode required
+                Civic Authority unlocked
               </span>
             </div>
             <p style={{ fontSize: '12px', color: '#94a3b8', lineHeight: 1.5, marginBottom: '10px' }}>
-              Updating issue status or marking issues resolved is restricted to authorities.
-              Enable authority mode for this account to manage issues.
+              You&apos;ve earned the <strong style={{ color: '#86efac' }}>Civic Authority</strong> badge
+              ({civicScore} civic points). Enable authority mode to verify and resolve issues — each
+              action earns more points.
             </p>
             <button onClick={handleEnroll} disabled={enrolling} style={{
-              backgroundColor: '#00d4ff', color: '#04091a', border: 'none',
+              backgroundColor: '#16a34a', color: '#04091a', border: 'none',
               borderRadius: '10px', padding: '10px 16px', fontSize: '13px',
               fontWeight: '600', cursor: enrolling ? 'wait' : 'pointer',
             }}>
               {enrolling ? 'Enabling…' : 'Enable Authority Mode'}
             </button>
           </div>
-        )}
+        ) : (
+          <div style={{
+            backgroundColor: '#0d1b2e', border: '0.5px solid #1a2f4a',
+            borderRadius: '12px', padding: '14px', marginBottom: '16px',
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
+              <Lock size={18} color="#4a6280" strokeWidth={1.5} />
+              <span style={{ fontSize: '14px', fontWeight: '600', color: '#f0f6ff' }}>
+                Civic Authority — locked
+              </span>
+            </div>
+            <p style={{ fontSize: '12px', color: '#94a3b8', lineHeight: 1.5, marginBottom: '10px' }}>
+              Verifying and resolving issues is reserved for trusted citizens. Earn{' '}
+              <strong style={{ color: '#00d4ff' }}>{AUTHORITY_THRESHOLD}</strong> civic points to unlock the{' '}
+              <strong style={{ color: '#f0f6ff' }}>Civic Authority</strong> badge — you have{' '}
+              <strong style={{ color: '#00d4ff' }}>{civicScore}</strong> ({toUnlock} to go).
+            </p>
+            <div style={{ height: '6px', backgroundColor: '#1a2f4a', borderRadius: '3px', overflow: 'hidden' }}>
+              <div style={{
+                width: `${Math.min(100, (civicScore / AUTHORITY_THRESHOLD) * 100)}%`, height: '100%',
+                backgroundColor: '#00d4ff', borderRadius: '3px', transition: 'width 0.4s ease',
+              }} />
+            </div>
+          </div>
+        ))}
 
         {/* Filters */}
         {/* Department filter — show only one department's issues (and stats) */}

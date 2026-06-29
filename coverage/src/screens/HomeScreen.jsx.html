@@ -23,9 +23,9 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">71.71% </span>
+                <span class="strong">72.09% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>213/297</span>
+                <span class='fraction'>217/301</span>
             </div>
         
             
@@ -44,9 +44,9 @@
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">71.71% </span>
+                <span class="strong">72.09% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>213/297</span>
+                <span class='fraction'>217/301</span>
             </div>
         
             
@@ -425,7 +425,13 @@
 <a name='L360'></a><a href='#L360'>360</a>
 <a name='L361'></a><a href='#L361'>361</a>
 <a name='L362'></a><a href='#L362'>362</a>
-<a name='L363'></a><a href='#L363'>363</a></td><td class="line-coverage quiet"><span class="cline-any cline-yes">1x</span>
+<a name='L363'></a><a href='#L363'>363</a>
+<a name='L364'></a><a href='#L364'>364</a>
+<a name='L365'></a><a href='#L365'>365</a>
+<a name='L366'></a><a href='#L366'>366</a>
+<a name='L367'></a><a href='#L367'>367</a>
+<a name='L368'></a><a href='#L368'>368</a>
+<a name='L369'></a><a href='#L369'>369</a></td><td class="line-coverage quiet"><span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -625,16 +631,14 @@
 <span class="cline-any cline-yes">3x</span>
 <span class="cline-any cline-yes">3x</span>
 <span class="cline-any cline-yes">3x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">3x</span>
-<span class="cline-any cline-yes">3x</span>
-<span class="cline-any cline-yes">3x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">3x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">3x</span>
 <span class="cline-any cline-yes">3x</span>
 <span class="cline-any cline-yes">3x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">3x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">3x</span>
 <span class="cline-any cline-yes">3x</span>
 <span class="cline-any cline-yes">3x</span>
@@ -643,18 +647,26 @@
 <span class="cline-any cline-yes">3x</span>
 <span class="cline-any cline-yes">3x</span>
 <span class="cline-any cline-yes">3x</span>
-<span class="cline-any cline-yes">15x</span>
-<span class="cline-any cline-yes">15x</span>
-<span class="cline-any cline-yes">15x</span>
-<span class="cline-any cline-yes">15x</span>
-<span class="cline-any cline-yes">15x</span>
-<span class="cline-any cline-yes">15x</span>
-<span class="cline-any cline-yes">15x</span>
-<span class="cline-any cline-yes">15x</span>
-<span class="cline-any cline-yes">15x</span>
-<span class="cline-any cline-yes">15x</span>
-<span class="cline-any cline-yes">15x</span>
-<span class="cline-any cline-yes">15x</span>
+<span class="cline-any cline-yes">3x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">3x</span>
+<span class="cline-any cline-yes">3x</span>
+<span class="cline-any cline-yes">3x</span>
+<span class="cline-any cline-yes">18x</span>
+<span class="cline-any cline-yes">18x</span>
+<span class="cline-any cline-yes">18x</span>
+<span class="cline-any cline-yes">18x</span>
+<span class="cline-any cline-yes">18x</span>
+<span class="cline-any cline-yes">18x</span>
+<span class="cline-any cline-yes">18x</span>
+<span class="cline-any cline-yes">18x</span>
+<span class="cline-any cline-yes">18x</span>
+<span class="cline-any cline-yes">18x</span>
+<span class="cline-any cline-yes">18x</span>
+<span class="cline-any cline-yes">18x</span>
+<span class="cline-any cline-yes">18x</span>
+<span class="cline-any cline-yes">18x</span>
 <span class="cline-any cline-yes">3x</span>
 <span class="cline-any cline-yes">3x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -791,7 +803,7 @@
 import { useNavigate } from 'react-router-dom';
 import { Bot, Search, MailCheck, BarChart3, AlertTriangle, ChevronRight,
          Eye, LogIn, UserPlus, Shield, ShieldCheck, Trophy, Newspaper,
-         Globe, TrendingUp, TrendingDown } from 'lucide-react';
+         Globe, TrendingUp, TrendingDown, Leaf } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import { useIssues } from '../hooks/useIssues';
 import { useUser } from '../hooks/useUser';
@@ -981,11 +993,12 @@ export default function HomeScreen() {
   const resolvedCount = issues.filter(i =&gt; i.status === 'Resolved').length;
 &nbsp;
   const AGENTS = [
-    { icon: Bot, name: 'Analyzer', count: stats.analyzed },
-    { icon: Search, name: 'Detector', count: stats.duplicatesCaught },
-    { icon: MailCheck, name: 'Router', count: stats.authoritiesNotified },
-    { icon: BarChart3, name: 'Predictor', count: stats.predictionsGenerated },
-    { icon: ShieldCheck, name: 'Verifier', count: stats.resolutionsVerified },
+    { icon: Bot, name: 'Analyzer', count: stats.analyzed, color: '#00d4ff' },
+    { icon: Search, name: 'Detector', count: stats.duplicatesCaught, color: '#3b82f6' },
+    { icon: MailCheck, name: 'Router', count: stats.authoritiesNotified, color: '#16a34a' },
+    { icon: BarChart3, name: 'Predictor', count: stats.predictionsGenerated, color: '#f97316' },
+    { icon: ShieldCheck, name: 'Verifier', count: stats.resolutionsVerified, color: '#8b5cf6' },
+    { icon: Leaf, name: 'ESG Scorer', count: stats.esgScored, color: '#4C9F38' },
   ];
 &nbsp;
   return (
@@ -1003,19 +1016,24 @@ export default function HomeScreen() {
             fontSize: '13px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '2px',
           }}&gt;See all &lt;ChevronRight size={14} strokeWidth={1.5} /&gt;&lt;/button&gt;
         &lt;/div&gt;
-        &lt;div style={{ display: 'flex', gap: '6px', paddingBottom: '4px' }}&gt;
+        {/* Horizontally-scrollable, color-coded agent chips — full labels stay readable
+            on mobile (no truncation) and the row scales to all 6 agents. */}
+        &lt;div style={{ display: 'flex', gap: '8px', overflowX: 'auto', paddingBottom: '6px',
+                      scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch' }}&gt;
           {AGENTS.map(a =&gt; (
             &lt;button key={a.name} onClick={<span class="fstat-no" title="function not covered" >() =&gt; navigate('/agents')} t</span>itle={`${a.name} — ${a.count} runs`} style={{
-              flex: 1, minWidth: 0,
-              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px',
-              backgroundColor: '#0d1b2e', border: '0.5px solid #1a2f4a',
-              borderRadius: '999px', padding: '7px 6px', cursor: 'pointer',
-              whiteSpace: 'nowrap', overflow: 'hidden',
+              flexShrink: 0, display: 'flex', alignItems: 'center', gap: '7px', whiteSpace: 'nowrap',
+              backgroundColor: '#0d1b2e', border: `0.5px solid ${a.color}40`,
+              borderRadius: '999px', padding: '6px 12px 6px 7px', cursor: 'pointer',
             }}&gt;
-              &lt;a.icon size={13} color="#00d4ff" strokeWidth={1.5} style={{ flexShrink: 0 }} /&gt;
-              &lt;span style={{ fontSize: '10px', color: '#f0f6ff', fontWeight: '500',
-                             overflow: 'hidden', textOverflow: 'ellipsis' }}&gt;{a.name}&lt;/span&gt;
-              &lt;span style={{ fontSize: '10px', color: '#16a34a', fontWeight: '600', flexShrink: 0 }}&gt;{a.count}&lt;/span&gt;
+              &lt;span style={{
+                width: '24px', height: '24px', borderRadius: '50%', flexShrink: 0,
+                backgroundColor: a.color + '1a', display: 'flex', alignItems: 'center', justifyContent: 'center',
+              }}&gt;
+                &lt;a.icon size={13} color={a.color} strokeWidth={1.5} /&gt;
+              &lt;/span&gt;
+              &lt;span style={{ fontSize: '12px', color: '#f0f6ff', fontWeight: '600' }}&gt;{a.name}&lt;/span&gt;
+              &lt;span style={{ fontSize: '12px', color: a.color, fontWeight: '700' }}&gt;{a.count}&lt;/span&gt;
             &lt;/button&gt;
           ))}
         &lt;/div&gt;
@@ -1156,7 +1174,7 @@ export default function HomeScreen() {
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-06-29T10:19:06.204Z
+                at 2026-06-29T11:18:56.979Z
             </div>
         <script src="../../prettify.js"></script>
         <script>

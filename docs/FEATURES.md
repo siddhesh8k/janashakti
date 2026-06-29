@@ -82,7 +82,7 @@ Orchestrated by `agents/orchestrator.js` (`orchestrateIssue`), each agent's outp
 
 ### Resolution & Celebration
 
-- **Authority dashboard** — `screens/AuthorityDashboard.jsx` (gated by the `authorities` allowlist) lets authorities filter by department, advance status, and upload resolution proof. *Why:* gives the supply side a real workflow.
+- **Authority dashboard** — `screens/AuthorityDashboard.jsx` lets qualified citizens filter by department, advance status, and upload resolution proof. *Why:* gives the supply side a real workflow. JanaShakti has **no separate authority persona** — authority powers are **earned** through gamification: the new **Civic Authority** badge unlocks at `AUTHORITY_THRESHOLD` = **100 civic points** (`constants/issueTypes.js`), so only genuine, trusted citizens can act as an authority. Enforcement is real, not cosmetic — `firestore.rules` requires the user's `civicScore` ≥ 100 (checked via `get()` on their user doc) to create an `/authorities` record, so a user can't self-enroll (and can't write status/resolution fields) until they've earned the badge. The dashboard shows a **LOCKED** card with a progress bar to 100 below the threshold, and a *"Civic Authority unlocked → Enable Authority Mode"* card once earned; the **Verify status / In Progress / Resolve** action buttons appear only for enrolled, qualified users. Authority actions feed a virtuous cycle by awarding civic points back to the authority — **+5** to advance a status (`AUTHORITY_ACTION`), **+15** to resolve with a verified photo (`AUTHORITY_RESOLVE`). *Distinction:* this gates the **authority status-pipeline** actions — separate from the community **confirm/verify** action (any geofenced citizen, **+5**), which is unchanged crowd verification.
 - **Resolution photo + AI verification** — On a fix photo, **Agent 5** (`verifyResolution`) judges whether it genuinely shows *this* issue resolved, writing `resolutionVerified / resolutionConfidence / resolutionNote`. It **flags, never blocks** — a legitimate resolution can't be broken by an AI hiccup. *Why:* prevents fake "fixed" photos while staying robust.
 - **Before/After slider** — `components/BeforeAfterSlider.jsx` shows the original vs. fix photo with an "AI-verified · NN%" badge.
 - **Confetti celebration** — When `IssueDetail`'s real-time listener sees status flip to **Resolved**, `components/ResolutionCelebration.jsx` fires a confetti animation and awards the reporter **+25 civic score** (idempotent via `resolutionCelebrated`). *Why:* closing the loop should *feel* like a win.
@@ -189,8 +189,10 @@ Features no other civic platform has shipped together.
 | Retweet a platform post | **+10** |
 | Issue resolved (reporter reward) | **+25** |
 | Daily streak (consecutive day) | **+2** |
+| Authority action — advance a status | **+5** |
+| Authority resolve — with verified photo | **+15** |
 
-### Badges (9) — `BADGE_CONDITIONS`
+### Badges (10) — `BADGE_CONDITIONS`
 
 | Badge | Unlock condition |
 |---|---|
@@ -203,6 +205,7 @@ Features no other civic platform has shipped together.
 | Verifier | 5+ issues verified |
 | City Champion | civic score ≥ 300 |
 | Legend | civic score ≥ 500 |
+| Civic Authority | civic score ≥ 100 — unlocks authority powers (verify/resolve) |
 
 ### ESG Badges (5) — `ESG_BADGES`
 
@@ -268,7 +271,7 @@ Three **Gemini-powered** Node dev agents (`tests/agents/`) that write, run, and 
 
 AI-generated tests live under `tests/ai/**` and are **isolated** from `npm test`, so a flaky AI test can never red the deterministic suite. Models: `gemini-2.5-flash → gemini-2.5-flash-lite → gemini-2.0-flash-lite`.
 
-**Latest run:** 407 tests passing (100%) across 52 files (18 deterministic + 34 AI-generated) at ~48% line / 70% branch coverage — see `tests/reports/latest.html`.
+**Latest run:** 410 tests passing (100%) across 52 files (18 deterministic + 34 AI-generated) at ~48% line / 70% branch coverage — see `tests/reports/latest.html`.
 
 ---
 

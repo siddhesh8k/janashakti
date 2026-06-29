@@ -147,7 +147,7 @@ sequenceDiagram
 | `/profile` | `ProfileScreen` | ✅ | Score, badges, affiliation · ESG Impact metrics + contributed SDGs + ESG badges |
 | `/issue/:id` | `IssueDetail` | ❌ (back) | Verify, RTI, share, escalation, elected-rep card · ESG card + SDG pills + ESG Report share |
 | `/analytics` | `AnalyticsDashboard` | ❌ (back) | Recharts + AI insights · ESG tab (`location.state.tab==='esg'`) |
-| `/authority` | `AuthorityDashboard` | ❌ (back) | Status / resolution (gated) · per-department filter · fires Agent 6 on resolve |
+| `/authority` | `AuthorityDashboard` | ❌ (back) | Status / resolution — **gamification-gated** (civicScore ≥ 100 = Civic Authority badge; locked card + progress bar below threshold, "Enable Authority Mode" when qualified) · acting authority earns +5/status, +15/resolve · per-department filter · fires Agent 6 on resolve |
 | `/agents` | `AgentsShowcase` | ❌ (back) | Live agent traces |
 | `/leaderboard` | `Leaderboard` | ❌ (back) | Wall of Fame + CSR report + Representative scorecard |
 | `/journalist` | `JournalistDashboard` | ❌ (back) | Story-ready + press release |
@@ -244,7 +244,7 @@ flowchart LR
 | **MapScreen** | useIssues, useSharedLocation | — | googleMaps, geo, organizations, mapStyle | — | — (read-only) |
 | **ProfileScreen** | useAuth, useUser, useIssues | — | organizations, publicProfile, issueTypes, esg (ESG Impact metrics, contributed SDGs, ESG badges) | — | `users` (affiliation, count reconcile), `publicProfiles` |
 | **AnalyticsDashboard** | useIssues, usePagination | `generateCityInsights` (Gemini) | trend, cities, exportToExcel, ChartCarousel, esg (ESG tab: City ESG grade, SDG Contributions, City Rankings, Top Environmental Impact) | — | — (read-only) |
-| **AuthorityDashboard** | useIssues, usePagination | `verifyResolution` (A5), `scoreESGImpact` (A6, on resolve) | authority, departments (per-dept filter), gemini (compress), validation, exportToExcel, esg | — | `issues` (status/resolution, `esgScore`), `authorities` (enroll) |
+| **AuthorityDashboard** | useAuth (civicScore gate), useIssues, usePagination | `verifyResolution` (A5), `scoreESGImpact` (A6, on resolve) | authority, departments (per-dept filter), gemini (compress), validation, exportToExcel, esg, issueTypes (`AUTHORITY_THRESHOLD`, `CIVIC_SCORE_POINTS`), publicProfile (`bumpPublicProfile`) | — | `issues` (status/resolution, `esgScore`), `authorities` (enroll, civicScore ≥ 100 gated), `users` + `publicProfiles` (acting authority +5/status, +15/resolve) |
 | **AgentsShowcase** | useAgents | — (displays traces) | — | — | — (read-only) |
 | **Leaderboard** | usePagination | `generateCSRReport` (Gemini) | organizations, orgStats, publicProfile, levelFor, representatives (calculateScorecard), exportToExcel | — | `publicProfiles` (self-heal own score) |
 | **JournalistDashboard** | usePagination | `generatePressRelease` (Gemini) | story, exportToExcel | — | `issues` (storyClaimedBy/At) |
@@ -537,12 +537,15 @@ flowchart TB
 
 ### 4.4 Resolution Flow
 
-`AuthorityDashboard.handleResolvePhoto` (gated by the `authorities` allowlist) →
+`AuthorityDashboard.handleResolvePhoto` (gated by the `authorities` allowlist, which a
+user only joins after earning the **Civic Authority** badge — civicScore ≥ 100) →
 **Agent 5** verifies the fix photo → status flips to **Resolved** → `IssueDetail`'s
 `onSnapshot` detects the transition, fires `ResolutionCelebration`, and awards the
 reporter **+25** (once, via `resolutionCelebrated` guard). The resolve also fires
 **Agent 6 — ESG Impact Scorer** (with ESG toasts); an owner-gated fallback effect in
-`IssueDetail` scores the issue if the dashboard missed it.
+`IssueDetail` scores the issue if the dashboard missed it. The **acting authority** is
+itself rewarded civic points — **+5** per status advance and **+15** per resolve (via
+`awardAuthorityPoints`, mirrored to `publicProfiles`).
 
 ```mermaid
 sequenceDiagram
@@ -560,6 +563,7 @@ sequenceDiagram
     AD->>A5: verifyResolution(photo, issue)
     A5-->>AD: { is_genuine, is_resolved, confidence, reasoning }
     AD->>F: setDoc(issue) status=Resolved,<br/>resolutionPhotoUrl, resolutionVerified,<br/>resolutionConfidence, resolutionNote, resolvedAt,<br/>statusHistory += {Resolved}
+    AD->>F: users/{authority} civicScore +15<br/>(awardAuthorityPoints → bumpPublicProfile)
     AD->>A6: scoreESGImpact(issue, issueId)
     A6->>F: updateDoc(issue) esgScore + esgScoredAt
     A6->>F: users/{reporter} esgIssuesResolved, totalPeopleImpacted,<br/>sdgsContributed (own try/catch)
@@ -756,7 +760,7 @@ noted ISO.
 | `esgIssuesResolved` / `totalPeopleImpacted` | number | ESG impact counters (Agent 6, via `increment()`); seeded 0 |
 | `sdgsContributed` | string[] | UN SDGs the user has contributed to (Agent 6, via `arrayUnion()`); seeded `[]` |
 | `rtiFiled` | number | RTI requests filed; seeded 0 |
-| `badges` | string[] | Earned badge ids (`BADGE_CONDITIONS`) |
+| `badges` | string[] | Earned badge ids (`BADGE_CONDITIONS`, **10 badges** — incl. `civic_authority`: civicScore ≥ `AUTHORITY_THRESHOLD` (100), the gate that unlocks authority powers) |
 | `level` | string | Tier name (`LEVEL_THRESHOLDS`) |
 | `streak` / `lastActiveDate` | number / string(YYYY-MM-DD) | Daily streak |
 | `xHandle` / `linkedinUrl` / `city` | string | Optional profile fields |
@@ -817,6 +821,9 @@ noted ISO.
 ### 5.7 `authorities/{uid}` — authority allowlist
 
 `{ uid, enrolledAt, demo }` — presence gates the trust-sensitive issue fields (§8).
+Self-enroll (create) is itself gated: the rules require the user's own
+`users/{uid}.civicScore` ≥ 100 (the **Civic Authority** badge / `AUTHORITY_THRESHOLD`),
+so authority status is earned, not free.
 
 ### 5.8 `meta/{docId}` — seed marker (vestigial)
 
@@ -975,6 +982,10 @@ flowchart TB
     Coll -->|users| OwnU{isOwner uid}
     OwnU -->|yes| AllowU([✅ read+write])
     OwnU -->|no| DenyU([❌])
+
+    Coll -->|authorities create| Self{auth.uid == authorityId<br/>&& users civicScore ≥ 100}
+    Self -->|yes| AllowAuth([✅ self-enroll])
+    Self -->|no| DenyAuth([❌])
 ```
 
 **Field-level authorization on `issues`** (the core control):
@@ -997,8 +1008,20 @@ flowchart TB
 (signed-in-write demo posture — real data is Admin-SDK imported; production-harden per the
 notes below); `representatives` public-read, **write locked** (Admin-SDK import only —
 curated reference data); `authorities` public-read, a signed-in user may create
-**only their own** uid doc (`update`/`delete` forbidden).
+**only their own** uid doc (`update`/`delete` forbidden) **and only once their
+`users/{uid}.civicScore` ≥ 100** — i.e. they have earned the **Civic Authority**
+badge (`AUTHORITY_THRESHOLD`, mirrored in `constants/issueTypes.js`). The create rule
+reads the user's own profile via
+`get(/databases/$(database)/documents/users/$(authorityId)).data.get('civicScore', 0) >= 100`,
+so authority self-enrollment — and the resulting status/resolution write rights gated by
+`isAuthority()` — is **earned**, not free.
 
+> **Honest-user enforcement (demo):** civic scores live on the owner-writable
+> `users/{uid}` doc, so a determined user could inflate their own score to clear the
+> gate. This is an honest-user control for the demo; production would compute scores
+> **server-side** (or provision authorities via Admin SDK / custom claims) so the gate
+> can't be self-granted.
+>
 > **Production hardening notes** (documented inline in the rules): lock `publicProfiles`
 > to `isOwner`, `organizations`/`meta` to `if false` (Admin-SDK seeding), and provision
 > `authorities` via Admin SDK / custom claims with self-enroll removed.
@@ -1017,6 +1040,14 @@ Cloudinary uses an **unsigned** preset (no secret in the bundle).
 - **Geofenced verification** — verifying requires a real GPS fix **within 500 m**
   (Haversine), preventing remote vote-stuffing.
 - **One vote per user** — `confirmedBy[]` + transactional `confirmIssue` (idempotent).
+- **Earned authority powers** — status/resolution write rights are gamification-gated:
+  a user can self-enroll into `/authorities` only once `civicScore` ≥
+  `AUTHORITY_THRESHOLD` (100 — the **Civic Authority** badge), enforced both in the UI
+  (locked card + progress bar in `AuthorityDashboard`) and in the rules' `authorities`
+  create check. Acting on issues then earns the authority civic points via
+  `CIVIC_SCORE_POINTS.AUTHORITY_ACTION` (+5/status advance) and `AUTHORITY_RESOLVE`
+  (+15/resolve). Community confirm/verify (the geofenced citizen +5) is a separate,
+  unchanged path.
 - **Exactly-once social** — the `socialQueued` flag is set inside the confirm
   transaction so concurrent verifiers can't double-post.
 - **Resolution verification** — Agent 5 flags fake/unrelated fix photos (AI-verified
@@ -1072,7 +1103,7 @@ and are **excluded from `npm test`** (which runs only the deterministic `src/**`
 chains Agent 1 → Agent 3. Vitest config + coverage (`@vitest/coverage-v8`,
 `json-summary`) is in `vite.config.js`.
 
-**Latest run:** 407 tests passing (100%) across 52 files — 18 deterministic
+**Latest run:** 410 tests passing (100%) across 52 files — 18 deterministic
 (`src/**` + hand-written `tests/unit/core`) + 34 Gemini-generated under `tests/ai/`
 (unit · components · hooks · screen-smoke) — at ~48% line / 41% function / 70% branch
 coverage (screens covered at the smoke / render-without-crash level). Snapshot:

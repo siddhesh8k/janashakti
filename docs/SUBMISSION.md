@@ -13,7 +13,7 @@
 
 ## Solution Overview
 
-JanaShakti turns the everyday frustration of broken civic infrastructure into organised, accountable action. A citizen photographs a pothole, dead streetlight, or overflowing bin; a **5-agent Google Gemini pipeline** instantly classifies it, scores its severity, drafts a formal complaint, identifies the citizen's legal rights, detects duplicates, routes it to the correct municipal department (emailing them via n8n), and predicts a resolution timeline. The community then verifies the issue under a GPS geofence, building visible pressure; if it's ignored, a time-based engine **auto-escalates** it from Ward Officer to Department Head to Commissioner to Media at 7/14/30 days. JanaShakti uniquely closes the accountability loop: it generates **RTI applications**, ranks **elected representatives** by real resolution rate, equips **journalists** with story-ready feeds and AI press releases, lets **companies and colleges** adopt civic zones with auto-generated CSR reports, and answers questions through a bilingual **Gemini voice assistant** grounded in live data. Once an issue is resolved, a **6th Gemini agent** scores its **ESG impact** across Environmental, Social, and Governance pillars and maps it to the **UN Sustainable Development Goals** — keeping civic action not just accountable, but measurable — all on Google's stack with **no custom backend**.
+JanaShakti turns the everyday frustration of broken civic infrastructure into organised, accountable action. A citizen photographs a pothole, dead streetlight, or overflowing bin; a **5-agent Google Gemini pipeline** instantly classifies it, scores its severity, drafts a formal complaint, identifies the citizen's legal rights, detects duplicates, routes it to the correct municipal department (emailing them via n8n), and predicts a resolution timeline. The community then verifies the issue under a GPS geofence, building visible pressure; authority powers to advance and resolve issues are **earned through civic points** (the Civic Authority badge unlocks at 100 points), not granted freely. If it's ignored, a time-based engine **auto-escalates** it from Ward Officer to Department Head to Commissioner to Media at 7/14/30 days. JanaShakti uniquely closes the accountability loop: it generates **RTI applications**, ranks **elected representatives** by real resolution rate, equips **journalists** with story-ready feeds and AI press releases, lets **companies and colleges** adopt civic zones with auto-generated CSR reports, and answers questions through a bilingual **Gemini voice assistant** grounded in live data. Once an issue is resolved, a **6th Gemini agent** scores its **ESG impact** across Environmental, Social, and Governance pillars and maps it to the **UN Sustainable Development Goals** — keeping civic action not just accountable, but measurable — all on Google's stack with **no custom backend**.
 
 *(~190 words)*
 
@@ -45,7 +45,7 @@ JanaShakti turns the everyday frustration of broken civic infrastructure into or
 - **AI-generated RTI applications (RTI Act 2005), formal complaint letters, contextual legal rights.** *Hands citizens real legal instruments.*
 
 ### 6. Civic Gamification
-- **Civic score, 9 badges, 5 levels, daily streaks.** *Turns one-off reporters into repeat civic guardians.*
+- **Civic score, 10 badges, 5 levels, daily streaks.** *Turns one-off reporters into repeat civic guardians.* The **Civic Authority** badge unlocks at **100 points**, granting authority powers (verify / resolve), which themselves award points — a virtuous cycle.
 
 ### 7. Corporate & College Adoption
 - **Zone adoption, auto-tagging, live org stats, AI CSR reports + LinkedIn posts, inter-college competition.** *Makes CSR and campus civic-duty measurable.*
@@ -85,7 +85,7 @@ flowchart LR
     A3 -->|"branded HTML + JSON"| Rep2[(tests/reports/latest.html)]
 ```
 
-Latest run: **407 tests passing (100%)** across 52 files (18 deterministic + 34 AI-generated) at ~48% line / 70% branch coverage. Models: `gemini-2.5-flash → gemini-2.5-flash-lite → gemini-2.0-flash-lite`.
+Latest run: **410 tests passing (100%)** across 52 files (18 deterministic + 34 AI-generated) at ~48% line / 70% branch coverage. Models: `gemini-2.5-flash → gemini-2.5-flash-lite → gemini-2.0-flash-lite`.
 
 ---
 

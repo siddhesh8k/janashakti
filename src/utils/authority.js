@@ -4,9 +4,10 @@ import { db } from '../firebase';
 // Authority allowlist helpers. A uid present in /authorities may update the
 // trust-sensitive issue fields (status / resolution) per firestore.rules.
 //
-// DEMO NOTE: enrollAuthority lets a signed-in user self-enroll so the Authority
-// Dashboard demo works without an admin backend. In production, authorities should
-// be provisioned via the Admin SDK / custom claims and self-enroll removed.
+// Self-enroll is GATED by gamification: firestore.rules only allows creating the
+// /authorities doc once the user's civicScore has reached AUTHORITY_THRESHOLD (the
+// "Civic Authority" badge). So authority powers are earned, not free. In production,
+// authorities would instead be provisioned via the Admin SDK / custom claims.
 
 export const isAuthority = async (uid) => {
   if (!uid) return false;
