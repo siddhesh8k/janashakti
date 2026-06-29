@@ -23,11 +23,12 @@ export const isAuthority = async (uid) => {
 export const enrollAuthority = async (uid) => {
   if (!uid) return false;
   try {
-    await setDoc(doc(db, 'authorities', uid), {
-      uid,
-      enrolledAt: serverTimestamp(),
-      demo: true,
-    });
+    const ref = doc(db, 'authorities', uid);
+    // Already enrolled? Treat as success — re-writing would be an UPDATE, which the rules
+    // forbid (create-only). This prevents a permission-denied error on re-enroll.
+    const existing = await getDoc(ref);
+    if (existing.exists()) return true;
+    await setDoc(ref, { uid, enrolledAt: serverTimestamp(), demo: true });
     return true;
   } catch (err) {
     console.error('[enrollAuthority]:', err);

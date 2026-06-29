@@ -30,7 +30,7 @@ const DEPARTMENTS = [...new Set(Object.values(DEPARTMENT_MAP).map(d => d.name))]
 
 export default function AuthorityDashboard() {
   const { issues, loading } = useIssues({ limitCount: 50 });
-  const { userProfile } = useAuth();
+  const { user, userProfile } = useAuth();
   const civicScore = userProfile?.civicScore || 0;
   const qualified = civicScore >= AUTHORITY_THRESHOLD;   // has earned the Civic Authority badge
   const toUnlock = Math.max(0, AUTHORITY_THRESHOLD - civicScore);
@@ -52,11 +52,16 @@ export default function AuthorityDashboard() {
   // Status/resolution writes require the signed-in user to be in the /authorities
   // allowlist (firestore.rules). Check once so we can gate the action buttons and
   // never surface a silent permission-denied.
+  // Re-check allowlist membership whenever the auth user RESOLVES. Running once on mount
+  // with a not-yet-ready auth.currentUser left `authorized` false for already-enrolled users
+  // — which wrongly showed the "Enable Authority Mode" card, and clicking it attempted to
+  // re-create an existing /authorities doc (a forbidden update → the error you saw).
   useEffect(() => {
+    if (!user?.uid) { setAuthorized(false); return; }
     let active = true;
-    isAuthority(auth.currentUser?.uid).then((ok) => { if (active) setAuthorized(ok); });
+    isAuthority(user.uid).then((ok) => { if (active) setAuthorized(ok); });
     return () => { active = false; };
-  }, []);
+  }, [user?.uid]);
 
   const handleEnroll = async () => {
     const uid = auth.currentUser?.uid;
