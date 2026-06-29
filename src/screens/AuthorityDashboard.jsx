@@ -43,6 +43,10 @@ export default function AuthorityDashboard() {
   const [noteText, setNoteText] = useState('');
   const [authorized, setAuthorized] = useState(false);
   const [enrolling, setEnrolling] = useState(false);
+  // Authority actions require BOTH allowlist enrolment AND current qualification
+  // (civicScore ≥ threshold). Gating on `authorized` alone flashed authority mode on first
+  // load while the profile/score was still loading (qualified was briefly unknown).
+  const canAct = authorized && qualified;
   const fileRef = useRef(null);
 
   // Status/resolution writes require the signed-in user to be in the /authorities
@@ -237,8 +241,9 @@ export default function AuthorityDashboard() {
           <Download size={14} strokeWidth={1.5} /> Export to Excel (Privacy Safe)
         </button>
 
-        {/* Authority gate — status/resolution writes require allowlist membership */}
-        {!authorized && (qualified ? (
+        {/* Authority gate — needs the earned badge (qualified) AND allowlist enrolment.
+            Not-yet-qualified always sees the locked card (even if previously enrolled). */}
+        {!canAct && (qualified ? (
           <div style={{
             backgroundColor: '#16a34a14', border: '0.5px solid #16a34a40',
             borderRadius: '12px', padding: '14px', marginBottom: '16px',
@@ -404,7 +409,7 @@ export default function AuthorityDashboard() {
                 </div>
               )}
 
-              {authorized && (
+              {canAct && (
                 <div style={{ display: 'flex', gap: '6px' }}>
                   {issue.status === 'Reported' && (
                     <button onClick={() => handleStatusUpdate(issue.id, 'Verified')} style={{
