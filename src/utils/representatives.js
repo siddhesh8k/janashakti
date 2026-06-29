@@ -27,6 +27,12 @@ const toWard = (id, d) => ({
     since: d.since || '',
     phone: d.phone ?? null,
   },
+  // Self-enrollment metadata (community-claimed reps) — flows into the lookups so the
+  // UI can badge a claim as self-declared and offer the community flag action.
+  docId: id,
+  selfDeclared: !!d.selfDeclared,
+  claimedByUid: d.claimedByUid || null,
+  flagCount: d.flagCount || 0,
 });
 
 export const loadRepresentatives = () => {

@@ -56,8 +56,8 @@ JanaShakti turns the everyday frustration of broken civic infrastructure into or
 ### 9. Social Amplification
 - **X / WhatsApp / LinkedIn / Facebook / Telegram share links, consent model, platform-only auto-posting.** *One tap turns a network into pressure, with privacy by design.*
 
-### 10. Elected Representative Scorecard
-- **GPS→ward→representative tagging, resolution-rate ranking, neutral by design.** *Objective accountability for those elected to act.*
+### 10. Representative Accountability (self-enrolled)
+- **Reps self-enrol — "claim your ward"** (one per ward, declare a party), GPS→ward tagging, resolution-rate ranking, plus a neutral **by-party aggregate**. Self-declared & community-flagged — *not an official record*. *No open dataset exists for this, so the app becomes the source.*
 
 ### 11. Voice Assistant
 - **Gemini voice Q&A over live PII-free data, English/Hindi, on-device speech.** *Anyone can simply ask "who is responsible near me?"*
@@ -169,7 +169,7 @@ The entire database of record — **9 collections**, all written client-side, in
 | `organizations` | ~9 | Adopted-zone companies/colleges |
 | `agents_log` | ~8 | Per-agent audit log |
 | `agent_runs` | ~6 | Orchestrated pipeline traces |
-| `representatives` | ~6 | Ward → elected representative (open-data import) |
+| `representatives` | ~6 | Ward → representative — community self-enrolled ("claim your ward") + fallback |
 | `authorities` | ~3 | Authority allowlist |
 | `meta` | — | Seed marker (vestigial) |
 

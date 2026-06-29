@@ -79,8 +79,31 @@ export const WARD_REPRESENTATIVES = [
 // Helpers stay synchronous, so no consumer screen needs an async rewrite.
 let ACTIVE = WARD_REPRESENTATIVES;
 
+// Neutral party labels for the self-enrollment dropdown. Metadata only — NO colors,
+// logos, or endorsements anywhere (keeps the scorecard non-partisan by design).
+export const PARTIES = [
+  { code: 'INC',         name: 'Indian National Congress' },
+  { code: 'BJP',         name: 'Bharatiya Janata Party' },
+  { code: 'AAP',         name: 'Aam Aadmi Party' },
+  { code: 'JDS',         name: 'Janata Dal (Secular)' },
+  { code: 'SHS',         name: 'Shiv Sena' },
+  { code: 'NCP',         name: 'Nationalist Congress Party' },
+  { code: 'DMK',         name: 'Dravida Munnetra Kazhagam' },
+  { code: 'AITC',        name: 'All India Trinamool Congress' },
+  { code: 'Independent', name: 'Independent' },
+  { code: 'Other',       name: 'Other / Local' },
+];
+
+const wardKey = (city, wardNo) => `${String(city || '').toLowerCase()}-${wardNo}`;
+
+// MERGE community-claimed / imported reps OVER the built-in fallback (claims win by
+// ward), instead of replacing it — so the scorecard stays populated for the demo while
+// real self-enrolled reps take precedence in their wards. Empty list → pure fallback.
 export const setRepresentatives = (list) => {
-  ACTIVE = (Array.isArray(list) && list.length) ? list : WARD_REPRESENTATIVES;
+  if (!Array.isArray(list) || !list.length) { ACTIVE = WARD_REPRESENTATIVES; return; }
+  const byKey = new Map(WARD_REPRESENTATIVES.map((w) => [wardKey(w.city, w.wardNo), w]));
+  list.forEach((w) => byKey.set(wardKey(w.city, w.wardNo), w));
+  ACTIVE = Array.from(byKey.values());
 };
 
 // City-level fallback: when a GPS fix doesn't fall inside any ward radius, return a
@@ -91,7 +114,9 @@ export const getRepresentativeForCity = (city) => {
   const c = String(city).toLowerCase();
   const ward = ACTIVE.find((w) => w.city?.toLowerCase() === c);
   if (!ward) return null;
-  return { wardNo: ward.wardNo, wardName: ward.name, city: ward.city, representative: ward.representative };
+  return { wardNo: ward.wardNo, wardName: ward.name, city: ward.city,
+           center: ward.center, radiusKm: ward.radiusKm, representative: ward.representative,
+           selfDeclared: !!ward.selfDeclared, docId: ward.docId || null, flagCount: ward.flagCount || 0 };
 };
 
 // Find which ward a location falls in (first match by Euclidean radius — same approach
@@ -107,7 +132,12 @@ export const getWardRepresentative = (lat, lng) => {
         wardNo: ward.wardNo,
         wardName: ward.name,
         city: ward.city,
+        center: ward.center,
+        radiusKm: ward.radiusKm,
         representative: ward.representative,
+        selfDeclared: !!ward.selfDeclared,
+        docId: ward.docId || null,
+        flagCount: ward.flagCount || 0,
       };
     }
   }
@@ -153,6 +183,28 @@ export const calculateScorecard = (issues) => {
       ...rep,
       resolutionRate: rep.totalIssues > 0 ? Math.round((rep.resolved / rep.totalIssues) * 100) : 0,
       avgDays: rep.totalIssues > 0 ? Math.round(rep.totalDaysOpen / rep.totalIssues) : 0,
+    }))
+    .sort((a, b) => b.resolutionRate - a.resolutionRate);
+};
+
+// Neutral party-level rollup of the individual scorecard. Surfaces "which party is most
+// responsive in this locality" as a TRANSPARENT AGGREGATE (sum of resolved / total
+// across that party's tracked reps) — a responsiveness signal, not an endorsement or an
+// official ranking. Methodology is the same factual issue data as the individual cards.
+export const aggregateByParty = (scorecard) => {
+  const map = {};
+  scorecard.forEach((r) => {
+    const party = r.representative?.party || 'Unknown';
+    if (!map[party]) map[party] = { party, reps: 0, totalIssues: 0, resolved: 0, wallOfShame: 0 };
+    map[party].reps += 1;
+    map[party].totalIssues += r.totalIssues || 0;
+    map[party].resolved += r.resolved || 0;
+    map[party].wallOfShame += r.wallOfShame || 0;
+  });
+  return Object.values(map)
+    .map((p) => ({
+      ...p,
+      resolutionRate: p.totalIssues > 0 ? Math.round((p.resolved / p.totalIssues) * 100) : 0,
     }))
     .sort((a, b) => b.resolutionRate - a.resolutionRate);
 };

@@ -98,12 +98,23 @@ service cloud.firestore {
       allow write: if isSignedIn();
     }
 
-    // Elected-representative / ward data, sourced from data.gov.in (OGD) and ingested
-    // via the Admin SDK (scripts/importRepresentatives.mjs). Public read; writes are
-    // locked — this is curated reference data, never user-editable from the client.
+    // Ward representatives — a self-enrollment ("claim your ward") collection, plus any
+    // curated rows seeded via the Admin SDK. Public read. A signed-in user may CREATE a
+    // claim for THEMSELVES (one per ward — create only applies when the doc is absent,
+    // so an existing claim can't be overwritten by a create). Self-declared, never
+    // official. The claimant may edit/withdraw their own claim; ANY signed-in user may
+    // add a community flag (flagCount/flaggedBy) — the lightweight verification signal.
     match /representatives/{wardId} {
       allow read: if true;
-      allow write: if false;
+      allow create: if isSignedIn()
+        && request.resource.data.claimedByUid == request.auth.uid
+        && request.resource.data.selfDeclared == true;
+      allow update: if isSignedIn() && (
+        (resource.data.get('claimedByUid', '') == request.auth.uid)
+        || request.resource.data.diff(resource.data).affectedKeys()
+             .hasOnly(['flagCount', 'flaggedBy', 'updatedAt'])
+      );
+      allow delete: if isSignedIn() && resource.data.get('claimedByUid', '') == request.auth.uid;
     }
 
     match /agents_log/{logId} {

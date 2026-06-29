@@ -619,18 +619,24 @@ flowchart TB
 
 ### 4.7 Representative Accountability Flow
 
-Every issue is auto-tagged at creation with the **elected representative responsible for
+Representatives are **community self-enrolled** ("claim your ward" — the same
+enrollment pattern as colleges/corporates): a citizen claims the ward they're standing in
+and declares a party, writing a `representatives` doc via `utils/repClaims.js`
+(`claimWard`, **one claim per ward**; `flagRepresentative` for the community-flag signal;
+`getMyClaim`). Every issue is then auto-tagged with the **representative responsible for
 its ward** (GPS → ward → representative, no user input), and a neutral **scorecard** ranks
 representatives purely by **resolution rate**. Ward/representative data loads at runtime
-from the `representatives` collection (open-data import — §6.6) via
-`utils/representatives.js` (`loadRepresentatives`, cached, swapped into the synchronous
-helpers); the built-in list in `constants/representatives.js` is the fallback. Helpers are
-pure: `getWardRepresentative(lat,lng)` (Euclidean radius, with `getRepresentativeForCity`
-fallback) and `calculateScorecard(issues)`.
+from the `representatives` collection via `utils/representatives.js` (`loadRepresentatives`,
+cached) and is **merged over** the built-in fallback in `constants/representatives.js`
+(claims win by ward; the demo stays populated). Helpers are pure:
+`getWardRepresentative(lat,lng)` (Euclidean radius, with `getRepresentativeForCity`
+fallback), `calculateScorecard(issues)`, and `aggregateByParty(scorecard)`.
 
-> **Neutral by design:** individual representative *performance* only — no party
-> colors/logos, no endorsements; `party` is a metadata label and resolution rate is the
-> sole ranking metric.
+> **Neutral by design:** the individual representative is the ranking unit — no party
+> colors/logos, no endorsements; `party` is a metadata label. A **By-Party** view offers a
+> transparent aggregate (identical resolution-rate math) as a responsiveness *signal*, not
+> a verdict. Every claim is **self-declared · community-tracked — not an official record**
+> (one-per-ward + community flag is the lightweight verification).
 
 ```mermaid
 flowchart TB

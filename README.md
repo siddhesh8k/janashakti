@@ -29,7 +29,7 @@ It closes the loop that every Indian civic-complaint app leaves open: **after yo
 - a **5-agent Google Gemini pipeline** that classifies the issue, drafts the complaint, detects duplicates **and recurrences of already-resolved issues**, routes it to the right department, and predicts a resolution timeline — plus a **6th, post-resolution agent** that scores each resolved issue's ESG (Environmental / Social / Governance) impact and maps it to the UN Sustainable Development Goals;
 - an **n8n automation layer** that emails the department and posts to social media;
 - a **time-based escalation engine** that climbs Ward Officer → Department Head → Commissioner → Media at 7 / 14 / 30 days;
-- a **transparency layer** that ranks elected representatives by their real resolution rate, equips journalists with story-ready feeds, and lets companies/colleges adopt civic zones.
+- a **transparency layer** where representatives **self-enrol to represent their ward** and are ranked by their real resolution rate (with a neutral by-party view), journalists get story-ready feeds, and companies/colleges adopt civic zones.
 
 Built **end-to-end on Google's stack** (Gemini · Firebase · Google Maps) with **no custom backend** — all business logic runs client-side and is secured by Firestore Security Rules.
 
@@ -127,7 +127,7 @@ Built **end-to-end on Google's stack** (Gemini · Firebase · Google Maps) with 
 **🚀 Unique Differentiators**
 - **Corporate / College zone adoption** + AI CSR reports + LinkedIn posts
 - **Journalist dashboard** — story-ready filter, AI press releases, 48h exclusives
-- **Elected Representative Scorecard** — GPS→ward→rep tagging, resolution-rate ranking (neutral by design)
+- **Representative Accountability** — self-enrolled "claim your ward" reps, GPS→ward tagging, resolution-rate ranking + neutral by-party aggregate (self-declared, community-flagged)
 - **Gemini Voice Assistant** — bilingual (EN/HI) Q&A over live, PII-free data
 - **Wall of Fame Leaderboard** — Citizens / Companies / Colleges / Representatives
 - **Privacy-safe Excel export** — anonymized, on 4 dashboards

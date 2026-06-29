@@ -621,7 +621,7 @@ export default function IssueDetail() {
               <Landmark size={14} color="#8b5cf6" strokeWidth={1.5} />
               <span style={{ fontSize: '11px', fontWeight: '500', color: '#8b5cf6',
                              textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                Your elected representative
+                {wardRep.selfDeclared ? 'Ward representative' : 'Your elected representative'}
               </span>
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -635,6 +635,14 @@ export default function IssueDetail() {
                 <p style={{ fontSize: '11px', color: '#4a6280', marginTop: '2px' }}>
                   {wardRep.representative.party} · Since {wardRep.representative.since}
                 </p>
+                {wardRep.selfDeclared && (
+                  <span style={{ display: 'inline-flex', alignItems: 'center', marginTop: '4px',
+                                 fontSize: '10px', fontWeight: '600', color: '#7ee8fa',
+                                 backgroundColor: '#00d4ff14', border: '0.5px solid #00d4ff33',
+                                 borderRadius: '999px', padding: '2px 8px' }}>
+                    Self-declared · community-tracked
+                  </span>
+                )}
               </div>
               <div style={{ textAlign: 'right' }}>
                 <span style={{ fontSize: '11px', color: '#4a6280' }}>
