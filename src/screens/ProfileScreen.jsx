@@ -431,7 +431,9 @@ export default function ProfileScreen() {
             </div>
             <div style={{ fontSize: '11px', fontWeight: '500', color: '#4a6280',
                           letterSpacing: '0.7px', marginBottom: '8px' }}>AMPLIFY REACH</div>
-            <div style={{ display: 'flex', flexWrap: 'nowrap', gap: '6px' }}>
+            {/* Icon-only circular chips — recognizable at a glance and never truncate
+                on narrow screens (the old icon+label pills clipped to "WhatsA…"). */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '8px' }}>
               {[
                 { label: 'X', icon: Twitter, color: '#00d4ff' },
                 { label: 'WhatsApp', icon: MessageCircle, color: '#16a34a' },
@@ -441,16 +443,15 @@ export default function ProfileScreen() {
               ].map(({ label, icon: Icon, color }) => {
                 const unlocked = (profile?.issuesShared || 0) >= 3;
                 return (
-                  <div key={label} style={{
-                    flex: 1, minWidth: 0, justifyContent: 'center',
-                    display: 'flex', alignItems: 'center', gap: '4px',
-                    padding: '6px 6px', borderRadius: '999px',
+                  <div key={label} title={label} aria-label={label} style={{
+                    flex: 1, aspectRatio: '1 / 1', maxWidth: '52px',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    borderRadius: '50%',
                     backgroundColor: color + '1a', border: '0.5px solid ' + color + '40',
+                    boxShadow: unlocked ? `0 0 0 1px ${color}22` : 'none',
                     opacity: unlocked ? 1 : 0.5,
                   }}>
-                    <Icon size={13} color={color} strokeWidth={1.5} style={{ flexShrink: 0 }} />
-                    <span title={label} style={{ fontSize: '11px', color: '#f0f6ff', fontWeight: '600',
-                                   overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{label}</span>
+                    <Icon size={18} color={color} strokeWidth={1.6} />
                   </div>
                 );
               })}
