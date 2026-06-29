@@ -26,7 +26,7 @@
 
 It closes the loop that every Indian civic-complaint app leaves open: **after you report, nothing happens.** JanaShakti answers that with:
 
-- a **5-agent Google Gemini pipeline** that classifies the issue, drafts the complaint, detects duplicates, routes it to the right department, and predicts a resolution timeline — plus a **6th, post-resolution agent** that scores each resolved issue's ESG (Environmental / Social / Governance) impact and maps it to the UN Sustainable Development Goals;
+- a **5-agent Google Gemini pipeline** that classifies the issue, drafts the complaint, detects duplicates **and recurrences of already-resolved issues**, routes it to the right department, and predicts a resolution timeline — plus a **6th, post-resolution agent** that scores each resolved issue's ESG (Environmental / Social / Governance) impact and maps it to the UN Sustainable Development Goals;
 - an **n8n automation layer** that emails the department and posts to social media;
 - a **time-based escalation engine** that climbs Ward Officer → Department Head → Commissioner → Media at 7 / 14 / 30 days;
 - a **transparency layer** that ranks elected representatives by their real resolution rate, equips journalists with story-ready feeds, and lets companies/colleges adopt civic zones.
@@ -148,7 +148,7 @@ All AI routes through `fetchAI()` in [`src/utils/gemini.js`](src/utils/gemini.js
 flowchart LR
     Photo([📷 Photo]) --> A1
     A1["<b>Agent 1</b><br/>Issue Analyzer<br/>Vision + fn-calling"]
-    A1 -->|genuine?| A2["<b>Agent 2</b><br/>Duplicate Detector<br/>geo 200m + text"]
+    A1 -->|genuine?| A2["<b>Agent 2</b><br/>Duplicate & Recurrence Detector<br/>geo 200m + text"]
     A2 -->|unique| Save[(addDoc → issues)]
     Save --> A3["<b>Agent 3</b><br/>Authority Router<br/>text + n8n email"]
     A3 -->|routedTo| A4["<b>Agent 4</b><br/>Resolution Predictor<br/>text · uses A3 output"]
@@ -159,7 +159,7 @@ flowchart LR
 | Agent | File | Gemini mode | Output |
 |---|---|---|---|
 | **1 · Issue Analyzer** | `agents/issueAnalyzer.js` | Vision + function-calling | type, severity, description, department, complaint, legal right, confidence, genuineness |
-| **2 · Duplicate Detector** | `agents/duplicateDetector.js` | Firestore geo + text | `isDuplicate` (±0.002° ≈ 200 m + similarity > 65%) |
+| **2 · Duplicate & Recurrence Detector** | `agents/duplicateDetector.js` | Firestore geo + text | `isDuplicate` (±0.002° ≈ 200 m + similarity > 65%); `checkRecurrence` flags a **resolved** issue that recurs at the same spot within **365 days** → links the prior complaint + "RECURRENCE NOTICE" in the authority email |
 | **3 · Authority Router** | `agents/authorityRouter.js` | text + n8n | department, officer, email subject, urgency, SLA, escalation path |
 | **4 · Resolution Predictor** | `agents/resolutionPredictor.js` | text | priority score, predicted days, escalation risk, recommendation, factors |
 | **5 · Resolution Verifier** | `agents/resolutionVerifier.js` | Vision | is the fix genuine & resolved? |

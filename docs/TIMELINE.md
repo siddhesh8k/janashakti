@@ -104,6 +104,8 @@ Proving it works, and writing it down.
 
 ## Day 6 — Submission (June 29)
 
+- **Recurrence detection — Agent 2 expansion** — added `checkRecurrence`: a *resolved* issue recurring at the same spot within **365 days** is flagged as a recurrence. The new report links the prior complaint (`recurrenceOf` + complaint ID + resolved date), the authority email gains a **"RECURRENCE NOTICE"** that the earlier fix didn't hold, and IssueDetail shows a "Recurring issue" banner. Deterministic, fail-open, cross-account (read-only on prior issues). Agent 2 is now the **Duplicate & Recurrence Detector**.
+- **Points-system cleanup** — every civic-point award now reads from the `CIVIC_SCORE_POINTS` constants (no magic numbers); single source of truth across report / verify / resolve / authority actions.
 - **Final smoke testing** on the deployed URL.
 - **Demo polish** — confirm the Gemini 2.5 Flash chain is healthy for the demo run.
 - **Final build & deploy** — `npm run deploy` (Hosting + Firestore rules + indexes).

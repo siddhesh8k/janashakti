@@ -30,7 +30,7 @@ JanaShakti turns the everyday frustration of broken civic infrastructure into or
 - **GPS + reverse geocoding** — Google Geocoding turns coordinates into an editable address. *Accurate location, zero typing.*
 
 ### 2. 4-Agent Intelligence Pipeline (+ a 5th verifier)
-- **Agent 1 Analyzer / Agent 2 Duplicate Detector / Agent 3 Authority Router / Agent 4 Resolution Predictor**, orchestrated so each agent's output feeds the next. *Coordinated reasoning, not isolated calls.*
+- **Agent 1 Analyzer / Agent 2 Duplicate & Recurrence Detector / Agent 3 Authority Router / Agent 4 Resolution Predictor**, orchestrated so each agent's output feeds the next. *Coordinated reasoning, not isolated calls.*
 - **Agent 5 Resolution Verifier** — judges fix photos. *Stops fake "resolved" claims without ever blocking a real one.*
 - **Live pipeline trace + `agents_log` / `agent_runs` logging.** *Total transparency on the Agents Showcase.*
 - **Model fallback chain.** *Rate-limit resilience.*
@@ -127,7 +127,7 @@ All Gemini calls route through `fetchAI()` in `utils/gemini.js` and use Gemini's
 | # | Usage | What Gemini does |
 |---|---|---|
 | 1 | **Agent 1 — Issue Analyzer** | Vision + function-calling (`report_civic_issue` typed schema). Returns issue type, severity, 2-sentence description, responsible department, a 3-paragraph complaint, the relevant Indian-law citizen right, predicted days, a genuineness/guard-rail verdict, confidence, and hashtags. Self-retries once on low confidence. |
-| 2 | **Agent 2 — Duplicate Detector** | Text comparison — given two nearby same-type reports (geo-filtered to ±200 m), Gemini returns `{ isDuplicate, similarity, reasoning }`; flagged duplicate only when similarity > 65%. |
+| 2 | **Agent 2 — Duplicate & Recurrence Detector** | Text comparison — given two nearby same-type reports (geo-filtered to ±200 m), Gemini returns `{ isDuplicate, similarity, reasoning }`; flagged duplicate only when similarity > 65%. **Also** runs a deterministic `checkRecurrence`: a *resolved* issue of the same type recurring at the same spot within **365 days** is flagged as a recurrence — the new report links the prior complaint and the authority email carries a "RECURRENCE NOTICE" that the earlier fix didn't hold. |
 | 3 | **Agent 3 — Authority Router** | Text — returns the official department name, ward office, officer title to address, a formal **email subject**, urgency level, SLA hours, and escalation path (seeded from `DEPARTMENT_MAP`). |
 | 4 | **Agent 4 — Resolution Predictor** | Text — analyses type, severity, city, confirmations, days open, escalation level, and **Agent 3's routed department** to return priority score, predicted days, escalation risk, recommendation, and contributing factors. |
 | 5 | **Agent 5 — Resolution Verifier** | Vision — judges whether an uploaded "fix" photo genuinely shows *this* issue resolved (`is_genuine`, `is_resolved`, confidence, reasoning). Flags, never blocks. |
