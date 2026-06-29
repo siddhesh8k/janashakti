@@ -362,16 +362,17 @@ flowchart LR
 | **Firestore writes** | `agents_log` (`agentName: issue_analyzer`). Fields are copied onto the issue doc by `ReportScreen`, not by the agent |
 | **Error handling** | Logs failure to `agents_log` with `success:false` then **throws** → `ReportScreen` shows the manual fallback form (type/severity/description) |
 
-#### Agent 2 — Duplicate Detector (`duplicateDetector.js`)
+#### Agent 2 — Duplicate & Recurrence Detector (`duplicateDetector.js`)
 | | |
 |---|---|
 | **Trigger** | First step inside `orchestrateIssue`, before save |
 | **Input** | new issue data (location, issueType, description) |
-| **Method** | Query `issues` where `status in [Reported, Verified, In Progress]` and `issueType ==`, then filter to **±0.002° (~200 m)**. If neighbours exist, ask Gemini for similarity |
+| **Method** | Query `issues` where `status in [Reported, Verified, In Progress]` and `issueType ==`, then filter to **±0.002° (`NEARBY_GEO_BOUND`, ~200 m)**. If neighbours exist, ask Gemini for similarity |
 | **Prompt summary** | "Are these two civic issue reports describing the same problem? Report A (new) … Report B (existing) … Return `{ isDuplicate, similarity, reasoning }`." |
 | **Output** | `{ isDuplicate: (result && similarity > 65), existingIssueId, similarity }` |
+| **Recurrence** | `checkRecurrence` additionally scans **Resolved** issues of the same type within **~200 m** that were resolved in the last **`RECURRENCE_WINDOW_DAYS` (365)** days. A match means the new report is a *recurrence* — the earlier fix didn't hold. The new issue is saved with `recurrenceOf` / `recurrenceOfComplaintId` / `recurrenceResolvedAt` / `recurrenceDaysSince` / `recurrenceCount`; the detector step flags it live; Agent 3's authority email cites the prior complaint; IssueDetail shows a "Recurring issue" banner linking the earlier report. **Deterministic** (no AI) — "same type, same spot, recently closed" is the recurrence grain |
 | **Firestore** | reads `issues`; writes `agents_log` (`duplicate_detector`) |
-| **Error handling** | Any failure → logs `success:false` and returns `{ isDuplicate:false }` (fail-open: a new report is created rather than lost) |
+| **Error handling** | Any failure → logs `success:false` and returns `{ isDuplicate:false }` (fail-open: a new report is created rather than lost); `checkRecurrence` fails-open to `{ isRecurrence:false }` |
 
 #### Agent 3 — Authority Router (`authorityRouter.js`)
 | | |

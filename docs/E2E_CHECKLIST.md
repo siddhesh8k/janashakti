@@ -54,6 +54,7 @@ If all six pass, the core loop is healthy. Full coverage below.
 - [ ] ESG toasts appear (calculating → score).
 - [ ] **IssueDetail** shows the **ESG Score card** (E/S/G scores, impact lines, metrics), **SDG alignment pills**, and an **"ESG Report"** share button → modal → *Share Impact* (Web Share / clipboard).
 - [ ] Confetti + **+25** reporter reward on the live Resolved transition.
+- [ ] **Recurrence:** after an issue is Resolved, report the **same type at the same spot** again → the new issue shows the orange **"Recurring issue — the earlier fix did not hold"** banner (taps through to the prior complaint), and the authority email includes a **RECURRENCE NOTICE** citing the earlier Complaint ID. (Detected within a 1-year window.)
 
 ## 6. Profile ESG (`ProfileScreen`)
 - [ ] **ESG Impact** section shows Water Saved / Waste Addressed / People Impacted + contributed-SDG pills.

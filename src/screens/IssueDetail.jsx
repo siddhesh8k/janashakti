@@ -4,7 +4,7 @@ import { doc, onSnapshot, updateDoc, increment } from 'firebase/firestore';
 import { Share2, MapPin, Users, Clock, CheckCircle, Copy,
          ThumbsUp, Scale, AlertTriangle, Twitter, Linkedin,
          MessageCircle, TrendingUp, ShieldAlert, ArrowUpCircle,
-         Building2, GraduationCap, Facebook, Send, Landmark, Leaf, Target } from 'lucide-react';
+         Building2, GraduationCap, Facebook, Send, Landmark, Leaf, Target, RotateCcw } from 'lucide-react';
 import { db, auth } from '../firebase';
 import { generateRTI } from '../utils/gemini';
 import { videoPosterUrl, cloudinaryThumb } from '../utils/cloudinary';
@@ -393,6 +393,35 @@ export default function IssueDetail() {
                         display: 'flex', alignItems: 'center' }}>
               <Copy size={14} color="#4a6280" strokeWidth={1.5} />
             </button>
+          </div>
+        )}
+
+        {/* Recurrence — this exact issue was resolved before and came back within a year */}
+        {issue.recurrenceOf && (
+          <div
+            onClick={() => navigate(`/issue/${issue.recurrenceOf}`)}
+            style={{
+              display: 'flex', alignItems: 'flex-start', gap: '10px',
+              backgroundColor: '#f9731614', border: '0.5px solid #f9731640',
+              borderLeft: '3px solid #f97316', borderRadius: '12px',
+              padding: '12px 14px', marginBottom: '14px', cursor: 'pointer',
+            }}
+          >
+            <RotateCcw size={18} strokeWidth={1.5} color="#f97316"
+                       style={{ flexShrink: 0, marginTop: '1px' }} />
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontSize: '13px', fontWeight: '700', color: '#f0f6ff' }}>
+                Recurring issue{issue.recurrenceCount > 1 ? ` (#${issue.recurrenceCount})` : ''} — the earlier fix did not hold
+              </div>
+              <div style={{ fontSize: '12px', fontWeight: '400', color: '#94a3b8', marginTop: '3px' }}>
+                Previously resolved
+                {issue.recurrenceDaysSince != null ? ` ${issue.recurrenceDaysSince} days ago` : ''}
+                {issue.recurrenceOfComplaintId ? ` · ${issue.recurrenceOfComplaintId}` : ''}. The authority was notified of the recurrence.
+              </div>
+              <div style={{ fontSize: '11px', fontWeight: '600', color: '#00d4ff', marginTop: '5px' }}>
+                View the earlier report →
+              </div>
+            </div>
           </div>
         )}
 

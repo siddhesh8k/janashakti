@@ -42,7 +42,7 @@ Orchestrated by `agents/orchestrator.js` (`orchestrateIssue`), each agent's outp
 | Agent | File | Model mode | Produces |
 |---|---|---|---|
 | **1 · Issue Analyzer** | `issueAnalyzer.js` | Gemini Vision + function-calling | type, severity, description, department, complaint, legal right, confidence, genuineness |
-| **2 · Duplicate Detector** | `duplicateDetector.js` | Firestore geo-query + Gemini text | `isDuplicate` (geo ±0.002° ≈ 200 m + similarity > 65%) |
+| **2 · Duplicate & Recurrence Detector** | `duplicateDetector.js` | Firestore geo-query + Gemini text | `isDuplicate` (geo ±0.002° ≈ 200 m + similarity > 65%); `checkRecurrence` flags a **resolved** issue that recurs at the same spot within **365 days** → the new report links the prior complaint and the authority email carries a "RECURRENCE NOTICE" |
 | **3 · Authority Router** | `authorityRouter.js` | Gemini text + n8n | department, officer title, email subject, urgency, SLA hours, escalation path |
 | **4 · Resolution Predictor** | `resolutionPredictor.js` | Gemini text | priority score, predicted days, escalation risk, recommendation, factors |
 | **5 · Resolution Verifier** | `resolutionVerifier.js` | Gemini Vision | is the fix photo genuine & resolved? (flags, never blocks) |

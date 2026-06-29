@@ -1,6 +1,6 @@
 import { collection, addDoc, doc, updateDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '../firebase';
-import { checkDuplicate } from './duplicateDetector';
+import { checkDuplicate, checkRecurrence } from './duplicateDetector';
 import { routeToAuthority } from './authorityRouter';
 import { predictResolution } from './resolutionPredictor';
 
@@ -62,16 +62,41 @@ export const orchestrateIssue = async ({ analysis, issueData, tempId, onStep, sa
     // Caller owns the confirm/redirect path. Nothing is saved.
     return { duplicate, analysis, routing: null, prediction: null, steps, docId: null, finishedAt: Date.now() };
   }
-  emit({ agent: 'detector', status: 'done', summary: 'No duplicate — new report', detail: 'Unique within 200m.' });
+  // ── Agent 2 (recurrence half): did a RESOLVED issue come back here within a year? ──
+  let issueToSave = issueData;
+  let recurrence = { isRecurrence: false };
+  try {
+    const r = await withTimeout(checkRecurrence(issueData), 10000, 'Recurrence check');
+    if (r) recurrence = r;
+  } catch (e) {
+    console.error('[Orchestrator/recurrence]:', e);
+  }
+  if (recurrence.isRecurrence) {
+    issueToSave = {
+      ...issueData,
+      recurrenceOf: recurrence.priorIssueId,
+      recurrenceOfComplaintId: recurrence.priorComplaintId,
+      recurrenceResolvedAt: recurrence.resolvedAtISO,
+      recurrenceDaysSince: recurrence.daysSinceResolved,
+      recurrenceCount: recurrence.recurrenceCount,
+    };
+    emit({
+      agent: 'detector', status: 'done',
+      summary: `Recurrence of a resolved issue (#${recurrence.recurrenceCount})`,
+      detail: `Previously resolved ${recurrence.daysSinceResolved}d ago${recurrence.priorComplaintId ? ` · ${recurrence.priorComplaintId}` : ''} — the earlier fix did not hold. Flagged for the authority.`,
+    });
+  } else {
+    emit({ agent: 'detector', status: 'done', summary: 'No duplicate — new report', detail: 'Unique within 200m.' });
+  }
 
   // ── Save the issue (caller's addDoc) → docId ──
-  const docId = await saveIssue(issueData);
+  const docId = await saveIssue(issueToSave);
 
   // ── Agent 3: Authority Router ──
   emit({ agent: 'router', name: 'Authority Router', status: 'running', summary: 'Routing to department…' });
   let routing = null;
   try {
-    routing = await withTimeout(routeToAuthority(issueData, docId), 20000, 'Authority routing');
+    routing = await withTimeout(routeToAuthority(issueToSave, docId), 20000, 'Authority routing');
     emit({
       agent: 'router', status: 'done',
       summary: routing?.departmentName || 'Department notified',
@@ -87,7 +112,7 @@ export const orchestrateIssue = async ({ analysis, issueData, tempId, onStep, sa
   let prediction = null;
   try {
     prediction = await withTimeout(
-      predictResolution({ ...issueData, id: docId, routedTo: routing || issueData.routedTo }, docId),
+      predictResolution({ ...issueToSave, id: docId, routedTo: routing || issueToSave.routedTo }, docId),
       20000, 'Resolution prediction',
     );
     emit({

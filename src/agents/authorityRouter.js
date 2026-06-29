@@ -7,12 +7,16 @@ export const routeToAuthority = async (issue, issueId) => {
   try {
     const defaultDept = DEPARTMENT_MAP[issue.issueType] || DEPARTMENT_MAP.Other;
 
+    const recurrenceNote = issue.recurrenceOf
+      ? `\nIMPORTANT — RECURRENCE: this issue was previously reported and marked RESOLVED ${issue.recurrenceDaysSince} days ago (Complaint ${issue.recurrenceOfComplaintId || 'on record'}), but it has RECURRED at the same location. The earlier fix did not hold — treat with higher urgency.`
+      : '';
+
     const prompt = `For this civic issue in India:
 City: ${issue.city || 'Not specified'}
 Ward: ${issue.ward || 'Not specified'}
 Issue Type: ${issue.issueType}
 Severity: ${issue.severity}
-Description: ${issue.description}
+Description: ${issue.description}${recurrenceNote}
 
 Return ONLY valid JSON:
 {
@@ -43,6 +47,14 @@ Return ONLY valid JSON:
         reporterEmail: issue.userEmail || '',
         complaintText: issue.complaintText || '',
         issueUrl: `${window.location.origin}/issue/${issueId}`,
+        // Set only when this report is a recurrence of a previously resolved issue, so
+        // the authority email can cite the prior complaint and flag the failed fix.
+        recurrence: issue.recurrenceOf ? {
+          priorComplaintId: issue.recurrenceOfComplaintId || null,
+          resolvedAt: issue.recurrenceResolvedAt || null,
+          daysSinceResolved: issue.recurrenceDaysSince ?? null,
+          count: issue.recurrenceCount ?? 1,
+        } : null,
       },
     });
 

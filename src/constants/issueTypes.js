@@ -79,6 +79,15 @@ export const ESCALATION_LEVELS = [
   { level: 3, name: 'Media & Public Alert', triggerDays: 30 },
 ];
 
+// Lat/lng degree window treated as "the same place" (~200 m) — shared by the
+// duplicate detector (active reports) and the recurrence detector (resolved reports).
+export const NEARBY_GEO_BOUND = 0.002;
+
+// A resolved issue that recurs at the same spot within this many days is flagged as a
+// RECURRENCE: the new report links back to the prior complaint and the authority email
+// calls out that the earlier fix did not hold. 365 = one year.
+export const RECURRENCE_WINDOW_DAYS = 365;
+
 export const issueColorMap = {
   Pothole:         '#f97316',
   Streetlight:     '#eab308',
