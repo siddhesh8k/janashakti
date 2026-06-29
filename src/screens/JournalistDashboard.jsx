@@ -348,14 +348,16 @@ export default function JournalistDashboard() {
         </div>
 
         {/* Filters */}
-        <div style={{ display: 'flex', gap: '6px', overflowX: 'auto', marginBottom: '12px', paddingBottom: '4px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', overflowX: 'auto', marginBottom: '12px', paddingBottom: '4px' }}>
           {FILTERS.map(f => (
             <button key={f} onClick={() => setFilter(f)} style={{
-              padding: '6px 14px', borderRadius: '999px', fontSize: '11px',
+              padding: '7px 14px', borderRadius: '999px', fontSize: '12px', lineHeight: 1,
               fontWeight: '600', cursor: 'pointer', whiteSpace: 'nowrap', flexShrink: 0,
+              boxSizing: 'border-box',
               backgroundColor: filter === f ? '#00d4ff' : 'transparent',
               color: filter === f ? '#04091a' : '#94a3b8',
-              border: filter === f ? 'none' : '0.5px solid #1a2f4a',
+              // transparent (not none) so the active chip's box matches the bordered ones — same height.
+              border: filter === f ? '0.5px solid transparent' : '0.5px solid #1a2f4a',
             }}>{f}</button>
           ))}
         </div>
