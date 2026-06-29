@@ -258,7 +258,7 @@ export default function Leaderboard() {
           const t = tally[org.id] || { total: 0, resolved: 0, types: {} };
           const topTypes = Object.entries(t.types).sort((a, b) => b[1] - a[1]).slice(0, 3).map(([k]) => k);
           return { ...org, totalAdopted: t.total, resolved: t.resolved, topTypes,
-                   score: orgScoreOf(t.resolved, t.total, org.memberCount) };
+                   score: orgScoreOf(t.resolved, t.total, org.memberCount) + (org.memberCivicScore || 0) };
         });
         if (active) setOrgs(withStats);
       } catch (err) {

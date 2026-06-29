@@ -3,10 +3,12 @@ import { Send } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { useToast } from '../ToastProvider';
 import { postUpdate, isContributor } from '../../utils/collaboration';
+import { bumpOrgCivic } from '../../utils/organizations';
+import { CIVIC_SCORE_POINTS } from '../../constants/issueTypes';
 
 // Contributor-only text composer to post a progress update to the activity timeline.
 export default function UpdateComposer({ issue }) {
-  const { user } = useAuth();
+  const { user, userProfile } = useAuth();
   const toast = useToast();
   const [text, setText] = useState('');
   const [busy, setBusy] = useState(false);
@@ -18,7 +20,7 @@ export default function UpdateComposer({ issue }) {
     if (!text.trim() || busy) return;
     setBusy(true);
     const res = await postUpdate(issue.id, user, text);
-    if (res?.ok) { toast.show('Update posted · +10 reputation', 'success'); setText(''); }
+    if (res?.ok) { bumpOrgCivic(userProfile?.affiliation?.orgId, CIVIC_SCORE_POINTS.POST_UPDATE); toast.show('Update posted · +10 reputation', 'success'); setText(''); }
     else toast.show(res?.error || 'Could not post update', 'error');
     setBusy(false);
   };

@@ -4,6 +4,8 @@ import { useAuth } from '../../hooks/useAuth';
 import { useToast } from '../ToastProvider';
 import { compressImage } from '../../utils/gemini';
 import { uploadEvidence, isContributor } from '../../utils/collaboration';
+import { bumpOrgCivic } from '../../utils/organizations';
+import { CIVIC_SCORE_POINTS } from '../../constants/issueTypes';
 
 const EVIDENCE_TYPES = ['photo', 'receipt', 'document', 'rti_response'];
 const MAX_PER_USER = 5; // loophole #2: cap evidence per contributor per issue
@@ -18,7 +20,7 @@ const fileToRawBase64 = (file) => new Promise((res, rej) => {
 // Contributor-only evidence uploader. Compresses to base64 (no Cloud Storage), runs the
 // Gemini-Vision relevance gate (points only on accept), caps at 5/issue.
 export default function EvidenceUploader({ issue, events = [] }) {
-  const { user } = useAuth();
+  const { user, userProfile } = useAuth();
   const toast = useToast();
   const [open, setOpen] = useState(false);
   const [type, setType] = useState('photo');
@@ -44,6 +46,7 @@ export default function EvidenceUploader({ issue, events = [] }) {
         imageBase64: compressed, type, caption, issueType: issue.issueType,
       });
       if (res?.ok) {
+        if (res.relevant) bumpOrgCivic(userProfile?.affiliation?.orgId, CIVIC_SCORE_POINTS.POST_EVIDENCE);
         toast.show(res.relevant ? 'Evidence added · +15 reputation' : 'Evidence saved, but it didn’t look relevant — no points awarded', res.relevant ? 'success' : 'info');
         setOpen(false); setCaption('');
       } else {

@@ -2,8 +2,9 @@ import { useState } from 'react';
 import { Users, UserPlus, LogOut, X, Lock, Unlock } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { useToast } from '../ToastProvider';
-import { AUTHORITY_THRESHOLD } from '../../constants/issueTypes';
+import { AUTHORITY_THRESHOLD, CIVIC_SCORE_POINTS } from '../../constants/issueTypes';
 import { joinIssue, leaveIssue, removeContributor, setCollaborationOpen, isContributor, isRemoved } from '../../utils/collaboration';
+import { bumpOrgCivic } from '../../utils/organizations';
 import RoleSelectModal from './RoleSelectModal';
 
 const agoIso = (iso) => {
@@ -57,7 +58,7 @@ export default function ContributorSection({ issue, events = [] }) {
   const doJoin = async (role) => {
     setBusy(true);
     const res = await joinIssue(issue.id, user, role);
-    if (res?.ok) { toast.show(`Joined as ${role} · +5 reputation`, 'success'); setShowRole(false); }
+    if (res?.ok) { bumpOrgCivic(userProfile?.affiliation?.orgId, CIVIC_SCORE_POINTS.JOIN_ISSUE); toast.show(`Joined as ${role} · +5 reputation`, 'success'); setShowRole(false); }
     else if (res?.alreadyJoined) { toast.show("You're already a contributor", 'info'); setShowRole(false); }
     else toast.show(res?.error || 'Could not join', 'error');
     setBusy(false);

@@ -5,8 +5,16 @@
 // orgs (companies / colleges) the user adds, and nothing when the collection is
 // empty. New orgs are created via createOrganization (e.g. the AffiliationPicker).
 
-import { collection, getDocs, doc, setDoc, serverTimestamp } from 'firebase/firestore';
+import { collection, getDocs, doc, setDoc, updateDoc, increment, serverTimestamp } from 'firebase/firestore';
 import { db } from '../firebase';
+
+// A member earning civic (report / join / evidence / verify / resolve) also lifts their
+// college/corporate's civic standing. Best-effort; org leaderboard factors memberCivicScore.
+export const bumpOrgCivic = async (orgId, points) => {
+  if (!orgId || !points) return;
+  try { await updateDoc(doc(db, 'organizations', orgId), { memberCivicScore: increment(points) }); }
+  catch (err) { console.error('[bumpOrgCivic]:', err.message); }
+};
 
 // Accent palette reused for newly-created orgs (cycled by a simple hash).
 const ORG_COLORS = ['#3b82f6', '#8b5cf6', '#06b6d4', '#16a34a', '#f97316', '#eab308', '#ec4899', '#14b8a6'];

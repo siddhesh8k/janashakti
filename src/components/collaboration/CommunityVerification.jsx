@@ -4,6 +4,8 @@ import { useAuth } from '../../hooks/useAuth';
 import { useToast } from '../ToastProvider';
 import { distanceKm } from '../../utils/geo';
 import { submitVerificationVote, checkVerificationThreshold } from '../../utils/collaboration';
+import { bumpOrgCivic } from '../../utils/organizations';
+import { CIVIC_SCORE_POINTS } from '../../constants/issueTypes';
 
 const VOTE_RADIUS_KM = 2;       // loophole #6: voters must be near the issue
 const MIN_JOIN_HOURS = 24;      // loophole #1: contributors wait 24h before voting
@@ -20,7 +22,7 @@ const here = () => new Promise((resolve) => {
 // Shown only when status === 'Needs Verification'. Yes / Partial / No, gated by live
 // geolocation (within 2 km) and a 24h-since-join rule for contributors.
 export default function CommunityVerification({ issue }) {
-  const { user } = useAuth();
+  const { user, userProfile } = useAuth();
   const toast = useToast();
   const [busy, setBusy] = useState(false);
 
@@ -51,6 +53,8 @@ export default function CommunityVerification({ issue }) {
     }
     const res = await submitVerificationVote(issue.id, user, choice);
     if (res?.ok) {
+      // verifier earned civic — lift their college/corporate's civic too
+      bumpOrgCivic(userProfile?.affiliation?.orgId, CIVIC_SCORE_POINTS.CORRECT_VOTE);
       const outcome = res.outcome;
       toast.show(outcome === 'passed' ? '✅ Verified — issue resolved!' : outcome === 'failed' ? 'Reopened — not enough confirmation' : 'Vote recorded · +5 reputation', outcome === 'failed' ? 'info' : 'success');
     } else if (res?.alreadyVoted) {
