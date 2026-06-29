@@ -76,7 +76,7 @@ export const checkDuplicate = async (newIssue, issueId) => {
 
     const snap = await getDocs(
       query(collection(db, 'issues'),
-        where('status', 'in', ['Reported', 'Verified', 'In Progress']),
+        where('status', 'in', ['Reported', 'Verified', 'In Progress', 'Needs Verification']),
         where('issueType', '==', newIssue.issueType)
       )
     );

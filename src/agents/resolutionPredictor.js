@@ -6,6 +6,13 @@ export const predictResolution = async (issue, issueId) => {
     const daysOpen = issue.createdAt?.toDate
       ? Math.floor((Date.now() - issue.createdAt.toDate()) / 86400000) : 0;
 
+    // Collaboration signals (0 at report time; populated when re-run from IssueDetail as
+    // the community engages). More contributors + evidence + recent activity = stronger
+    // momentum → higher resolution probability.
+    const contributorCount = issue.contributorCount ?? (issue.contributors?.length || 0);
+    const evidenceCount = issue.evidenceCount ?? 0;
+    const timelineDensity = issue.timelineDensity ?? 0;
+
     const prompt = `You are a civic AI analyst for JanaShakti India.
 Predict resolution likelihood for this civic issue:
 
@@ -16,6 +23,13 @@ Community confirmations: ${issue.confirmations || 0}
 Days open: ${daysOpen}
 Escalation level: ${issue.escalationLevel || 0} of 3
 Department: ${issue.routedTo?.departmentName || 'Unknown'}
+Contributors collaborating: ${contributorCount}
+Evidence items uploaded: ${evidenceCount}
+Recent activity events (last 7 days): ${timelineDensity}
+
+Weigh community momentum: more contributors, more uploaded evidence, and higher recent
+activity indicate a higher resolution probability — reflect this in priority_score,
+predicted_days, and the factors.
 
 Return ONLY valid JSON:
 {

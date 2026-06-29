@@ -260,6 +260,13 @@ export default function ReportScreen() {
         pressureScore: 10,
         escalationLevel: 0,
         wallOfShame: false,
+        // Civic collaboration layer — initialized so Join / verify work from creation.
+        contributors: [],
+        contributedUids: [],
+        removedUids: [],
+        closeRewardedBy: [],
+        collaborationOpen: true,
+        communityVerification: { votes: { yes: 0, no: 0, partial: 0 }, voters: [], threshold: 3, positiveRatio: 0.7, status: 'pending' },
         isRecurring: false,
         recurringCount: 0,
         previousReportIds: [],

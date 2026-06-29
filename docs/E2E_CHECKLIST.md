@@ -85,6 +85,17 @@ If all six pass, the core loop is healthy. Full coverage below.
 - [ ] An AI/Gemini failure shows a fallback, never a crash (ErrorBoundary).
 - [ ] Offline revisit serves cached reads (Firestore `persistentLocalCache`).
 
+## 11. Civic collaboration layer (open an issue → Join / contribute / verify)
+- [ ] **Join Issue** (a 2nd account, not the reporter) → pick a civic role → contributor count +1, a "joined" event appears in the **Activity** timeline, reputation **+5**.
+- [ ] **Add evidence** (photo) → AI relevance check runs → on accept, it appears in the timeline + reputation **+15** (irrelevant images save but award nothing); cap **5/issue**.
+- [ ] **Mark as resolved** (contributor or reporter) → status flips to **Needs Verification** (purple) + a "resolution requested" timeline event.
+- [ ] **Community verification** appears → vote **Yes/Partial/No**. Gated: must be **within 2 km** (live GPS) and, if you joined, **24h after joining**. At **3 votes & ≥70% positive** → **Resolved** (or reopens). *Demo tip: vote from accounts that did NOT join (the 24h gate only applies to contributors), or use the existing **authority resolve** path.*
+- [ ] On a **Resolved** issue, an **active contributor** (who joined + posted) opening it gets **+25** once (claim-on-view); the reporter still gets **+25**.
+- [ ] **Lead moderation** (reporter / Civic-Authority): close/reopen joining + remove a contributor (× on their row).
+- [ ] **Refresh prediction** (owner, on the AI Prediction card) re-runs Agent 4 with live contributor/evidence/activity signals.
+- [ ] **Profile** shows **Community Reputation** + Joined / Evidence / Verify-Votes tiles + new badges (Neighborhood Hero, Road Guardian, Evidence Expert, Community Builder, Top Verifier).
+- [ ] Existing features intact: representatives, authority resolve, ESG, escalation, leaderboard.
+
 ---
 
 ## Notes

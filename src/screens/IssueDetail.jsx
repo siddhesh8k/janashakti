@@ -35,6 +35,7 @@ import LoadingSkeleton from '../components/LoadingSkeleton';
 import ESGScoreCard from '../components/ESGScoreCard';
 import SDGBadge from '../components/SDGBadge';
 import { scoreESGImpact } from '../agents/esgScorer';
+import { predictResolution } from '../agents/resolutionPredictor';
 import { ISSUE_SDG_MAP } from '../constants/esg';
 
 export default function IssueDetail() {
@@ -56,6 +57,7 @@ export default function IssueDetail() {
   const esgScoredRef = useRef(false);
   const [showESGModal, setShowESGModal] = useState(false);
   const { events: timelineEvents, loading: timelineLoading } = useIssueTimeline(id);
+  const [refreshingPred, setRefreshingPred] = useState(false);
 
   useEffect(() => {
     if (!id) return;
@@ -110,6 +112,31 @@ export default function IssueDetail() {
     setToast(res?.ok
       ? { msg: 'Marked resolved — the community will verify', type: 'success' }
       : { msg: res?.error || 'Could not update', type: 'error' });
+  };
+
+  // Re-run Agent 4 with live collaboration signals (contributors, evidence, activity).
+  // Owner-only — `prediction` is an authority field.
+  const handleRefreshPrediction = async () => {
+    if (!issue) return;
+    setRefreshingPred(true);
+    try {
+      const now = Date.now();
+      const evidenceCount = timelineEvents.filter((e) => e.action === 'evidence_uploaded').length;
+      const timelineDensity = timelineEvents.filter(
+        (e) => e.createdAt?.toDate && now - e.createdAt.toDate().getTime() < 7 * 86400000,
+      ).length;
+      const pred = await predictResolution({
+        ...issue,
+        contributorCount: issue.contributors?.length || 0,
+        evidenceCount, timelineDensity,
+      }, issue.id);
+      await updateDoc(doc(db, 'issues', issue.id), { prediction: pred });
+      setToast({ msg: 'Prediction refreshed with community signals', type: 'success' });
+    } catch (err) {
+      console.error('[refreshPrediction]:', err);
+      setToast({ msg: 'Could not refresh prediction', type: 'error' });
+    }
+    setRefreshingPred(false);
   };
 
   // Auto-escalation: check once when the issue loads.
@@ -497,8 +524,19 @@ export default function IssueDetail() {
         {issue.prediction && (
           <div style={{ backgroundColor: '#0d1b2e', borderRadius: '14px',
                         border: '0.5px solid #1a2f4a', padding: '14px', marginBottom: '10px' }}>
-            <span style={{ fontSize: '11px', fontWeight: '500', color: '#4a6280',
-                           textTransform: 'uppercase', letterSpacing: '0.7px' }}>AI PREDICTION</span>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <span style={{ fontSize: '11px', fontWeight: '500', color: '#4a6280',
+                             textTransform: 'uppercase', letterSpacing: '0.7px' }}>AI PREDICTION</span>
+              {auth.currentUser?.uid === issue.userId && (
+                <button onClick={handleRefreshPrediction} disabled={refreshingPred} style={{
+                  display: 'inline-flex', alignItems: 'center', gap: '4px', background: 'none',
+                  border: '0.5px solid #1a2f4a', borderRadius: '8px', padding: '4px 9px',
+                  color: '#7ee8fa', fontSize: '10px', fontWeight: '600',
+                  cursor: refreshingPred ? 'default' : 'pointer' }}>
+                  <RotateCcw size={11} strokeWidth={1.5} /> {refreshingPred ? 'Refreshing…' : 'Refresh'}
+                </button>
+              )}
+            </div>
             <div style={{ display: 'flex', gap: '16px', marginTop: '8px' }}>
               <div>
                 <span style={{ fontSize: '22px', fontWeight: '700', color: '#00d4ff' }}>
