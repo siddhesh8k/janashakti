@@ -36,7 +36,8 @@ describe('isAuthority', () => {
 });
 
 describe('enrollAuthority', () => {
-  beforeEach(() => vi.clearAllMocks());
+  // Default: not yet enrolled → the create path runs.
+  beforeEach(() => { vi.clearAllMocks(); getDoc.mockResolvedValue({ exists: () => false }); });
 
   it('writes the caller\'s own allowlist doc and returns true', async () => {
     const ok = await enrollAuthority('uid1');
@@ -45,6 +46,12 @@ describe('enrollAuthority', () => {
     const [ref, data] = setDoc.mock.calls[0];
     expect(ref).toEqual({ col: 'authorities', id: 'uid1' });
     expect(data).toMatchObject({ uid: 'uid1' });
+  });
+
+  it('is idempotent — returns true WITHOUT writing if already enrolled', async () => {
+    getDoc.mockResolvedValue({ exists: () => true });
+    expect(await enrollAuthority('uid1')).toBe(true);
+    expect(setDoc).not.toHaveBeenCalled();
   });
 
   it('returns false for a missing uid without writing', async () => {
