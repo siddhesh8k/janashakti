@@ -87,7 +87,8 @@ If all six pass, the core loop is healthy. Full coverage below.
 
 ## 11. Civic collaboration layer (open an issue → Join / contribute / verify)
 - [ ] **Join Issue** (a 2nd account, not the reporter) → pick a civic role → contributor count +1, a "joined" event appears in the **Activity** timeline, reputation **+5**.
-- [ ] **Add evidence** (photo) → AI relevance check runs → on accept, it appears in the timeline + reputation **+15** (irrelevant images save but award nothing); cap **5/issue**.
+- [ ] **Add evidence** (photo) → AI relevance check runs → on accept, it appears in the timeline + the **Evidence gallery** + reputation **+15** (irrelevant images save but award nothing); cap **5/issue**.
+- [ ] **Post an update** (text composer) → appears in the **Activity** timeline + reputation **+10**.
 - [ ] **Mark as resolved** (contributor or reporter) → status flips to **Needs Verification** (purple) + a "resolution requested" timeline event.
 - [ ] **Community verification** appears → vote **Yes/Partial/No**. Gated: must be **within 2 km** (live GPS) and, if you joined, **24h after joining**. At **3 votes & ≥70% positive** → **Resolved** (or reopens). *Demo tip: vote from accounts that did NOT join (the 24h gate only applies to contributors), or use the existing **authority resolve** path.*
 - [ ] On a **Resolved** issue, an **active contributor** (who joined + posted) opening it gets **+25** once (claim-on-view); the reporter still gets **+25**.

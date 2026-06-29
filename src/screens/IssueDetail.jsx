@@ -31,6 +31,7 @@ import ActivityTimeline from '../components/collaboration/ActivityTimeline';
 import EvidenceUploader from '../components/collaboration/EvidenceUploader';
 import CommunityVerification from '../components/collaboration/CommunityVerification';
 import EvidenceGallery from '../components/collaboration/EvidenceGallery';
+import UpdateComposer from '../components/collaboration/UpdateComposer';
 import { useIssueEvidence } from '../hooks/useIssueEvidence';
 import { claimCloseReward, markNeedsVerification, isContributor } from '../utils/collaboration';
 import LoadingSkeleton from '../components/LoadingSkeleton';
@@ -735,6 +736,7 @@ export default function IssueDetail() {
         <CommunityVerification issue={issue} />
         <EvidenceUploader issue={issue} events={timelineEvents} />
         <EvidenceGallery items={evidenceItems} />
+        <UpdateComposer issue={issue} />
         <ActivityTimeline events={timelineEvents} loading={timelineLoading} />
 
         {/* Pressure Meter */}

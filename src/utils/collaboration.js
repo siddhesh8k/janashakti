@@ -111,10 +111,14 @@ export const removeContributor = async (issueId, targetUid, actor) => {
       const contributors = (snap.data().contributors || []).filter((c) => c.userId !== targetUid);
       tx.update(ref, { contributors, removedUids: arrayUnion(targetUid), updatedAt: serverTimestamp() });
     });
-    await appendTimeline(issueId, {
-      userId: actor?.uid || 'lead', displayName: actor?.displayName || 'Lead',
-      action: 'update_posted', message: 'removed a contributor from the collaboration',
-    });
+    // Timeline event must carry the actor's real uid (immutable-timeline rule requires
+    // userId == auth.uid) — skip the audit line if we somehow don't have the actor.
+    if (actor?.uid) {
+      await appendTimeline(issueId, {
+        userId: actor.uid, displayName: actor.displayName || 'Lead',
+        action: 'update_posted', message: 'removed a contributor from the collaboration',
+      });
+    }
     return { ok: true };
   } catch (e) { console.error('[removeContributor]:', e); return { error: 'Could not remove.' }; }
 };
@@ -137,7 +141,7 @@ export const postUpdate = async (issueId, user, message) => {
     });
     await updateDoc(doc(db, 'issues', issueId),
       { contributedUids: arrayUnion(user.uid), updatedAt: serverTimestamp() });
-    await award(user.uid, CIVIC_SCORE_POINTS.POST_UPDATE);
+    await award(user.uid, CIVIC_SCORE_POINTS.POST_UPDATE, { updatesPosted: 1 });
     return { ok: true };
   } catch (e) { console.error('[postUpdate]:', e); return { error: 'Could not post.' }; }
 };
