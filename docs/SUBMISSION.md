@@ -85,7 +85,7 @@ flowchart LR
     A3 -->|"branded HTML + JSON"| Rep2[(tests/reports/latest.html)]
 ```
 
-Latest run: **401 tests passing (100%)** across 51 files (17 deterministic + 34 AI-generated) at ~47% line / 70% branch coverage. Models: `gemini-2.5-flash → gemini-2.5-flash-lite → gemini-2.0-flash-lite`.
+Latest run: **407 tests passing (100%)** across 52 files (18 deterministic + 34 AI-generated) at ~48% line / 70% branch coverage. Models: `gemini-2.5-flash → gemini-2.5-flash-lite → gemini-2.0-flash-lite`.
 
 ---
 

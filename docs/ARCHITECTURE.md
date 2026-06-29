@@ -1072,9 +1072,9 @@ and are **excluded from `npm test`** (which runs only the deterministic `src/**`
 chains Agent 1 → Agent 3. Vitest config + coverage (`@vitest/coverage-v8`,
 `json-summary`) is in `vite.config.js`.
 
-**Latest run:** 401 tests passing (100%) across 51 files — 17 deterministic
+**Latest run:** 407 tests passing (100%) across 52 files — 18 deterministic
 (`src/**` + hand-written `tests/unit/core`) + 34 Gemini-generated under `tests/ai/`
-(unit · components · hooks · screen-smoke) — at ~47% line / 40% function / 70% branch
+(unit · components · hooks · screen-smoke) — at ~48% line / 41% function / 70% branch
 coverage (screens covered at the smoke / render-without-crash level). Snapshot:
 `tests/reports/latest.html`.
 

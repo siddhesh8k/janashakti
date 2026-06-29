@@ -1,28 +1,28 @@
 {
-  "timestamp": "2026-06-29T09:36:15.848Z",
+  "timestamp": "2026-06-29T10:19:12.880Z",
   "app": "JanaShakti",
   "version": "1.0.0",
   "tests": {
-    "total": 401,
-    "passed": 401,
+    "total": 407,
+    "passed": 407,
     "failed": 0,
     "skipped": 0,
     "passRate": 100,
-    "duration": "227.02s"
+    "duration": "172.39s"
   },
   "coverage": {
-    "lines": 47.1,
-    "functions": 40.43,
-    "branches": 70.47,
-    "statements": 47.1
+    "lines": 48.05,
+    "functions": 41.25,
+    "branches": 70.48,
+    "statements": 48.05
   },
   "source": {
     "files": 96,
     "jsx": 43,
     "js": 53
   },
-  "testFiles": 51,
-  "aiAnalysis": "Health Assessment:\nThe test suite currently passes all 401 tests, indicating stability for tested features. However, the very low line coverage of 47.1% is a major concern, suggesting a significant portion of the application's code remains untested and vulnerable to regressions.\n\nTop 3 areas that need more test coverage:\n1.  End-to-end user flows for reporting issues, including media uploads, location data, and submission.\n2.  Integration with Firebase services (Authentication, Firestore for data persistence, Storage for media).\n3.  Gemini AI integration for processing, categorizing, or moderating reported content.\n\nRisk Assessment:\nThe biggest untested risk for production deployment is the failure of critical user reporting workflows or data integrity issues due to untested interactions with Firebase and the Gemini AI, potentially leading to lost reports or incorrect processing.\n\nSpecific Recommendation:\nImplement end-to-end tests for the core \"report an issue\" user journey, covering form submission, media upload, Firebase data persistence, and initial Gemini AI processing.",
+  "testFiles": 52,
+  "aiAnalysis": "Health Assessment:\nThe existing test suite is highly stable with a 100% pass rate, indicating reliability for the covered code. However, the low 48.05% line coverage is a significant concern, meaning over half the codebase is untested.\n\nTop 3 Areas for More Test Coverage:\n1.  End-to-end user reporting workflow (submission, media upload, location tagging).\n2.  Gemini AI integration for report processing, categorization, and content moderation.\n3.  Firebase data interactions (authentication, CRUD operations, real-time updates for report status).\n\nRisk Assessment:\nThe biggest untested risk for production is critical user workflows failing silently or data integrity issues due to untested interactions with Firebase or Gemini AI, leading to lost or misprocessed civic reports.\n\nRecommendation for Improving Test Quality:\nPrioritize implementing end-to-end tests for the core report submission and lifecycle management flow to validate critical user journeys and system integrations.",
   "status": "PASS",
   "generatedBy": "Gemini 2.5 Flash (Agent 3)"
 }
