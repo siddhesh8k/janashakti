@@ -25,6 +25,13 @@ let firestore;
 try {
   firestore = initializeFirestore(app, {
     localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() }),
+    // Auto-detect when the default WebChannel streaming transport is being blocked
+    // (common on Android Chrome behind certain carrier/corporate networks & proxies)
+    // and transparently fall back to HTTP long-polling. Without this, cached READS
+    // still work but WRITES hang/error on those Android clients — which showed up as
+    // "can't save profile edits on Android, fine on iOS/desktop". Safe on all
+    // platforms: it's a no-op where WebChannel works.
+    experimentalAutoDetectLongPolling: true,
   });
 } catch (err) {
   console.error('[firestore cache]:', err);

@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { doc, updateDoc, setDoc, collection, query, where, getCountFromServer } from 'firebase/firestore';
+import { doc, setDoc, collection, query, where, getCountFromServer } from 'firebase/firestore';
 import { Shield, ShieldCheck, Star, Award, Lock, LogOut, Eye, Trophy, Zap, Flame,
          Building2, GraduationCap, Users, Pencil,
          Twitter, MessageCircle, Linkedin, Facebook, Send,
@@ -120,7 +120,9 @@ export default function ProfileScreen() {
         const org = await createOrganization(affDraft.draft);
         aff = { role: affDraft.role, orgId: org.id, orgName: org.name, orgType: org.type };
       }
-      await updateDoc(doc(db, 'users', user.uid), { affiliation: aff });
+      // setDoc + merge (not updateDoc): create-or-update, so a missing user doc can
+      // never throw not-found — matches the write pattern used across the app.
+      await setDoc(doc(db, 'users', user.uid), { affiliation: aff }, { merge: true });
       await mirrorPublicIdentity(user.uid, {
         displayName: user.displayName, photoURL: user.photoURL,
       });
