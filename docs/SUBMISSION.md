@@ -85,7 +85,10 @@ flowchart LR
     A3 -->|"branded HTML + JSON"| Rep2[(tests/reports/latest.html)]
 ```
 
-Latest run: **410 tests passing (100%)** across 52 files (18 deterministic + 34 AI-generated) at ~48% line / 70% branch coverage. Models: `gemini-2.5-flash → gemini-2.5-flash-lite → gemini-2.0-flash-lite`.
+Latest run: **138 deterministic tests passing** across 21 files (`npm test`), plus the AI-generated tier under `tests/ai/**`. Models: `gemini-2.5-flash → gemini-2.5-flash-lite → gemini-2.0-flash`.
+
+### 15. Civic Collaboration Layer
+- **Every issue is a public collaboration space: any citizen *Joins* (as a civic role), posts evidence/updates to an immutable activity timeline, and the community *verifies* the fix (2 km live-GPS + 24h-since-join gates) — earning Community Reputation + badges. AI-checked evidence, claim-on-view rewards, lead moderation.** *GitHub-for-civic-issues — every report becomes an open, evidence-backed, community-verified effort, not just a complaint.*
 
 ---
 

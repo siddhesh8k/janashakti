@@ -10,7 +10,7 @@
 [![Firebase](https://img.shields.io/badge/Firebase-Auth%20%2B%20Firestore%20%2B%20Hosting-ffca28?logo=firebase&logoColor=black)](https://firebase.google.com)
 [![Gemini](https://img.shields.io/badge/Google%20Gemini-2.5%20Flash-4285F4?logo=google&logoColor=white)](https://ai.google.dev)
 [![Language](https://img.shields.io/badge/JSX-only%20·%20no%20TypeScript-16a34a)](#)
-[![Tests](https://img.shields.io/badge/tests-410%20passing-16a34a)](#-testing--ai-testing-pipeline)
+[![Tests](https://img.shields.io/badge/tests-138%20passing-16a34a)](#-testing--ai-testing-pipeline)
 
 **Report civic issues. Build community pressure. Hold authorities accountable.**
 
@@ -417,17 +417,18 @@ flowchart LR
 2. **Test Analyzer** — runs the suite, classifies failures (`MOCK_ISSUE / IMPORT_ERROR / LOGIC_BUG / TEST_ISSUE`) + health note.
 3. **Report Generator** — runs suite + coverage, Gemini health/risk assessment → branded HTML report.
 
-> **Latest run:** **410 tests passing (100%)** across 52 files (18 deterministic + 34 AI-generated) at ~48% line / 70% branch coverage. Testing-agent models: `gemini-2.5-flash → gemini-2.5-flash-lite → gemini-2.0-flash-lite`.
+> **Latest run:** **138 deterministic tests passing** across 21 files (`npm test` — `src/**` + `tests/unit`), plus the Gemini-generated tier under `tests/ai/**`. Testing-agent models: `gemini-2.5-flash → gemini-2.5-flash-lite → gemini-2.0-flash`.
 
 ---
 
 ## 🗄 Data Model (Cloud Firestore)
 
-Nine collections, all written client-side and secured by `firestore.rules`:
+Nine top-level collections (+ two per-issue collaboration subcollections), all written client-side and secured by `firestore.rules`:
 
 | Collection | Purpose |
 |---|---|
-| `issues` | The central document — report → routing → prediction → resolution → social → story (~55 fields) |
+| `issues` | The central document — report → routing → prediction → resolution → collaboration → story (~60 fields) |
+| `issues/{id}/timeline` · `/evidence` | Per-issue collaboration — immutable activity timeline + uploaded evidence (subcollections) |
 | `users` | Private profile (owner-only) — score, badges, level, streak, affiliation |
 | `publicProfiles` | Public, display-only leaderboard mirror |
 | `organizations` | Adopted-zone companies / colleges |

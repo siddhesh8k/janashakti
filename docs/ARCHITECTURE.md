@@ -49,7 +49,7 @@ flowchart TB
 
     subgraph Google["🟥 GOOGLE CLOUD PLATFORM"]
         Auth["Firebase Auth<br/>Google · Email · Anonymous"]
-        FS[("Cloud Firestore<br/>issues · users · publicProfiles<br/>organizations · representatives · agents_log<br/>agent_runs · authorities · meta")]
+        FS[("Cloud Firestore<br/>issues (+ /timeline, /evidence) · users · publicProfiles<br/>organizations · representatives · agents_log<br/>agent_runs · authorities · meta")]
         Host["Firebase Hosting<br/>(SPA + PWA delivery)"]
         Gem["Gemini 2.5 Flash chain<br/>(Google AI Studio)<br/>text + vision + function-calling"]
         Maps["Google Maps JS API<br/>+ Geocoding API"]
@@ -694,9 +694,34 @@ sequenceDiagram
 
 ---
 
+### 4.9 Civic Collaboration Flow
+
+Every issue is a public collaboration space (**additive** — the authority/representative
+paths are unchanged). Any signed-in user **Joins** as a civic role (`utils/collaboration.js`
+`joinIssue` → `contributors[]` + a `contributor_joined` timeline event + **+5**), then posts
+**evidence** (`uploadEvidence` — base64 in the `issues/{id}/evidence` subcollection, gated by
+a Gemini-Vision relevance check before awarding **+15**, capped 5/issue) or **updates**
+(`postUpdate` → **+10**). The lead (reporter or a Civic-Authority holder) can open/close
+joining and remove contributors. A contributor marks the issue resolved → status
+**Needs Verification**; nearby users vote Yes/Partial/No (`submitVerificationVote`, a **2 km**
+live-GPS gate + a **24 h**-since-join rule for contributors); at the threshold (≥ N votes and
+≥ 70 % positive, via `checkVerificationThreshold`) it flips to **Resolved** (or reopens). On
+close, each active contributor self-awards **+25** on view (`claimCloseReward`, idempotent via
+`closeRewardedBy` — rules forbid writing another user's doc, so there is no fan-out). All
+activity is an immutable, append-only timeline (`issues/{id}/timeline`). Reputation extends
+the existing `civicScore` (relabeled **Community Reputation**) with new counters
+(`issuesJoined`, `evidenceUploaded`, `updatesPosted`, `verificationsGiven`) and badges.
+
+> **MVP trust note:** the threshold status-flip is client-driven (Spark plan — no Cloud
+> Functions, so rules can't count votes); the immutable timeline + community flagging are the
+> deterrents. Production should gate the flip via a Cloud Function.
+
+---
+
 ## 5. Database Schema (Cloud Firestore)
 
-Nine collections. App documents are written client-side; the demo dataset
+Nine top-level collections (+ two per-issue collaboration subcollections: `timeline`,
+`evidence` — §5.10). App documents are written client-side; the demo dataset
 (issues/users/orgs) is bulk-loaded via `scripts/importExcel.mjs` and ward/representative
 reference data via `scripts/importRepresentatives.mjs` — both Admin SDK. Integrity is
 enforced by `firestore.rules` (§8). Timestamps are Firestore `serverTimestamp()` unless
@@ -728,7 +753,7 @@ noted ISO.
 | `adoptedBy` | `{id, name, type}`\|null | Corporate/campus adoption tag |
 | `ward` | string | Ward (optional) |
 | `wardInfo` | `{wardNo, wardName, city, representative}`\|null | Elected-rep tag (GPS→ward) powering the accountability scorecard |
-| `status` | string | `Reported`→`Verified`→`In Progress`→`Resolved` |
+| `status` | string | `Reported`→`Verified`→`In Progress`→`Needs Verification`→`Resolved` |
 | `statusHistory` | array | `{status, changedAt(ISO), changedBy, note}` (append via `arrayUnion`) |
 | `confirmations` | number | Community vote count (starts 1) |
 | `confirmedBy` | string[] | uids who confirmed (one vote each) |
@@ -755,6 +780,12 @@ noted ISO.
 | `resolutionCelebrated` | boolean | Idempotent +25 award guard |
 | `rtiGenerated` / `rtiDocUrl` | boolean / string\|null | RTI state |
 | `storyClaimedBy` / `storyClaimedAt` | string\|null / timestamp\|null | Journalist 48 h exclusive |
+| `contributors` | array | Collaboration: `{userId, displayName, photoURL, role, joinedAt}` per contributor |
+| `contributedUids` | string[] | Joiners who posted ≥ 1 evidence/update (active set for the on-close reward) |
+| `communityVerification` | object | `{votes:{yes,no,partial}, voters[], threshold, positiveRatio, status}` |
+| `collaborationOpen` | boolean | Lead toggle — whether joining is open |
+| `removedUids` | string[] | Contributors removed by the lead |
+| `closeRewardedBy` | string[] | Idempotency guard for the on-close reward (claim-on-view) |
 | `createdAt` / `updatedAt` | timestamp | Lifecycle timestamps |
 
 ### 5.2 `users/{uid}` — private profile (owner read/write only)
@@ -844,7 +875,8 @@ have been removed; real data is now bulk-imported via the Admin SDK
 
 Curated reference data sourced from open data (§6.6) and ingested via the Admin SDK
 (`scripts/importRepresentatives.mjs`); loaded at runtime by `utils/representatives.js`
-with a built-in fallback (`constants/representatives.js`). Write-locked in the rules.
+with a built-in fallback (`constants/representatives.js`). **Community self-enrolled**
+("claim your ward") — the rules let a signed-in user create/manage their own claim (§8).
 
 | Field | Type | Purpose |
 |---|---|---|
@@ -853,7 +885,18 @@ with a built-in fallback (`constants/representatives.js`). Write-locked in the r
 | `city` | string | City / municipal corporation |
 | `center` | `{lat, lng}` | Ward centroid (from the boundary polygon) |
 | `radiusKm` | number | Approx ward radius (bbox-derived) |
-| `representative` | `{name, party, since, phone}` | Elected representative (`party` = neutral label) |
+| `representative` | `{name, role, party, since, phone}` | Ward role-holder — `role` is the civic role; `party` is an optional neutral label |
+
+### 5.10 `issues/{id}/timeline` & `issues/{id}/evidence` — collaboration subcollections
+
+**`timeline`** (append-only, immutable): `{userId, displayName, photoURL, action, message,
+createdAt}` — `action` ∈ issue_created / contributor_joined / evidence_uploaded /
+update_posted / resolution_requested / verification_vote / issue_resolved / issue_reopened.
+Rules: public read; create if `userId == auth.uid`; **no update/delete** (audit log).
+
+**`evidence`**: `{userId, displayName, type, imageBase64 (base64 data URL), caption, verified,
+relevant, relevanceReason, createdAt}` — `type` ∈ photo / receipt / document / rti_response.
+Rules: public read; creator-owned create; only the `verified` flag updatable; no delete.
 
 ### Composite indexes (`firestore.indexes.json`)
 
@@ -1112,11 +1155,9 @@ and are **excluded from `npm test`** (which runs only the deterministic `src/**`
 chains Agent 1 → Agent 3. Vitest config + coverage (`@vitest/coverage-v8`,
 `json-summary`) is in `vite.config.js`.
 
-**Latest run:** 410 tests passing (100%) across 52 files — 18 deterministic
-(`src/**` + hand-written `tests/unit/core`) + 34 Gemini-generated under `tests/ai/`
-(unit · components · hooks · screen-smoke) — at ~48% line / 41% function / 70% branch
-coverage (screens covered at the smoke / render-without-crash level). Snapshot:
-`tests/reports/latest.html`.
+**Latest run:** 138 deterministic tests passing across 21 files (`npm test` — `src/**`
++ hand-written `tests/unit`), plus the Gemini-generated tier under `tests/ai/`
+(unit · components · hooks · screen-smoke). Snapshot: `tests/reports/latest.html`.
 
 ---
 
