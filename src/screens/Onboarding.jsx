@@ -108,7 +108,8 @@ export default function Onboarding() {
             </h2>
             <p style={{ fontSize: '14px', color: '#94a3b8', textAlign: 'center',
                         lineHeight: 1.6, marginBottom: '20px', maxWidth: '300px' }}>
-              Report civic issues, build community pressure, and hold authorities accountable.
+              A universal civic accountability platform — report issues, build community
+              pressure, and hold those responsible accountable.
             </p>
             <NationTagline style={{ marginBottom: '32px' }} />
             <button onClick={() => setStep(2)} style={{

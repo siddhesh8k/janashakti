@@ -83,8 +83,9 @@ const buildNearby = (issues, userLocation, scorecard) => {
     (userLocation.locationText ? userLocation.locationText.split(',')[0].trim() : null);
   const header = `NEAR YOU (within ${NEAR_RADIUS_KM} km of the user's current location${detected ? `, around ${detected}` : ''}):`;
 
-  // Elected representative responsible for the user's ward (neutral accountability —
-  // party is just a metadata label). Includes their ward's resolution record.
+  // Civic role-holder accountable for the user's ward (universal accountability — the
+  // role may be a corporator, RWA, volunteer, officer, NGO, or independent citizen rep).
+  // Includes their ward's resolution record.
   let repLine = '';
   const wardRep = getWardRepresentative(userLocation.lat, userLocation.lng)
     || getRepresentativeForCity(detected);
@@ -92,7 +93,7 @@ const buildNearby = (issues, userLocation, scorecard) => {
     const sc = (scorecard || []).find(
       (s) => s.wardNo === wardRep.wardNo && s.representative.name === wardRep.representative.name
     );
-    repLine = `\nYOUR ELECTED REPRESENTATIVE (responsible for civic issues in your ward): ${wardRep.representative.name}, Ward ${wardRep.wardNo} — ${wardRep.wardName}, ${wardRep.city} (${wardRep.representative.party}, since ${wardRep.representative.since}).`;
+    repLine = `\nWARD REPRESENTATIVE (accountable for civic issues in your ward): ${wardRep.representative.name}, Ward ${wardRep.wardNo} — ${wardRep.wardName}, ${wardRep.city} (${wardRep.representative.role || 'civic role-holder'}, since ${wardRep.representative.since}).`;
     repLine += sc
       ? ` Ward record: ${sc.totalIssues} issues received, ${sc.resolved} resolved (${sc.resolutionRate}% resolution rate), average ${sc.avgDays} days to act${sc.wallOfShame ? `, ${sc.wallOfShame} ignored 30+ days` : ''}.`
       : ` No civic issues recorded in this ward yet.`;
@@ -128,12 +129,12 @@ const buildNearby = (issues, userLocation, scorecard) => {
 ${closest}${repLine}`;
 };
 
-// Top of the elected-representative accountability scorecard (ranked by resolution
-// rate). Neutral: party shown only as a metadata label, no opinions/endorsements.
+// Top of the civic-accountability scorecard (ranked by resolution rate). Neutral &
+// universal: each role-holder's civic role is shown, no opinions/endorsements.
 const buildRepSection = (scorecard) => {
   if (!scorecard || !scorecard.length) return '- No ward-mapped issues yet';
   return scorecard.slice(0, 10).map((r) =>
-    `- ${r.representative.name} (Ward ${r.wardNo} ${r.wardName}, ${r.city}; ${r.representative.party}): ${r.totalIssues} issues, ${r.resolved} resolved, ${r.resolutionRate}% resolution rate, avg ${r.avgDays} days`
+    `- ${r.representative.name} (Ward ${r.wardNo} ${r.wardName}, ${r.city}; ${r.representative.role || 'civic role-holder'}): ${r.totalIssues} issues, ${r.resolved} resolved, ${r.resolutionRate}% resolution rate, avg ${r.avgDays} days`
   ).join('\n');
 };
 
@@ -228,7 +229,7 @@ ${topAreas.length ? topAreas.map(([k, v]) => `- ${k}: ${v}`).join('\n') : '- N/A
 TOP PROBLEM AREA: ${topCity ? `${topCity[0]} with ${topCity[1].total} issues` : 'N/A'}
 MOST COMMON ISSUE: ${topIssueType ? `${topIssueType[0]} with ${topIssueType[1]} reports` : 'N/A'}
 
-ELECTED REPRESENTATIVE ACCOUNTABILITY (ward-level, ranked by resolution rate; "received" = issues in their ward; party is a neutral metadata label only, never an endorsement):
+WARD CIVIC ACCOUNTABILITY (ward-level, ranked by resolution rate; "received" = issues in their ward; the civic role is a neutral label, never a party endorsement):
 ${repSection}
 
 CURRENT CRITICAL ISSUES (unresolved):

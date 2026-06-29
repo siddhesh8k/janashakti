@@ -27,8 +27,9 @@ const resolveWard = (lat, lng, city) => {
 };
 
 // Claim the ward seat. Returns { ok, ward } on success, or { error } with a message.
-export const claimWard = async ({ uid, name, partyCode, lat, lng, city, since }) => {
-  if (!uid || !name || !partyCode) return { error: 'Add your name and party first.' };
+// `roleCode` is the civic role (required); `party` is an optional, muted free-text label.
+export const claimWard = async ({ uid, name, roleCode, party, lat, lng, city, since }) => {
+  if (!uid || !name || !roleCode) return { error: 'Add your name and role first.' };
   if (lat == null || lng == null) return { error: 'Location needed to detect your ward.' };
   try {
     const w = resolveWard(lat, lng, city);
@@ -41,7 +42,8 @@ export const claimWard = async ({ uid, name, partyCode, lat, lng, city, since })
     await setDoc(ref, {
       wardNo: w.wardNo, name: w.wardName, city: w.city,
       center: w.center, radiusKm: w.radiusKm,
-      representative: { name, party: partyCode, since: since || `${new Date().getFullYear()}`, phone: null },
+      representative: { name, role: roleCode, party: (party || '').trim() || null,
+                        since: since || `${new Date().getFullYear()}`, phone: null },
       selfDeclared: true,
       claimedByUid: uid,
       claimedByName: name,

@@ -57,7 +57,7 @@ JanaShakti turns the everyday frustration of broken civic infrastructure into or
 - **X / WhatsApp / LinkedIn / Facebook / Telegram share links, consent model, platform-only auto-posting.** *One tap turns a network into pressure, with privacy by design.*
 
 ### 10. Representative Accountability (self-enrolled)
-- **Reps self-enrol — "claim your ward"** (one per ward, declare a party), GPS→ward tagging, resolution-rate ranking, plus a neutral **by-party aggregate**. Self-declared & community-flagged — *not an official record*. *No open dataset exists for this, so the app becomes the source.*
+- **Reps self-enrol — "claim your ward"** (one per ward, declare a **civic role** — corporator / RWA / volunteer / officer / NGO / independent; party optional & never ranked), GPS→ward tagging, resolution-rate ranking, plus a neutral **by-role aggregate**. Self-declared & community-flagged — *not an official record*. *No open dataset exists for this, so the app becomes the source.*
 
 ### 11. Voice Assistant
 - **Gemini voice Q&A over live PII-free data, English/Hindi, on-device speech.** *Anyone can simply ask "who is responsible near me?"*

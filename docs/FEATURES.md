@@ -121,14 +121,14 @@ Features no other civic platform has shipped together.
 
 *Why it matters:* connects civic data to the fourth estate — the most effective accountability lever in India.
 
-### Elected Representative Scorecard
+### Representative Accountability (self-enrolled, universal)
 
 - **Auto-detection of ward from GPS** — At report time, `utils/representatives.js` (`getWardRepresentative`) maps coordinates → ward → representative and tags `wardInfo` on the issue (no user input).
-- **Representative tagged on every issue**, shown on IssueDetail's "Your elected representative" card.
+- **Representative tagged on every issue**, shown on IssueDetail's "Ward representative" card.
 - **Resolution-rate scorecard** — `calculateScorecard()` groups all issues by ward+representative and computes resolution rate, average days open, critical-open count, and 30-day-ignored count — covering even older issues by deriving their ward on the fly.
 - **Ranked leaderboard** (Leaderboard → Reps tab), with "Responsive Representative" / "Low accountability" framing.
 - **Self-enrollment ("Represent your ward")** — a citizen claims the ward they're in and declares a party (`utils/repClaims.js` → `claimWard`, **one claim per ward**, GPS-detected). Self-declared & community-tracked — **not an official record**; any user can **flag** a claim (`flagRepresentative`). With no open dataset for ward-level reps, the app *becomes* the civic-responsiveness data source.
-- **By-Party aggregate** — a neutral toggle rolls the scorecard up to "which party is most responsive here" via `aggregateByParty()` (same factual resolution-rate math — a signal, not an endorsement).
+- **By-Role aggregate** — a neutral toggle rolls the scorecard up to "which civic role is most responsive here" (corporators vs RWAs vs volunteers vs officers…) via `aggregateByRole()` (same factual resolution-rate math — a signal, never a party comparison). A self-enrolling rep picks a **civic role** (`CIVIC_ROLES`); political party is an **optional, muted** field that is never ranked.
 - **Neutral by design** — `party` is a metadata label only; **no party colours, logos, or endorsements**. Resolution rate is the *sole* ranking metric.
 
 *Why it matters:* converts scattered civic complaints into an objective, data-driven accountability metric for the people actually elected to fix them.

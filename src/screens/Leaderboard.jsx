@@ -15,7 +15,7 @@ import { levelFor } from '../constants/issueTypes';
 import { generateCSRReport } from '../utils/csrReport';
 import { loadOrganizations } from '../utils/organizations';
 import { exportToExcel } from '../utils/exportToExcel';
-import { calculateScorecard, aggregateByParty, PARTIES } from '../constants/representatives';
+import { calculateScorecard, aggregateByRole, CIVIC_ROLES } from '../constants/representatives';
 import { loadRepresentatives, clearRepresentativesCache } from '../utils/representatives';
 import { claimWard, flagRepresentative, getMyClaim } from '../utils/repClaims';
 import { useSharedLocation } from '../components/LocationProvider';
@@ -187,7 +187,8 @@ export default function Leaderboard() {
   const [repView, setRepView] = useState('individual'); // 'individual' | 'party'
   const [showClaim, setShowClaim] = useState(false);
   const [claimName, setClaimName] = useState('');
-  const [claimParty, setClaimParty] = useState('INC');
+  const [claimRole, setClaimRole] = useState(CIVIC_ROLES[0]);
+  const [claimParty, setClaimParty] = useState(''); // optional, muted political affiliation
   const [claiming, setClaiming] = useState(false);
   const [myClaim, setMyClaim] = useState(null);
   const [flaggedIds, setFlaggedIds] = useState(() => new Set());
@@ -320,7 +321,8 @@ export default function Leaderboard() {
 
   const openClaim = () => {
     setClaimName((myClaim?.representative?.name) || auth.currentUser?.displayName || '');
-    setClaimParty((myClaim?.representative?.party) || 'INC');
+    setClaimRole((myClaim?.representative?.role) || CIVIC_ROLES[0]);
+    setClaimParty((myClaim?.representative?.party) || '');
     setShowClaim(true);
   };
 
@@ -330,7 +332,7 @@ export default function Leaderboard() {
     if (!myLocation?.lat) { toast.error('Location needed to detect your ward'); return; }
     setClaiming(true);
     const res = await claimWard({
-      uid: myUid, name: claimName.trim(), partyCode: claimParty,
+      uid: myUid, name: claimName.trim(), roleCode: claimRole, party: claimParty,
       lat: myLocation.lat, lng: myLocation.lng, city: myLocation.city,
     });
     if (res.ok) {
@@ -370,8 +372,8 @@ export default function Leaderboard() {
   const repAvgRate = repScorecard.length > 0
     ? Math.round(repScorecard.reduce((s, r) => s + r.resolutionRate, 0) / repScorecard.length)
     : 0;
-  // Neutral party-level rollup for the "By Party" view.
-  const partyAgg = useMemo(() => aggregateByParty(repScorecard), [repScorecard]);
+  // Neutral civic-role rollup for the "By Role" view.
+  const roleAgg = useMemo(() => aggregateByRole(repScorecard), [repScorecard]);
 
   const handleCSR = async (org) => {
     setCsrLoading(org.id);
@@ -559,7 +561,7 @@ export default function Leaderboard() {
                     You represent Ward {myClaim.wardNo} — {myClaim.name}
                   </div>
                   <div style={{ fontSize: '11px', color: '#94a3b8' }}>
-                    {myClaim.representative?.party} · self-declared · resolve issues in your ward to lift your rating
+                    {myClaim.representative?.role || 'Civic role'} · self-declared · resolve issues in your ward to lift your rating
                   </div>
                 </div>
                 <button onClick={openClaim} style={{ background: 'none', border: '0.5px solid #16a34a55',
@@ -575,10 +577,10 @@ export default function Leaderboard() {
               </button>
             )}
 
-            {/* By-Representative | By-Party view toggle */}
+            {/* By-Representative | By-Role view toggle (civic role, never party) */}
             <div style={{ display: 'flex', gap: '6px', backgroundColor: '#0d1b2e',
                           border: '0.5px solid #1a2f4a', borderRadius: '10px', padding: '4px' }}>
-              {[{ k: 'individual', l: 'By Representative' }, { k: 'party', l: 'By Party' }].map(({ k, l }) => (
+              {[{ k: 'individual', l: 'By Representative' }, { k: 'role', l: 'By Role' }].map(({ k, l }) => (
                 <button key={k} onClick={() => setRepView(k)} style={{
                   flex: 1, padding: '8px', borderRadius: '8px', border: 'none', cursor: 'pointer',
                   fontSize: '12px', fontWeight: '600',
@@ -587,22 +589,22 @@ export default function Leaderboard() {
               ))}
             </div>
             <div style={{ fontSize: '10px', color: '#4a6280', margin: '8px 0 14px', lineHeight: 1.4 }}>
-              Community-tracked, self-declared — not an official electoral record. Party is a neutral responsiveness signal.
+              Community-tracked, self-declared — not an official record. Resolution rate is the only ranking metric.
             </div>
 
             {loading ? (
               <LoadingSkeleton count={6} />
-            ) : repView === 'party' ? (
-              partyAgg.length === 0 ? (
-                <EmptyState title="No party data yet"
-                  message="Representatives must enrol and resolve issues first" icon={Landmark} />
+            ) : repView === 'role' ? (
+              roleAgg.length === 0 ? (
+                <EmptyState title="No role data yet"
+                  message="Ward representatives must enrol and resolve issues first" icon={Landmark} />
               ) : (
                 <>
-                  {partyAgg.map((p, i) => {
+                  {roleAgg.map((p, i) => {
                     const rateColor = p.resolutionRate >= 70 ? '#16a34a'
                       : p.resolutionRate >= 40 ? '#f97316' : '#ef4444';
                     return (
-                      <div key={p.party} style={{ backgroundColor: '#0d1b2e', borderRadius: '14px',
+                      <div key={p.role} style={{ backgroundColor: '#0d1b2e', borderRadius: '14px',
                                 border: '0.5px solid #1a2f4a', padding: '14px', marginBottom: '8px',
                                 borderLeft: `3px solid ${rateColor}` }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -612,7 +614,7 @@ export default function Leaderboard() {
                                     justifyContent: 'center', fontSize: '13px', fontWeight: '700',
                                     color: rateColor, flexShrink: 0 }}>{i + 1}</div>
                             <div>
-                              <p style={{ fontSize: '14px', fontWeight: '600', color: '#f0f6ff' }}>{p.party}</p>
+                              <p style={{ fontSize: '14px', fontWeight: '600', color: '#f0f6ff' }}>{p.role}</p>
                               <p style={{ fontSize: '11px', color: '#4a6280' }}>
                                 {p.reps} rep{p.reps > 1 ? 's' : ''} · {p.totalIssues} issues tracked
                               </p>
@@ -666,7 +668,7 @@ export default function Leaderboard() {
                             Ward {rep.wardNo} — {rep.wardName}, {rep.city}
                           </p>
                           <p style={{ fontSize: '11px', color: '#4a6280' }}>
-                            {rep.representative.party} · Since {rep.representative.since}
+                            {rep.representative.role || 'Civic role'} · Since {rep.representative.since}{rep.representative.party ? ` · ${rep.representative.party}` : ''}
                           </p>
                           {rep.selfDeclared && (
                             <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', marginTop: '4px',
@@ -748,7 +750,7 @@ export default function Leaderboard() {
 
               <button onClick={async () => {
                 const rows = repScorecard.map((r) => ({
-                  representative: r.representative.name, party: r.representative.party,
+                  representative: r.representative.name, role: r.representative.role, party: r.representative.party || '',
                   ward: `${r.wardNo} — ${r.wardName}`, city: r.city,
                   totalIssues: r.totalIssues, resolved: r.resolved,
                   resolutionRate: `${r.resolutionRate}%`, avgDays: r.avgDays,
@@ -783,10 +785,14 @@ export default function Leaderboard() {
                   <input value={claimName} onChange={(e) => setClaimName(e.target.value)}
                          placeholder="As it should appear" style={fieldInput} />
 
-                  <label style={{ ...fieldLabel, marginTop: '12px' }}>Party you represent</label>
-                  <select value={claimParty} onChange={(e) => setClaimParty(e.target.value)} style={fieldInput}>
-                    {PARTIES.map((p) => <option key={p.code} value={p.code}>{p.code} — {p.name}</option>)}
+                  <label style={{ ...fieldLabel, marginTop: '12px' }}>Your civic role</label>
+                  <select value={claimRole} onChange={(e) => setClaimRole(e.target.value)} style={fieldInput}>
+                    {CIVIC_ROLES.map((r) => <option key={r} value={r}>{r}</option>)}
                   </select>
+
+                  <label style={{ ...fieldLabel, marginTop: '12px' }}>Party / affiliation <span style={{ textTransform: 'none', letterSpacing: 0, color: '#4a6280' }}>(optional)</span></label>
+                  <input value={claimParty} onChange={(e) => setClaimParty(e.target.value)}
+                         placeholder="Leave blank if non-partisan" style={fieldInput} />
 
                   <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '12px',
                                 fontSize: '11px', color: '#4a6280' }}>

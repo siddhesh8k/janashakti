@@ -630,13 +630,15 @@ from the `representatives` collection via `utils/representatives.js` (`loadRepre
 cached) and is **merged over** the built-in fallback in `constants/representatives.js`
 (claims win by ward; the demo stays populated). Helpers are pure:
 `getWardRepresentative(lat,lng)` (Euclidean radius, with `getRepresentativeForCity`
-fallback), `calculateScorecard(issues)`, and `aggregateByParty(scorecard)`.
+fallback), `calculateScorecard(issues)`, and `aggregateByRole(scorecard)`.
 
-> **Neutral by design:** the individual representative is the ranking unit — no party
-> colors/logos, no endorsements; `party` is a metadata label. A **By-Party** view offers a
-> transparent aggregate (identical resolution-rate math) as a responsiveness *signal*, not
-> a verdict. Every claim is **self-declared · community-tracked — not an official record**
-> (one-per-ward + community flag is the lightweight verification).
+> **Universal & neutral by design:** a ward role-holder is **any** civic accountability
+> partner — elected corporator, Resident Welfare Association, ward volunteer, municipal
+> officer, NGO, or independent citizen rep. The individual is the ranking unit; the optional
+> political `party` is a muted metadata label only — **never ranked, never compared**. A
+> **By-Role** view offers a transparent aggregate (identical resolution-rate math) as a
+> responsiveness *signal*, not a verdict. Every claim is **self-declared · community-tracked
+> — not an official record** (one-per-ward + community flag is the lightweight verification).
 
 ```mermaid
 flowchart TB
@@ -644,7 +646,7 @@ flowchart TB
     Reps[("representatives<br/>OGD import + fallback")] --> Helpers["getWardRepresentative /<br/>getRepresentativeForCity"]
     Helpers --> Tag
     Tag --> Doc[(issues doc carries wardInfo)]
-    Doc --> Card["IssueDetail:<br/>'Your elected representative' card"]
+    Doc --> Card["IssueDetail:<br/>'Ward representative' card"]
     Doc --> Score["calculateScorecard(issues)<br/>group by ward+rep · resolution rate · avg days · ignored 30d+"]
     Helpers --> Score
     Score --> Board["Leaderboard 'Reps' tab<br/>ranked by resolution rate"]
@@ -838,7 +840,7 @@ so authority status is earned, not free.
 have been removed; real data is now bulk-imported via the Admin SDK
 (`scripts/importExcel.mjs`, `scripts/importRepresentatives.mjs`). Kept for compatibility.
 
-### 5.9 `representatives/{wardId}` — ward → elected representative (public read)
+### 5.9 `representatives/{wardId}` — ward → civic role-holder (self-enrolled + fallback; public read)
 
 Curated reference data sourced from open data (§6.6) and ingested via the Admin SDK
 (`scripts/importRepresentatives.mjs`); loaded at runtime by `utils/representatives.js`

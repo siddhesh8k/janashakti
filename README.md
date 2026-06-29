@@ -2,7 +2,7 @@
 
 # JanaShakti — जनशक्ति
 
-### People's Power — an AI civic-intelligence Progressive Web App for India
+### People's Power — a universal civic accountability platform for India (AI-powered PWA)
 
 [![PWA](https://img.shields.io/badge/PWA-installable-00d4ff)](public/manifest.json)
 [![React 18](https://img.shields.io/badge/React-18.3-00d4ff?logo=react&logoColor=white)](https://react.dev)
@@ -29,7 +29,7 @@ It closes the loop that every Indian civic-complaint app leaves open: **after yo
 - a **5-agent Google Gemini pipeline** that classifies the issue, drafts the complaint, detects duplicates **and recurrences of already-resolved issues**, routes it to the right department, and predicts a resolution timeline — plus a **6th, post-resolution agent** that scores each resolved issue's ESG (Environmental / Social / Governance) impact and maps it to the UN Sustainable Development Goals;
 - an **n8n automation layer** that emails the department and posts to social media;
 - a **time-based escalation engine** that climbs Ward Officer → Department Head → Commissioner → Media at 7 / 14 / 30 days;
-- a **transparency layer** where representatives **self-enrol to represent their ward** and are ranked by their real resolution rate (with a neutral by-party view), journalists get story-ready feeds, and companies/colleges adopt civic zones.
+- a **transparency layer** where ward representatives — corporators, RWAs, volunteers, officers, NGOs, or independents — **self-enrol to represent their ward** and are ranked by their real resolution rate (with a neutral by-role view, never party-vs-party), journalists get story-ready feeds, and companies/colleges adopt civic zones.
 
 Built **end-to-end on Google's stack** (Gemini · Firebase · Google Maps) with **no custom backend** — all business logic runs client-side and is secured by Firestore Security Rules.
 
@@ -127,7 +127,7 @@ Built **end-to-end on Google's stack** (Gemini · Firebase · Google Maps) with 
 **🚀 Unique Differentiators**
 - **Corporate / College zone adoption** + AI CSR reports + LinkedIn posts
 - **Journalist dashboard** — story-ready filter, AI press releases, 48h exclusives
-- **Representative Accountability** — self-enrolled "claim your ward" reps, GPS→ward tagging, resolution-rate ranking + neutral by-party aggregate (self-declared, community-flagged)
+- **Representative Accountability** — self-enrolled "claim your ward" reps (civic role: corporator / RWA / volunteer / officer / NGO / independent), GPS→ward tagging, resolution-rate ranking + neutral by-role aggregate (self-declared, community-flagged)
 - **Gemini Voice Assistant** — bilingual (EN/HI) Q&A over live, PII-free data
 - **Wall of Fame Leaderboard** — Citizens / Companies / Colleges / Representatives
 - **Privacy-safe Excel export** — anonymized, on 4 dashboards
@@ -432,7 +432,7 @@ Nine collections, all written client-side and secured by `firestore.rules`:
 | `organizations` | Adopted-zone companies / colleges |
 | `agents_log` | Per-agent audit log (input, output, latency, success, model) |
 | `agent_runs` | Orchestrated pipeline step-traces (Agents Showcase) |
-| `representatives` | Ward → elected representative reference data (open-data import) |
+| `representatives` | Ward → civic role-holder — community self-enrolled ("claim your ward") + fallback |
 | `authorities` | Authority allowlist (gates trust-sensitive fields) |
 | `meta` | Seed marker (vestigial) |
 

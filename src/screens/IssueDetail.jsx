@@ -633,7 +633,7 @@ export default function IssueDetail() {
                   Ward {wardRep.wardNo} — {wardRep.wardName}
                 </p>
                 <p style={{ fontSize: '11px', color: '#4a6280', marginTop: '2px' }}>
-                  {wardRep.representative.party} · Since {wardRep.representative.since}
+                  {wardRep.representative.role || 'Civic role'} · Since {wardRep.representative.since}{wardRep.representative.party ? ` · ${wardRep.representative.party}` : ''}
                 </p>
                 {wardRep.selfDeclared && (
                   <span style={{ display: 'inline-flex', alignItems: 'center', marginTop: '4px',
