@@ -63,6 +63,22 @@ export function useNotifications(uid) {
           note: 'Amplified on social media.', time: updated,
         });
       }
+      // Collaboration: contributors joined / resolution awaiting community verification.
+      if ((issue.contributors || []).length >= 1) {
+        const n = issue.contributors.length;
+        out.push({
+          key: `${issue.id}-collab`, issueId: issue.id, kind: 'milestone',
+          title: `${n} citizen${n > 1 ? 's' : ''} joined your ${type} report`,
+          note: 'Community contributors are helping solve this.', time: updated,
+        });
+      }
+      if (issue.status === 'Needs Verification') {
+        out.push({
+          key: `${issue.id}-needsverif`, issueId: issue.id, kind: 'status',
+          title: `Your ${type} report needs community verification`,
+          note: 'A contributor marked it resolved — nearby citizens are verifying.', time: updated,
+        });
+      }
     }
 
     return out

@@ -362,6 +362,24 @@ export default function Leaderboard() {
 
   const citizensPage = usePagination(citizens, 10);
 
+  // Time-windowed "most active" board. publicProfiles only holds the cumulative score, so
+  // week/month rankings are derived from issues reported in the window (allIssues carries
+  // userId/userName/userPhoto/createdAt). 'all' = the cumulative civicScore board.
+  const [citizenWindow, setCitizenWindow] = useState('all');
+  const windowedCitizens = useMemo(() => {
+    if (citizenWindow === 'all') return [];
+    const cutoff = Date.now() - (citizenWindow === 'week' ? 7 : 30) * 86400000;
+    const tally = {};
+    for (const it of allIssues) {
+      const t = it.createdAt?.toDate ? it.createdAt.toDate().getTime()
+        : (it.createdAt ? new Date(it.createdAt).getTime() : 0);
+      if (!t || t < cutoff || !it.userId) continue;
+      const e = tally[it.userId] || (tally[it.userId] = { id: it.userId, displayName: it.userName || 'Citizen', photoURL: it.userPhoto || null, count: 0 });
+      e.count += 1;
+    }
+    return Object.values(tally).sort((a, b) => b.count - a.count).slice(0, 20);
+  }, [citizenWindow, allIssues]);
+
   const companies = orgs.filter(o => o.type === 'company').sort((a, b) => b.score - a.score);
   const colleges = orgs.filter(o => o.type === 'college').sort((a, b) => b.score - a.score);
   const companiesPage = usePagination(companies, 10);
@@ -441,6 +459,49 @@ export default function Leaderboard() {
             <EmptyState title="No citizens yet" message="Be the first to report!" icon={Trophy} />
           ) : (
             <>
+              {/* Time-window filter */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', overflowX: 'auto', marginBottom: '12px', paddingBottom: '4px' }}>
+                {[{ k: 'all', l: 'All Time' }, { k: 'month', l: 'This Month' }, { k: 'week', l: 'This Week' }].map(({ k, l }) => (
+                  <button key={k} onClick={() => setCitizenWindow(k)} style={{
+                    padding: '7px 14px', borderRadius: '999px', fontSize: '12px', lineHeight: 1, fontWeight: '600',
+                    cursor: 'pointer', whiteSpace: 'nowrap', flexShrink: 0, boxSizing: 'border-box',
+                    backgroundColor: citizenWindow === k ? '#00d4ff' : 'transparent',
+                    color: citizenWindow === k ? '#04091a' : '#94a3b8',
+                    border: citizenWindow === k ? '0.5px solid transparent' : '0.5px solid #1a2f4a',
+                  }}>{l}</button>
+                ))}
+              </div>
+
+              {citizenWindow !== 'all' ? (
+                windowedCitizens.length === 0 ? (
+                  <EmptyState title="No activity in this period" message="No issues were reported in this window yet." icon={Trophy} />
+                ) : (
+                  <>
+                    <div style={{ fontSize: '11px', color: '#4a6280', marginBottom: '10px' }}>
+                      Most active citizens — by issues reported {citizenWindow === 'week' ? 'this week' : 'this month'}.
+                    </div>
+                    {windowedCitizens.map((u, i) => (
+                      <div key={u.id} style={{ display: 'flex', alignItems: 'center', gap: '10px',
+                        backgroundColor: '#0d1b2e', borderRadius: '12px', border: '0.5px solid #1a2f4a',
+                        padding: '12px 14px', marginBottom: '8px' }}>
+                        <RankBadge rank={i + 1} />
+                        {u.photoURL
+                          ? <img src={u.photoURL} alt="" style={{ width: 32, height: 32, borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }} />
+                          : <div style={{ width: 32, height: 32, borderRadius: '50%', backgroundColor: '#112035', border: '0.5px solid #1a2f4a', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '13px', fontWeight: '700', color: '#7ee8fa', flexShrink: 0 }}>{(u.displayName || 'C').slice(0, 1).toUpperCase()}</div>}
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ fontSize: '14px', fontWeight: '600', color: '#f0f6ff' }}>
+                            {u.displayName}{u.id === myUid ? ' (You)' : ''}
+                          </div>
+                          <div style={{ fontSize: '12px', color: '#94a3b8' }}>
+                            {u.count} report{u.count !== 1 ? 's' : ''}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </>
+                )
+              ) : (
+              <>
               {/* Your Rank summary — needs a signed-in user to compute. */}
               {!myUid ? (
                 <div style={{
@@ -495,6 +556,8 @@ export default function Leaderboard() {
               }} style={exportBtnStyle}>
                 <Download size={14} strokeWidth={1.5} /> Export Citizens
               </button>
+              </>
+              )}
             </>
           )
         )}
