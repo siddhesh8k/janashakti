@@ -5,15 +5,15 @@
 
 ## WHAT YOU HAVE (Already Done For You)
 
-I've built the ENTIRE codebase — all 42 files:
+I've built the ENTIRE codebase (counts below reflect the current shipped app):
 
-- 9 screens (Home, Report, Map, Profile, IssueDetail, Analytics, Authority, Agents, Onboarding)
-- 12 components (BottomNav, TopNav, IssueCard, Toast, LoadingSkeleton, etc.)
-- 4 AI agents (Analyzer, Duplicate Detector, Authority Router, Predictor)
-- 5 hooks (useAuth, useIssues, useUser, useLocation, useAgents)
-- 3 utils (gemini.js, n8n.js, social.js)
+- 12 screens (Home, Report, Map, Profile, IssueDetail, Analytics, Authority, Agents, Onboarding, Leaderboard, Journalist, Notifications)
+- 30 components (BottomNav, TopNav, IssueCard, PressureMeter, VoiceAssistant, etc.)
+- 7 AI agents (Analyzer, Duplicate Detector, Authority Router, Predictor, Verifier, ESG Scorer, autonomous Coordinator) — Detector & Router run as bounded ReAct loops (shared `reactLoop.js`)
+- 9 hooks (useAuth, useIssues, useUser, useLocation, useAgents, useNotifications, usePagination, …)
+- 31 utils (gemini, n8n, social, escalation, reactLoop, cityDetect, geo, rti, …)
 - Theme system (colors, typography, spacing, components)
-- Constants (issueTypes, departments, cities)
+- Constants (issueTypes, departments, cities, representatives, mapStyle, voiceLang)
 - Firebase config, Firestore rules, PWA manifest
 - Sample data seeder (15 realistic issues)
 
@@ -227,7 +227,7 @@ firebase deploy --only firestore:rules
 [0:00] "JanaShakti gives citizens POWER."
 [0:30] Open app → show Home with live data
        Point to Agent Status row
-       "Four AI agents, all powered by Gemini 2.5."
+       "Seven AI agents, all powered by Gemini 2.5."
 
 [0:30-1:30] Tap Report → take photo
        Show AI analyzing overlay
@@ -273,14 +273,14 @@ firebase deploy --only firestore:rules
 ```
 Config files:    6  (package.json, vite.config, index.html, .env, .gitignore, firebase.json)
 Theme:           4  (colors, typography, spacing, components)
-Constants:       3  (issueTypes, departments, cities)
-Hooks:           5  (useAuth, useIssues, useUser, useLocation, useAgents)
-Utils:           3  (gemini, n8n, social)
-Agents:          4  (issueAnalyzer, duplicateDetector, authorityRouter, resolutionPredictor)
-Components:     12  (BottomNav, TopNav, IssueCard, SeverityBadge, PressureMeter, etc.)
-Screens:         9  (Home, Report, Map, Profile, IssueDetail, Analytics, Authority, Agents, Onboarding)
-Other:           4  (App.jsx, main.jsx, index.css, firebase.js, seedData.js, firestore.rules, manifest.json)
-TOTAL:          ~47 files
+Constants:       6  (issueTypes, departments, cities, representatives, mapStyle, voiceLang)
+Hooks:           9  (useAuth, useIssues, useUser, useLocation, useAgents, useNotifications, usePagination, …)
+Utils:          31  (gemini, n8n, social, escalation, reactLoop, cityDetect, geo, rti, …)
+Agents:          7  (+ orchestrator + reactLoop helper — Detector & Router are ReAct loops)
+Components:     30  (BottomNav, TopNav, IssueCard, PressureMeter, VoiceAssistant, etc.)
+Screens:        12  (Home, Report, Map, Profile, IssueDetail, Analytics, Authority, Agents, Onboarding, Leaderboard, Journalist, Notifications)
+Other:               App.jsx, main.jsx, index.css, firebase.js, firestore.rules, manifest.json
+TOTAL:         ~130+ source files
 ```
 
 ---

@@ -29,9 +29,9 @@ JanaShakti turns the everyday frustration of broken civic infrastructure into or
 - **Complaint ID** — `JS-CITY-YEAR-SEQUENCE`. *Citizen-friendly tracking reference.*
 - **GPS + reverse geocoding** — Google Geocoding turns coordinates into an editable address. *Accurate location, zero typing.*
 
-### 2. 4-Agent Intelligence Pipeline (+ a 5th verifier)
-- **Agent 1 Analyzer / Agent 2 Duplicate & Recurrence Detector / Agent 3 Authority Router / Agent 4 Resolution Predictor**, orchestrated so each agent's output feeds the next. *Coordinated reasoning, not isolated calls.*
-- **Agent 5 Resolution Verifier** — judges fix photos. *Stops fake "resolved" claims without ever blocking a real one.*
+### 2. Multi-Agent Intelligence Pipeline (7 agents)
+- **Agent 1 Analyzer / Agent 2 Duplicate & Recurrence Detector / Agent 3 Authority Router / Agent 4 Resolution Predictor**, orchestrated so each agent's output feeds the next — and **Agents 2 & 3 reason in bounded ReAct loops** (multi-step reason→tool→observe via Gemini function-calling, shared `reactLoop.js`), not single calls. *Coordinated, multi-step reasoning — not isolated prompts.*
+- **Agent 5 Resolution Verifier** — judges fix photos. *Stops fake "resolved" claims without ever blocking a real one.* (Agent 6 ESG Scorer and the autonomous Agent 7 Coordinator are detailed in their own sections.)
 - **Live pipeline trace + `agents_log` / `agent_runs` logging.** *Total transparency on the Agents Showcase.*
 - **Model fallback chain.** *Rate-limit resilience.*
 
@@ -85,10 +85,10 @@ flowchart LR
     A3 -->|"branded HTML + JSON"| Rep2[(tests/reports/latest.html)]
 ```
 
-Latest run: **158 deterministic tests passing** across 23 files (`npm test`), plus the AI-generated tier under `tests/ai/**`. Models: `gemini-2.5-flash → gemini-2.5-flash-lite → gemini-2.0-flash`.
+Latest run: **176 deterministic tests passing** across 26 files (`npm test`), plus the AI-generated tier under `tests/ai/**`. Models: `gemini-2.5-flash → gemini-2.5-flash-lite → gemini-2.0-flash`.
 
 ### 15. Civic Collaboration Layer
-- **Every issue is a public collaboration space: any citizen *Joins* (as a civic role), posts evidence/updates to an immutable activity timeline, and the community *verifies* the fix (2 km live-GPS + 24h-since-join gates) — earning Community Reputation + badges. AI-checked evidence, claim-on-view rewards, lead moderation.** *GitHub-for-civic-issues — every report becomes an open, evidence-backed, community-verified effort, not just a complaint.*
+- **Every issue is a public collaboration space: any citizen *Joins* (as a civic role), posts evidence/updates to an immutable activity timeline, and the community *verifies* the fix (500 m live-GPS + 24h-since-join gates) — earning Community Reputation + badges. AI-checked evidence, claim-on-view rewards, lead moderation.** *GitHub-for-civic-issues — every report becomes an open, evidence-backed, community-verified effort, not just a complaint.*
 
 ---
 
@@ -155,7 +155,7 @@ All Gemini calls route through `fetchAI()` in `utils/gemini.js` and use Gemini's
 ### 2. Firebase Authentication
 
 Three sign-in methods (`firebase.js`):
-- **Google** — `signInWithPopup` (popup, COOP-header friendly).
+- **Google** — `signInWithPopup` in the browser, with an automatic **`signInWithRedirect`** fallback for installed PWAs / standalone mode (`completeRedirectSignIn` finishes it on app load). *Popups can't return a result to a standalone window — redirect fixes login in the installed app.*
 - **Email/Password** — `createUserWithEmailAndPassword` / `signInWithEmailAndPassword`.
 - **Anonymous (Guest)** — `signInAnonymously`.
 
