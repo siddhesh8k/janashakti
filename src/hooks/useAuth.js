@@ -11,10 +11,14 @@ export function useAuth() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Finish a pending installed-PWA redirect sign-in (provisions the profile) so a
-    // redirect-based Google login lands signed-in instead of bouncing to the login screen.
-    completeRedirectSignIn();
-    const unsub = onAuthStateChanged(auth, async (firebaseUser) => {
+    let unsub = () => {};
+    let cancelled = false;
+    // Finish a pending installed-PWA redirect sign-in (provisions the profile) BEFORE wiring
+    // the auth listener, so a redirect-based Google login lands signed-in WITH its profile
+    // (never rejects — completeRedirectSignIn swallows its own errors and returns null).
+    completeRedirectSignIn().finally(() => {
+      if (cancelled) return;
+      unsub = onAuthStateChanged(auth, async (firebaseUser) => {
       setUser(firebaseUser);
       if (firebaseUser) {
         try {
@@ -60,8 +64,9 @@ export function useAuth() {
         setUserProfile(null);
       }
       setLoading(false);
+      });
     });
-    return unsub;
+    return () => { cancelled = true; unsub(); };
   }, []);
 
   return { user, userProfile, loading };

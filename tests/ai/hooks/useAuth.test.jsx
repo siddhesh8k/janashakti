@@ -170,7 +170,7 @@ describe('useAuth', () => {
   });
 
   // Test Case 5: Cleanup - unsubscribe on unmount
-  it('should unsubscribe from auth state changes on unmount', () => {
+  it('should unsubscribe from auth state changes on unmount', async () => {
     const mockUnsubscribe = vi.fn();
     onAuthStateChanged.mockImplementation((_auth, callback) => {
       callback(null); // Initial call
@@ -179,7 +179,8 @@ describe('useAuth', () => {
 
     const { unmount } = renderHook(() => useAuth());
 
-    expect(onAuthStateChanged).toHaveBeenCalledTimes(1);
+    // The auth listener is now wired after completeRedirectSignIn() resolves (a microtask).
+    await waitFor(() => expect(onAuthStateChanged).toHaveBeenCalledTimes(1));
 
     unmount();
 

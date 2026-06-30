@@ -21,6 +21,19 @@ window.addEventListener('unhandledrejection', (e) => {
 // deploy can recover again (and so we never loop within a single broken session).
 window.addEventListener('load', () => setTimeout(() => sessionStorage.removeItem(RELOAD_KEY), 10000));
 
+// Force clients onto a new service worker the moment it activates, so a deploy can't leave
+// users running stale JS (e.g. the old popup-login build) until a manual hard-refresh. Only
+// attach when the page is ALREADY SW-controlled (a returning visit) — a later controllerchange
+// then means an UPDATE, not the first install — and a flag guards against reload loops.
+if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+  let swReloaded = false;
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    if (swReloaded) return;
+    swReloaded = true;
+    window.location.reload();
+  });
+}
+
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <App />
