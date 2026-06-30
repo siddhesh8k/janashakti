@@ -94,7 +94,7 @@ export default function CommunityVerification({ issue }) {
       <div style={{ height: '6px', backgroundColor: '#112035', borderRadius: '999px', overflow: 'hidden', marginBottom: '6px' }}>
         <div style={{ height: '100%', width: `${Math.min(100, (total / threshold) * 100)}%`, backgroundColor: '#a855f7' }} />
       </div>
-      <div style={{ fontSize: '11px', color: '#4a6280' }}>
+      <div style={{ fontSize: '11px', color: '#7689a3' }}>
         {total} of {threshold} votes · {positivePct}% positive
         {alreadyVoted ? ' · you verified' : ''}
       </div>

@@ -43,7 +43,7 @@ export default function TopNav({ title, showBack = false, rightElement, user }) 
             display: 'flex',
           }}>
             <Avatar src={user.photoURL} name={user.displayName} size={28}
-              ring="1.5px solid #1a2f4a" textColor="#4a6280" />
+              ring="1.5px solid #1a2f4a" textColor="#7689a3" />
           </button>
         )}
       </div>

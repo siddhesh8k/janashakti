@@ -223,7 +223,7 @@ flowchart TB
     UI -->|uploadVideo| Cloud
     Host -->|serves bundle| Client
     N -.->|email| Dept["🏛️ Department"]
-    N -.->|@JanaShaktiApp| Social["📣 X / LinkedIn"]
+    N -.->|"@JanaShaktiApp"| Social["📣 X / LinkedIn"]
 ```
 
 - **No backend / no Cloud Functions** — Firestore is the single source of truth; security is enforced entirely by **Firestore Security Rules**.
@@ -470,7 +470,7 @@ A strict palette derived from the JanaShakti holographic-fist logo (see `src/the
 | Green (secondary) | `#16a34a` | Success, civic score, resolved |
 | Screen background | `#080f1e` | All screens |
 | Card background | `#0d1b2e` | All cards (0.5px border `#1a2f4a`) |
-| Text primary / body / muted | `#f0f6ff` / `#94a3b8` / `#4a6280` | Typography hierarchy |
+| Text primary / body / muted | `#f0f6ff` / `#94a3b8` / `#7689a3` | Typography hierarchy |
 
 Severity: Critical `#ef4444` · High `#f97316` · Medium `#eab308` · Low `#22c55e`.
 **Rules:** JSX only · Lucide icons only (no emoji UI icons) · string font-weights · LinkedIn-style cards.

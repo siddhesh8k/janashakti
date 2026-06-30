@@ -22,7 +22,7 @@ function StatusGlyph({ status }) {
   }
   if (status === 'done') return <CheckCircle size={16} color="#16a34a" strokeWidth={2} />;
   if (status === 'error') return <AlertTriangle size={16} color="#f97316" strokeWidth={2} />;
-  return <Circle size={16} color="#4a6280" strokeWidth={1.5} />;
+  return <Circle size={16} color="#7689a3" strokeWidth={1.5} />;
 }
 
 // Full-screen overlay that renders the live agent pipeline trace during submit, so
@@ -44,7 +44,7 @@ export default function AgentPipelineOverlay({ steps = [], visible }) {
           <Bot size={18} color="#00d4ff" strokeWidth={1.5} />
           <span style={{ fontSize: '15px', fontWeight: '600', color: '#f0f6ff' }}>AI agents at work</span>
         </div>
-        <p style={{ fontSize: '12px', color: '#4a6280', marginBottom: '12px' }}>
+        <p style={{ fontSize: '12px', color: '#7689a3', marginBottom: '12px' }}>
           4 agents analysing, de-duplicating, routing and predicting — collaborating in real time.
         </p>
 
@@ -78,7 +78,7 @@ export default function AgentPipelineOverlay({ steps = [], visible }) {
                   </div>
                 )}
                 {s.detail && (
-                  <div style={{ fontSize: '11px', color: '#4a6280', marginTop: '2px', lineHeight: 1.4 }}>
+                  <div style={{ fontSize: '11px', color: '#7689a3', marginTop: '2px', lineHeight: 1.4 }}>
                     {s.detail}
                   </div>
                 )}

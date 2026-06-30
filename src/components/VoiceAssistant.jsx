@@ -158,11 +158,11 @@ export default function VoiceAssistant() {
               <Bot size={18} color="#00d4ff" strokeWidth={1.5} />
               <div>
                 <div style={{ fontSize: '14px', fontWeight: '600', color: '#00d4ff' }}>JanaShakti AI</div>
-                <div style={{ fontSize: '11px', color: '#4a6280' }}>{L.ui.subtitle}</div>
+                <div style={{ fontSize: '11px', color: '#7689a3' }}>{L.ui.subtitle}</div>
               </div>
             </div>
             <button onClick={closePanel} aria-label="Close" style={{
-              background: 'none', border: 'none', color: '#4a6280', cursor: 'pointer', padding: '2px',
+              background: 'none', border: 'none', color: '#7689a3', cursor: 'pointer', padding: '2px',
             }}>
               <X size={18} strokeWidth={1.5} />
             </button>
@@ -226,7 +226,7 @@ export default function VoiceAssistant() {
           {state === 'speaking' && answer && (
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
               <Volume2 size={14} color="#00d4ff" strokeWidth={1.5} style={{ flexShrink: 0, animation: 'pulse 1.2s infinite' }} />
-              <span style={{ fontSize: '11px', color: '#4a6280' }}>{L.ui.speaking}</span>
+              <span style={{ fontSize: '11px', color: '#7689a3' }}>{L.ui.speaking}</span>
             </div>
           )}
           {error && (
@@ -282,8 +282,8 @@ export default function VoiceAssistant() {
 
           {/* Privacy note */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginTop: '10px' }}>
-            <Lock size={10} color="#4a6280" strokeWidth={1.5} />
-            <span style={{ fontSize: '10px', color: '#4a6280' }}>{L.ui.privacy}</span>
+            <Lock size={10} color="#7689a3" strokeWidth={1.5} />
+            <span style={{ fontSize: '10px', color: '#7689a3' }}>{L.ui.privacy}</span>
           </div>
         </div>
       )}

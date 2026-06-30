@@ -99,7 +99,7 @@ export default function ContributorSection({ issue, events = [] }) {
           ) : removed ? (
             <span style={{ fontSize: '11px', color: '#ef4444', fontWeight: '600' }}>Removed</span>
           ) : !open ? (
-            <span style={{ fontSize: '11px', color: '#4a6280', fontWeight: '600' }}>Joining closed</span>
+            <span style={{ fontSize: '11px', color: '#7689a3', fontWeight: '600' }}>Joining closed</span>
           ) : (
             <button onClick={() => setShowRole(true)} style={{ display: 'inline-flex', alignItems: 'center', gap: '5px',
               backgroundColor: '#00d4ff', color: '#04091a', border: 'none', borderRadius: '8px', padding: '7px 14px',
@@ -121,7 +121,7 @@ export default function ContributorSection({ issue, events = [] }) {
       )}
 
       {contributors.length === 0 ? (
-        <p style={{ fontSize: '13px', color: '#4a6280' }}>No contributors yet. Join to help solve this issue.</p>
+        <p style={{ fontSize: '13px', color: '#7689a3' }}>No contributors yet. Join to help solve this issue.</p>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
           {contributors.map((c) => {
@@ -131,7 +131,7 @@ export default function ContributorSection({ issue, events = [] }) {
                 <Ava photoURL={c.photoURL} name={c.displayName} />
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontSize: '13px', fontWeight: '600', color: '#f0f6ff' }}>{c.displayName}</div>
-                  <div style={{ fontSize: '11px', color: '#4a6280' }}>
+                  <div style={{ fontSize: '11px', color: '#7689a3' }}>
                     {c.role} · joined {agoIso(c.joinedAt)}
                     {ev > 0 ? ` · ${ev} evidence` : ''}{up > 0 ? ` · ${up} updates` : ''}
                   </div>

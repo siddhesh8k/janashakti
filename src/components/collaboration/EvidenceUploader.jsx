@@ -74,7 +74,7 @@ export default function EvidenceUploader({ issue, events = [] }) {
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
             <span style={{ fontSize: '14px', fontWeight: '600', color: '#f0f6ff' }}>Add evidence</span>
             <button onClick={() => !busy && setOpen(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>
-              <X size={18} color="#4a6280" />
+              <X size={18} color="#7689a3" />
             </button>
           </div>
 
@@ -86,7 +86,7 @@ export default function EvidenceUploader({ issue, events = [] }) {
                   padding: '6px 12px', borderRadius: '999px', cursor: 'pointer', fontSize: '12px', fontWeight: '600',
                   textTransform: 'capitalize',
                   backgroundColor: active ? '#112035' : 'transparent',
-                  color: active ? '#00d4ff' : '#4a6280', border: '0.5px solid #1a2f4a' }}>
+                  color: active ? '#00d4ff' : '#7689a3', border: '0.5px solid #1a2f4a' }}>
                   {t.replace('_', ' ')}
                 </button>
               );
@@ -105,7 +105,7 @@ export default function EvidenceUploader({ issue, events = [] }) {
             cursor: (busy || atCap) ? 'default' : 'pointer' }}>
             <UploadCloud size={16} strokeWidth={2} /> {busy ? 'Checking & uploading…' : atCap ? `Cap reached (${MAX_PER_USER})` : 'Choose image & upload'}
           </button>
-          <p style={{ fontSize: '10px', color: '#4a6280', marginTop: '8px', lineHeight: 1.4 }}>
+          <p style={{ fontSize: '10px', color: '#7689a3', marginTop: '8px', lineHeight: 1.4 }}>
             AI checks each image is relevant to the issue before awarding points. {MAX_PER_USER - mine} of {MAX_PER_USER} uploads left.
           </p>
         </div>

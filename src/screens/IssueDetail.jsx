@@ -383,7 +383,7 @@ export default function IssueDetail() {
             <BeforeAfterSlider before={issue.photoUrl} after={issue.resolutionPhotoUrl} />
             {issue.resolutionNote && (
               <p style={{ fontSize: '11px', color: '#94a3b8', lineHeight: 1.5, marginTop: '8px' }}>
-                <span style={{ color: '#4a6280' }}>AI check: </span>{issue.resolutionNote}
+                <span style={{ color: '#7689a3' }}>AI check: </span>{issue.resolutionNote}
               </p>
             )}
           </div>
@@ -396,8 +396,8 @@ export default function IssueDetail() {
             <div style={{ marginBottom: '16px' }}>
               {/* SDG preview — shown even before the ESG score finishes generating */}
               <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px' }}>
-                <Target size={12} color="#4a6280" strokeWidth={1.5} />
-                <span style={{ fontSize: '11px', fontWeight: '500', color: '#4a6280',
+                <Target size={12} color="#7689a3" strokeWidth={1.5} />
+                <span style={{ fontSize: '11px', fontWeight: '500', color: '#7689a3',
                                textTransform: 'uppercase', letterSpacing: '0.7px' }}>
                   SDG Alignment
                 </span>
@@ -414,7 +414,7 @@ export default function IssueDetail() {
               ) : (
                 <div>
                   <LoadingSkeleton type="text" count={3} />
-                  <p style={{ fontSize: '12px', color: '#4a6280', textAlign: 'center', marginTop: '4px' }}>
+                  <p style={{ fontSize: '12px', color: '#7689a3', textAlign: 'center', marginTop: '4px' }}>
                     Generating ESG impact analysis...
                   </p>
                 </div>
@@ -435,7 +435,7 @@ export default function IssueDetail() {
         {/* Complaint ID */}
         {issue.complaintId && (
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '14px' }}>
-            <span style={{ fontSize: '11px', color: '#4a6280', fontWeight: '500' }}>Complaint No:</span>
+            <span style={{ fontSize: '11px', color: '#7689a3', fontWeight: '500' }}>Complaint No:</span>
             <span style={{
               fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace',
               fontSize: '12px', fontWeight: '600', color: '#00d4ff',
@@ -447,7 +447,7 @@ export default function IssueDetail() {
               setToast({ msg: 'Complaint ID copied!', type: 'info' });
             }} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0,
                         display: 'flex', alignItems: 'center' }}>
-              <Copy size={14} color="#4a6280" strokeWidth={1.5} />
+              <Copy size={14} color="#7689a3" strokeWidth={1.5} />
             </button>
           </div>
         )}
@@ -493,7 +493,7 @@ export default function IssueDetail() {
                   backgroundColor: reached ? color : 'transparent',
                   border: `2px solid ${color}`,
                 }} />
-                <span style={{ fontSize: '9px', color: reached ? '#f0f6ff' : '#4a6280',
+                <span style={{ fontSize: '9px', color: reached ? '#f0f6ff' : '#7689a3',
                                fontWeight: reached ? '600' : '400' }}>{s}</span>
                 {i < STATUS_PIPELINE.length - 1 && (
                   <div style={{ flex: 1, height: '1px', backgroundColor: color }} />
@@ -530,7 +530,7 @@ export default function IssueDetail() {
           <div style={{ backgroundColor: '#0d1b2e', borderRadius: '14px',
                         border: '0.5px solid #1a2f4a', padding: '14px', marginBottom: '10px' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <span style={{ fontSize: '11px', fontWeight: '500', color: '#4a6280',
+              <span style={{ fontSize: '11px', fontWeight: '500', color: '#7689a3',
                              textTransform: 'uppercase', letterSpacing: '0.7px' }}>AI PREDICTION</span>
               {auth.currentUser?.uid === issue.userId && (
                 <button onClick={handleRefreshPrediction} disabled={refreshingPred} style={{
@@ -547,14 +547,14 @@ export default function IssueDetail() {
                 <span style={{ fontSize: '22px', fontWeight: '700', color: '#00d4ff' }}>
                   {issue.prediction.priority_score}
                 </span>
-                <span style={{ fontSize: '10px', color: '#4a6280' }}>/100</span>
-                <div style={{ fontSize: '10px', color: '#4a6280' }}>Priority</div>
+                <span style={{ fontSize: '10px', color: '#7689a3' }}>/100</span>
+                <div style={{ fontSize: '10px', color: '#7689a3' }}>Priority</div>
               </div>
               <div>
                 <span style={{ fontSize: '22px', fontWeight: '700', color: '#f0f6ff' }}>
                   ~{issue.prediction.predicted_days}
                 </span>
-                <div style={{ fontSize: '10px', color: '#4a6280' }}>days</div>
+                <div style={{ fontSize: '10px', color: '#7689a3' }}>days</div>
               </div>
               <div>
                 <span style={{ fontSize: '13px', fontWeight: '600',
@@ -562,7 +562,7 @@ export default function IssueDetail() {
                          issue.prediction.escalation_risk === 'High' ? '#f97316' : '#eab308' }}>
                   {issue.prediction.escalation_risk}
                 </span>
-                <div style={{ fontSize: '10px', color: '#4a6280' }}>Risk</div>
+                <div style={{ fontSize: '10px', color: '#7689a3' }}>Risk</div>
               </div>
             </div>
           </div>
@@ -580,7 +580,7 @@ export default function IssueDetail() {
                           padding: '14px', marginBottom: '10px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '14px' }}>
                 <ShieldAlert size={16} color={esc.color} strokeWidth={1.5} />
-                <span style={{ fontSize: '11px', fontWeight: '500', color: '#4a6280',
+                <span style={{ fontSize: '11px', fontWeight: '500', color: '#7689a3',
                                textTransform: 'uppercase', letterSpacing: '0.7px' }}>
                   Escalation Chain
                 </span>
@@ -614,7 +614,7 @@ export default function IssueDetail() {
                 {ESCALATION_LEVELS.map((lvl) => (
                   <span key={lvl.level} style={{
                     fontSize: '8px', flex: 1, textAlign: 'center',
-                    color: esc.currentLevel >= lvl.level ? '#94a3b8' : '#4a6280',
+                    color: esc.currentLevel >= lvl.level ? '#94a3b8' : '#7689a3',
                   }}>{lvl.name.split(' ')[0]}</span>
                 ))}
               </div>
@@ -702,7 +702,7 @@ export default function IssueDetail() {
                 <p style={{ fontSize: '12px', color: '#94a3b8' }}>
                   Ward {wardRep.wardNo} — {wardRep.wardName}
                 </p>
-                <p style={{ fontSize: '11px', color: '#4a6280', marginTop: '2px' }}>
+                <p style={{ fontSize: '11px', color: '#7689a3', marginTop: '2px' }}>
                   {wardRep.representative.role || 'Civic role'} · Since {wardRep.representative.since}{wardRep.representative.party ? ` · ${wardRep.representative.party}` : ''}
                 </p>
                 {wardRep.selfDeclared && (
@@ -715,7 +715,7 @@ export default function IssueDetail() {
                 )}
               </div>
               <div style={{ textAlign: 'right' }}>
-                <span style={{ fontSize: '11px', color: '#4a6280' }}>
+                <span style={{ fontSize: '11px', color: '#7689a3' }}>
                   This issue is in their ward
                 </span>
               </div>
@@ -753,7 +753,7 @@ export default function IssueDetail() {
         <button onClick={handleVerify} disabled={!canVerify} style={{
           width: '100%', padding: '13px',
           backgroundColor: canVerify ? '#16a34a' : '#112035',
-          color: canVerify ? '#ffffff' : '#4a6280',
+          color: canVerify ? '#ffffff' : '#7689a3',
           border: canVerify ? 'none' : '0.5px solid #1a2f4a', borderRadius: '10px',
           fontSize: '14px', fontWeight: '600', cursor: canVerify ? 'pointer' : 'not-allowed',
           display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
@@ -832,7 +832,7 @@ export default function IssueDetail() {
         {/* Your amplify powers */}
         <div style={{ backgroundColor: '#0d1b2e', borderRadius: '14px',
                       border: '0.5px solid #1a2f4a', padding: '14px', marginBottom: '10px' }}>
-          <span style={{ fontSize: '11px', fontWeight: '500', color: '#4a6280',
+          <span style={{ fontSize: '11px', fontWeight: '500', color: '#7689a3',
                          textTransform: 'uppercase', letterSpacing: '0.7px' }}>Your Amplify Powers</span>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginTop: '10px' }}>
             {[
@@ -883,12 +883,12 @@ export default function IssueDetail() {
         {/* Meta */}
         <div style={{ display: 'flex', justifyContent: 'space-between',
                       padding: '8px 0', marginTop: '8px' }}>
-          <span style={{ fontSize: '11px', color: '#4a6280', display: 'flex',
+          <span style={{ fontSize: '11px', color: '#7689a3', display: 'flex',
                          alignItems: 'center', gap: '4px' }}>
             <MapPin size={11} strokeWidth={1.5} />
             {issue.locationText?.split(',').slice(0, 2).join(',') || 'Unknown'}
           </span>
-          <span style={{ fontSize: '11px', color: '#4a6280', display: 'flex',
+          <span style={{ fontSize: '11px', color: '#7689a3', display: 'flex',
                          alignItems: 'center', gap: '4px' }}>
             <Clock size={11} strokeWidth={1.5} />
             {timeAgo(issue.createdAt)}

@@ -26,7 +26,7 @@ export default function RoleSelectModal({ open, onClose, onConfirm, busy }) {
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
           <span style={{ fontSize: '15px', fontWeight: '700', color: '#f0f6ff' }}>Join this issue</span>
           <button onClick={() => !busy && onClose()} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>
-            <X size={18} color="#4a6280" />
+            <X size={18} color="#7689a3" />
           </button>
         </div>
         <p style={{ fontSize: '12px', color: '#94a3b8', marginBottom: '14px', lineHeight: 1.5 }}>

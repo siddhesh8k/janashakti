@@ -280,7 +280,7 @@ export default function AuthorityDashboard() {
             borderRadius: '12px', padding: '14px', marginBottom: '16px',
           }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
-              <Lock size={18} color="#4a6280" strokeWidth={1.5} />
+              <Lock size={18} color="#7689a3" strokeWidth={1.5} />
               <span style={{ fontSize: '14px', fontWeight: '600', color: '#f0f6ff' }}>
                 Civic Authority — locked
               </span>
@@ -303,7 +303,7 @@ export default function AuthorityDashboard() {
         {/* Filters */}
         {/* Department filter — show only one department's issues (and stats) */}
         <div style={{ marginBottom: '12px' }}>
-          <div style={{ fontSize: '11px', fontWeight: '500', color: '#4a6280',
+          <div style={{ fontSize: '11px', fontWeight: '500', color: '#7689a3',
                         textTransform: 'uppercase', letterSpacing: '0.7px', marginBottom: '6px' }}>
             Department
           </div>
@@ -345,7 +345,7 @@ export default function AuthorityDashboard() {
 
         {/* Issues list */}
         {filtered.length === 0 && (
-          <p style={{ fontSize: '13px', color: '#4a6280', textAlign: 'center', padding: '32px 16px' }}>
+          <p style={{ fontSize: '13px', color: '#7689a3', textAlign: 'center', padding: '32px 16px' }}>
             No {filter !== 'All' ? `${filter.toLowerCase()} ` : ''}issues
             {dept !== 'All' ? ` for ${dept}` : ''}.
           </p>
@@ -369,11 +369,11 @@ export default function AuthorityDashboard() {
                 {issue.locationText?.split(',').slice(0, 2).join(',') || 'Unknown'}
               </p>
               <div style={{ display: 'flex', gap: '12px', marginBottom: '10px' }}>
-                <span style={{ fontSize: '11px', color: days > 7 ? '#ef4444' : '#4a6280',
+                <span style={{ fontSize: '11px', color: days > 7 ? '#ef4444' : '#7689a3',
                                display: 'flex', alignItems: 'center', gap: '3px' }}>
                   <Clock size={11} strokeWidth={1.5} /> {days}d open
                 </span>
-                <span style={{ fontSize: '11px', color: '#4a6280' }}>
+                <span style={{ fontSize: '11px', color: '#7689a3' }}>
                   {issue.confirmations || 0} confirmed
                 </span>
                 {issue.prediction && (

@@ -7,7 +7,7 @@ const gradeFor = (score) =>
   ESG_GRADES.find((g) => score >= g.min) || ESG_GRADES[ESG_GRADES.length - 1];
 
 const rankColor = (rank) =>
-  rank === 1 ? '#F59E0B' : rank === 2 ? '#9CA3AF' : rank === 3 ? '#CD7F32' : '#4a6280';
+  rank === 1 ? '#F59E0B' : rank === 2 ? '#9CA3AF' : rank === 3 ? '#CD7F32' : '#7689a3';
 
 function CityESGCard({ rank, city, esgScore, issuesResolved, trend, highlight }) {
   const grade = gradeFor(Number(esgScore) || 0);
@@ -59,9 +59,9 @@ function CityESGCard({ rank, city, esgScore, issuesResolved, trend, highlight })
           </span>
           {trend === 'up' && <TrendingUp size={16} color="#22c55e" strokeWidth={2} />}
           {trend === 'down' && <TrendingDown size={16} color="#ef4444" strokeWidth={2} />}
-          {trend === 'same' && <span style={{ fontSize: '13px', color: '#4a6280' }}>–</span>}
+          {trend === 'same' && <span style={{ fontSize: '13px', color: '#7689a3' }}>–</span>}
         </div>
-        <span style={{ fontSize: '11px', color: '#4a6280' }}>
+        <span style={{ fontSize: '11px', color: '#7689a3' }}>
           {issuesResolved || 0} resolved
         </span>
       </div>

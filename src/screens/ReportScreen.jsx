@@ -680,7 +680,7 @@ export default function ReportScreen() {
                     position: 'absolute', top: '8px', right: '8px',
                     background: 'none', border: 'none', cursor: 'pointer',
                   }}>
-                    <Copy size={14} color="#4a6280" strokeWidth={1.5} />
+                    <Copy size={14} color="#7689a3" strokeWidth={1.5} />
                   </button>
                   <p style={{ fontSize: '12px', color: '#94a3b8', lineHeight: 1.6,
                               whiteSpace: 'pre-wrap' }}>{complaintLetter}</p>

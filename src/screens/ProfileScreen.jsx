@@ -208,7 +208,7 @@ export default function ProfileScreen() {
             </span>
           </div>
           {user.isAnonymous && (
-            <p style={{ fontSize: '11px', color: '#4a6280', marginTop: '8px' }}>
+            <p style={{ fontSize: '11px', color: '#7689a3', marginTop: '8px' }}>
               Guest Account
             </p>
           )}
@@ -223,7 +223,7 @@ export default function ProfileScreen() {
           <div style={{ fontSize: '44px', fontWeight: '800', color: '#00d4ff' }}>
             {profile?.civicScore || 0}
           </div>
-          <div style={{ fontSize: '11px', color: '#4a6280', textTransform: 'uppercase',
+          <div style={{ fontSize: '11px', color: '#7689a3', textTransform: 'uppercase',
                         letterSpacing: '0.7px', marginBottom: '12px' }}>Community Reputation</div>
           <div style={{ height: '6px', backgroundColor: '#1a2f4a', borderRadius: '3px',
                         overflow: 'hidden', marginBottom: '8px' }}>
@@ -232,7 +232,7 @@ export default function ProfileScreen() {
                           transition: 'width 0.5s ease' }} />
           </div>
           {nextLevel && (
-            <span style={{ fontSize: '11px', color: '#4a6280' }}>
+            <span style={{ fontSize: '11px', color: '#7689a3' }}>
               {nextLevel.min - (profile?.civicScore || 0)} pts to {nextLevel.name}
             </span>
           )}
@@ -251,7 +251,7 @@ export default function ProfileScreen() {
                 <div style={{ fontSize: '15px', fontWeight: '700', color: '#f0f6ff' }}>
                   {profile.streak} day streak
                 </div>
-                <div style={{ fontSize: '11px', color: '#4a6280' }}>+2 pts/day bonus active</div>
+                <div style={{ fontSize: '11px', color: '#7689a3' }}>+2 pts/day bonus active</div>
               </div>
             </div>
             <span style={{ fontSize: '13px', fontWeight: '700', color: '#86efac' }}>
@@ -281,7 +281,7 @@ export default function ProfileScreen() {
         }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center',
                         marginBottom: editingAff ? '12px' : '0' }}>
-            <span style={{ fontSize: '11px', fontWeight: '500', color: '#4a6280',
+            <span style={{ fontSize: '11px', fontWeight: '500', color: '#7689a3',
                            textTransform: 'uppercase', letterSpacing: '0.7px' }}>Affiliation</span>
             {!editingAff && (
               <button onClick={startEditAff} style={{
@@ -327,7 +327,7 @@ export default function ProfileScreen() {
 
         {/* Badges */}
         <div style={{ marginBottom: '16px' }}>
-          <span style={{ fontSize: '11px', fontWeight: '500', color: '#4a6280',
+          <span style={{ fontSize: '11px', fontWeight: '500', color: '#7689a3',
                          textTransform: 'uppercase', letterSpacing: '0.7px' }}>BADGES</span>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)',
                         gap: '8px', marginTop: '10px' }}>
@@ -343,9 +343,9 @@ export default function ProfileScreen() {
                   {unlocked ? (
                     <Icon size={24} color="#00d4ff" strokeWidth={1.5} />
                   ) : (
-                    <Lock size={24} color="#4a6280" strokeWidth={1.5} />
+                    <Lock size={24} color="#7689a3" strokeWidth={1.5} />
                   )}
-                  <div style={{ fontSize: '10px', color: unlocked ? '#f0f6ff' : '#4a6280',
+                  <div style={{ fontSize: '10px', color: unlocked ? '#f0f6ff' : '#7689a3',
                                 marginTop: '4px', fontWeight: '500' }}>
                     {badge.name}
                   </div>
@@ -394,7 +394,7 @@ export default function ProfileScreen() {
 
           {/* ESG badges */}
           <div style={{ marginTop: '16px' }}>
-            <span style={{ fontSize: '11px', fontWeight: '500', color: '#4a6280',
+            <span style={{ fontSize: '11px', fontWeight: '500', color: '#7689a3',
                            textTransform: 'uppercase', letterSpacing: '0.7px' }}>ESG Badges</span>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)',
                           gap: '8px', marginTop: '10px' }}>
@@ -411,13 +411,13 @@ export default function ProfileScreen() {
                   }}>
                     {unlocked
                       ? <Icon size={24} color={badge.color} strokeWidth={1.5} />
-                      : <Lock size={24} color="#4a6280" strokeWidth={1.5} />}
-                    <div style={{ fontSize: '10px', color: unlocked ? '#f0f6ff' : '#4a6280',
+                      : <Lock size={24} color="#7689a3" strokeWidth={1.5} />}
+                    <div style={{ fontSize: '10px', color: unlocked ? '#f0f6ff' : '#7689a3',
                                   marginTop: '4px', fontWeight: '500' }}>
                       {badge.name}
                     </div>
                     {!unlocked && prog && (
-                      <div style={{ fontSize: '9px', color: '#4a6280', marginTop: '2px' }}>
+                      <div style={{ fontSize: '9px', color: '#7689a3', marginTop: '2px' }}>
                         {remaining} more to unlock
                       </div>
                     )}
@@ -430,16 +430,16 @@ export default function ProfileScreen() {
 
         {/* Superpowers — reach the citizen commands, framed from existing level + badges */}
         <div style={{ marginBottom: '16px' }}>
-          <span style={{ fontSize: '11px', fontWeight: '500', color: '#4a6280',
+          <span style={{ fontSize: '11px', fontWeight: '500', color: '#7689a3',
                          textTransform: 'uppercase', letterSpacing: '0.7px' }}>SUPERPOWERS</span>
           <div style={{ backgroundColor: '#0d1b2e', borderRadius: '12px',
                         border: '0.5px solid #1a2f4a', padding: '14px', marginTop: '10px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
               <Zap size={18} color="#00d4ff" strokeWidth={1.5} />
               <span style={{ fontSize: '14px', fontWeight: '600', color: '#f0f6ff' }}>{level.name}</span>
-              <span style={{ fontSize: '11px', color: '#4a6280' }}>· power tier</span>
+              <span style={{ fontSize: '11px', color: '#7689a3' }}>· power tier</span>
             </div>
-            <div style={{ fontSize: '11px', fontWeight: '500', color: '#4a6280',
+            <div style={{ fontSize: '11px', fontWeight: '500', color: '#7689a3',
                           letterSpacing: '0.7px', marginBottom: '8px' }}>AMPLIFY REACH</div>
             {/* Icon-only circular chips — recognizable at a glance and never truncate
                 on narrow screens (the old icon+label pills clipped to "WhatsA…"). */}
@@ -467,7 +467,7 @@ export default function ProfileScreen() {
               })}
             </div>
             <div style={{ marginTop: '10px', fontSize: '11px',
-                          color: (profile?.issuesShared || 0) >= 3 ? '#86efac' : '#4a6280' }}>
+                          color: (profile?.issuesShared || 0) >= 3 ? '#86efac' : '#7689a3' }}>
               {(profile?.issuesShared || 0) >= 3
                 ? 'Social Voice unlocked — your shares amplify civic issues.'
                 : `Share ${Math.max(0, 3 - (profile?.issuesShared || 0))} more to unlock the Social Voice power.`}

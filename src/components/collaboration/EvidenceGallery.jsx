@@ -34,7 +34,7 @@ export default function EvidenceGallery({ items = [] }) {
                 )}
               </div>
               {ev.caption && <div style={{ fontSize: '11px', color: '#94a3b8', lineHeight: 1.3 }}>{ev.caption}</div>}
-              <div style={{ fontSize: '10px', color: '#4a6280', marginTop: '3px' }}>by {ev.displayName || 'Citizen'}</div>
+              <div style={{ fontSize: '10px', color: '#7689a3', marginTop: '3px' }}>by {ev.displayName || 'Citizen'}</div>
             </div>
           </div>
         ))}

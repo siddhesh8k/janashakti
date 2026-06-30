@@ -30,11 +30,11 @@ const orgScoreOf = (resolved, total, members) =>
 const exportBtnStyle = {
   width: '100%', padding: '10px', marginTop: '12px',
   backgroundColor: 'transparent', border: '0.5px solid #1a2f4a', borderRadius: '10px',
-  color: '#4a6280', fontSize: '12px', fontWeight: '600', cursor: 'pointer',
+  color: '#7689a3', fontSize: '12px', fontWeight: '600', cursor: 'pointer',
   display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px',
 };
 
-const fieldLabel = { display: 'block', fontSize: '11px', fontWeight: '500', color: '#4a6280',
+const fieldLabel = { display: 'block', fontSize: '11px', fontWeight: '500', color: '#7689a3',
   textTransform: 'uppercase', letterSpacing: '0.7px', marginBottom: '6px' };
 const fieldInput = { width: '100%', backgroundColor: '#112035', color: '#f0f6ff',
   border: '0.5px solid #1a2f4a', borderRadius: '10px', padding: '12px 14px', fontSize: '14px', outline: 'none' };
@@ -57,7 +57,7 @@ function RankBadge({ rank }) {
   if (rank === 3) return <div style={wrap}><Award size={20} color="#d97706" strokeWidth={1.5} /></div>;
   return (
     <div style={wrap}>
-      <span style={{ fontSize: '14px', fontWeight: '600', color: '#4a6280' }}>{rank}</span>
+      <span style={{ fontSize: '14px', fontWeight: '600', color: '#7689a3' }}>{rank}</span>
     </div>
   );
 }
@@ -105,7 +105,7 @@ function CitizenRow({ user, rank, isMe }) {
         <div style={{ fontSize: '18px', fontWeight: '700' }}>
           <ReputationBadge score={user.civicScore || 0} size={16} />
         </div>
-        <div style={{ fontSize: '11px', color: '#4a6280' }}>
+        <div style={{ fontSize: '11px', color: '#7689a3' }}>
           {user.issuesReported || 0} issues
         </div>
       </div>
@@ -128,7 +128,7 @@ function OrgRow({ org, rank, badges, onCSR, csrLoading }) {
             {badges.map(b => <Pill key={b.label} label={b.label} color={b.color} />)}
           </div>
           <div style={{ fontSize: '12px', color: '#94a3b8', marginTop: '2px' }}>{org.zoneName}</div>
-          <div style={{ fontSize: '11px', color: '#4a6280', marginTop: '2px' }}>
+          <div style={{ fontSize: '11px', color: '#7689a3', marginTop: '2px' }}>
             {org.memberCount || 0} {unitLabel} · {org.totalAdopted || 0} issues in zone
           </div>
         </div>
@@ -477,7 +477,7 @@ export default function Leaderboard() {
                   <EmptyState title="No activity in this period" message="No issues were reported in this window yet." icon={Trophy} />
                 ) : (
                   <>
-                    <div style={{ fontSize: '11px', color: '#4a6280', marginBottom: '10px' }}>
+                    <div style={{ fontSize: '11px', color: '#7689a3', marginBottom: '10px' }}>
                       Most active citizens — by issues reported {citizenWindow === 'week' ? 'this week' : 'this month'}.
                     </div>
                     {windowedCitizens.map((u, i) => (
@@ -512,7 +512,7 @@ export default function Leaderboard() {
                   <div style={{ fontSize: '13px', fontWeight: '600', color: '#f0f6ff', marginBottom: '4px' }}>
                     Sign in to see your rank
                   </div>
-                  <div style={{ fontSize: '12px', color: '#4a6280' }}>
+                  <div style={{ fontSize: '12px', color: '#7689a3' }}>
                     {totalCitizens} citizen{totalCitizens !== 1 ? 's' : ''} on the leaderboard
                   </div>
                 </div>
@@ -524,7 +524,7 @@ export default function Leaderboard() {
               }}>
                 <div>
                   <div style={{
-                    fontSize: '11px', fontWeight: '500', color: '#4a6280',
+                    fontSize: '11px', fontWeight: '500', color: '#7689a3',
                     letterSpacing: '0.7px', textTransform: 'uppercase', marginBottom: '4px',
                   }}>Your Rank</div>
                   <div style={{ fontSize: '44px', fontWeight: '800', color: '#00d4ff', lineHeight: 1 }}>
@@ -536,7 +536,7 @@ export default function Leaderboard() {
                 </div>
                 <div style={{ textAlign: 'right' }}>
                   <div style={{
-                    fontSize: '11px', fontWeight: '500', color: '#4a6280',
+                    fontSize: '11px', fontWeight: '500', color: '#7689a3',
                     letterSpacing: '0.7px', textTransform: 'uppercase', marginBottom: '4px',
                   }}>Community Reputation</div>
                   <div style={{ fontSize: '28px', fontWeight: '700', color: '#16a34a' }}>{myScore}</div>
@@ -565,7 +565,7 @@ export default function Leaderboard() {
         {/* ── COMPANIES ── */}
         {activeTab === 'companies' && (
           companies.length === 0
-            ? <p style={{ fontSize: '13px', color: '#4a6280', textAlign: 'center', padding: '24px' }}>No organizations yet.</p>
+            ? <p style={{ fontSize: '13px', color: '#7689a3', textAlign: 'center', padding: '24px' }}>No organizations yet.</p>
             : (
               <>
                 {companiesPage.visible.map((org, i) => (
@@ -589,7 +589,7 @@ export default function Leaderboard() {
         {/* ── COLLEGES ── */}
         {activeTab === 'colleges' && (
           colleges.length === 0
-            ? <p style={{ fontSize: '13px', color: '#4a6280', textAlign: 'center', padding: '24px' }}>No organizations yet.</p>
+            ? <p style={{ fontSize: '13px', color: '#7689a3', textAlign: 'center', padding: '24px' }}>No organizations yet.</p>
             : (
               <>
                 {collegesPage.visible.map((org, i) => (
@@ -649,10 +649,10 @@ export default function Leaderboard() {
                   flex: 1, padding: '8px', borderRadius: '8px', border: 'none', cursor: 'pointer',
                   fontSize: '12px', fontWeight: '600',
                   backgroundColor: repView === k ? '#112035' : 'transparent',
-                  color: repView === k ? '#00d4ff' : '#4a6280' }}>{l}</button>
+                  color: repView === k ? '#00d4ff' : '#7689a3' }}>{l}</button>
               ))}
             </div>
-            <div style={{ fontSize: '10px', color: '#4a6280', margin: '8px 0 14px', lineHeight: 1.4 }}>
+            <div style={{ fontSize: '10px', color: '#7689a3', margin: '8px 0 14px', lineHeight: 1.4 }}>
               Community-tracked, self-declared — not an official record. Resolution rate is the only ranking metric.
             </div>
 
@@ -679,14 +679,14 @@ export default function Leaderboard() {
                                     color: rateColor, flexShrink: 0 }}>{i + 1}</div>
                             <div>
                               <p style={{ fontSize: '14px', fontWeight: '600', color: '#f0f6ff' }}>{p.role}</p>
-                              <p style={{ fontSize: '11px', color: '#4a6280' }}>
+                              <p style={{ fontSize: '11px', color: '#7689a3' }}>
                                 {p.reps} rep{p.reps > 1 ? 's' : ''} · {p.totalIssues} issues tracked
                               </p>
                             </div>
                           </div>
                           <div style={{ textAlign: 'right' }}>
                             <div style={{ fontSize: '20px', fontWeight: '700', color: rateColor }}>{p.resolutionRate}%</div>
-                            <div style={{ fontSize: '10px', color: '#4a6280', textTransform: 'uppercase' }}>resolved</div>
+                            <div style={{ fontSize: '10px', color: '#7689a3', textTransform: 'uppercase' }}>resolved</div>
                           </div>
                         </div>
                       </div>
@@ -731,7 +731,7 @@ export default function Leaderboard() {
                           <p style={{ fontSize: '12px', color: '#94a3b8' }}>
                             Ward {rep.wardNo} — {rep.wardName}, {rep.city}
                           </p>
-                          <p style={{ fontSize: '11px', color: '#4a6280' }}>
+                          <p style={{ fontSize: '11px', color: '#7689a3' }}>
                             {rep.representative.role || 'Civic role'} · Since {rep.representative.since}{rep.representative.party ? ` · ${rep.representative.party}` : ''}
                           </p>
                           {rep.selfDeclared && (
@@ -748,7 +748,7 @@ export default function Leaderboard() {
                         <div style={{ fontSize: '20px', fontWeight: '700', color: rateColor }}>
                           {rep.resolutionRate}%
                         </div>
-                        <div style={{ fontSize: '10px', color: '#4a6280', textTransform: 'uppercase' }}>
+                        <div style={{ fontSize: '10px', color: '#7689a3', textTransform: 'uppercase' }}>
                           resolved
                         </div>
                       </div>
@@ -757,15 +757,15 @@ export default function Leaderboard() {
                                   borderTop: '0.5px solid #1a2f4a' }}>
                       <div>
                         <span style={{ fontSize: '14px', fontWeight: '600', color: '#f0f6ff' }}>{rep.totalIssues}</span>
-                        <span style={{ fontSize: '10px', color: '#4a6280', marginLeft: '4px' }}>total</span>
+                        <span style={{ fontSize: '10px', color: '#7689a3', marginLeft: '4px' }}>total</span>
                       </div>
                       <div>
                         <span style={{ fontSize: '14px', fontWeight: '600', color: '#16a34a' }}>{rep.resolved}</span>
-                        <span style={{ fontSize: '10px', color: '#4a6280', marginLeft: '4px' }}>resolved</span>
+                        <span style={{ fontSize: '10px', color: '#7689a3', marginLeft: '4px' }}>resolved</span>
                       </div>
                       <div>
                         <span style={{ fontSize: '14px', fontWeight: '600', color: '#f0f6ff' }}>~{rep.avgDays}d</span>
-                        <span style={{ fontSize: '10px', color: '#4a6280', marginLeft: '4px' }}>avg</span>
+                        <span style={{ fontSize: '10px', color: '#7689a3', marginLeft: '4px' }}>avg</span>
                       </div>
                       {rep.wallOfShame > 0 && (
                         <div>
@@ -802,7 +802,7 @@ export default function Leaderboard() {
                           style={{ display: 'inline-flex', alignItems: 'center', gap: '5px',
                                    background: 'none', border: '0.5px solid #1a2f4a', borderRadius: '999px',
                                    padding: '4px 10px', fontSize: '10px', fontWeight: '600',
-                                   color: flaggedIds.has(rep.docId) ? '#4a6280' : '#94a3b8',
+                                   color: flaggedIds.has(rep.docId) ? '#7689a3' : '#94a3b8',
                                    cursor: flaggedIds.has(rep.docId) ? 'default' : 'pointer' }}>
                           <Flag size={11} strokeWidth={1.5} /> {flaggedIds.has(rep.docId) ? 'Flagged' : 'Flag claim'}
                         </button>
@@ -837,7 +837,7 @@ export default function Leaderboard() {
                     <span style={{ fontSize: '15px', fontWeight: '700', color: '#f0f6ff' }}>Represent your ward</span>
                     <button onClick={() => !claiming && setShowClaim(false)}
                       style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>
-                      <X size={18} color="#4a6280" />
+                      <X size={18} color="#7689a3" />
                     </button>
                   </div>
                   <p style={{ fontSize: '12px', color: '#94a3b8', marginBottom: '14px', lineHeight: 1.5 }}>
@@ -854,12 +854,12 @@ export default function Leaderboard() {
                     {CIVIC_ROLES.map((r) => <option key={r} value={r}>{r}</option>)}
                   </select>
 
-                  <label style={{ ...fieldLabel, marginTop: '12px' }}>Party / affiliation <span style={{ textTransform: 'none', letterSpacing: 0, color: '#4a6280' }}>(optional)</span></label>
+                  <label style={{ ...fieldLabel, marginTop: '12px' }}>Party / affiliation <span style={{ textTransform: 'none', letterSpacing: 0, color: '#7689a3' }}>(optional)</span></label>
                   <input value={claimParty} onChange={(e) => setClaimParty(e.target.value)}
                          placeholder="Leave blank if non-partisan" style={fieldInput} />
 
                   <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '12px',
-                                fontSize: '11px', color: '#4a6280' }}>
+                                fontSize: '11px', color: '#7689a3' }}>
                     <MapPin size={13} strokeWidth={1.5} />
                     {myLocation?.lat ? 'Ward detected from your current location' : 'Waiting for your location…'}
                   </div>
@@ -896,7 +896,7 @@ export default function Leaderboard() {
                 {csrReport.title}
               </span>
               <button onClick={() => setCsrReport(null)} style={{
-                background: 'none', border: 'none', color: '#4a6280', cursor: 'pointer', fontSize: '16px',
+                background: 'none', border: 'none', color: '#7689a3', cursor: 'pointer', fontSize: '16px',
               }}>✕</button>
             </div>
             <p style={{ fontSize: '13px', color: '#94a3b8', lineHeight: 1.6, marginBottom: '12px' }}>
@@ -905,11 +905,11 @@ export default function Leaderboard() {
             <div style={{ display: 'flex', gap: '16px', marginBottom: '12px' }}>
               <div style={{ textAlign: 'center' }}>
                 <div style={{ fontSize: '22px', fontWeight: '700', color: '#00d4ff' }}>{csrReport.impactScore}</div>
-                <div style={{ fontSize: '10px', color: '#4a6280', textTransform: 'uppercase' }}>Impact</div>
+                <div style={{ fontSize: '10px', color: '#7689a3', textTransform: 'uppercase' }}>Impact</div>
               </div>
               <div style={{ textAlign: 'center' }}>
                 <div style={{ fontSize: '22px', fontWeight: '700', color: '#16a34a' }}>{csrReport.resolutionRate}</div>
-                <div style={{ fontSize: '10px', color: '#4a6280', textTransform: 'uppercase' }}>Resolution</div>
+                <div style={{ fontSize: '10px', color: '#7689a3', textTransform: 'uppercase' }}>Resolution</div>
               </div>
             </div>
             {csrReport.highlights && (
@@ -925,7 +925,7 @@ export default function Leaderboard() {
             {csrReport.linkedinPost && (
               <div style={{ backgroundColor: '#112035', borderRadius: '10px', padding: '10px', position: 'relative' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
-                  <span style={{ fontSize: '10px', color: '#4a6280', textTransform: 'uppercase', fontWeight: '500' }}>
+                  <span style={{ fontSize: '10px', color: '#7689a3', textTransform: 'uppercase', fontWeight: '500' }}>
                     LinkedIn ready
                   </span>
                   <button onClick={() => {

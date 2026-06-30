@@ -27,7 +27,7 @@ function PressureMeter({ confirmations = 0, compact = false }) {
             transition: 'width 0.5s ease',
           }} />
         </div>
-        <span style={{ fontSize: '10px', color: '#4a6280', fontWeight: '600' }}>
+        <span style={{ fontSize: '10px', color: '#7689a3', fontWeight: '600' }}>
           {Math.round(percent)}%
         </span>
       </div>
@@ -38,8 +38,8 @@ function PressureMeter({ confirmations = 0, compact = false }) {
     <div style={{ marginTop: '12px' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-          <Users size={12} color="#4a6280" strokeWidth={1.5} />
-          <span style={{ fontSize: '11px', color: '#4a6280' }}>
+          <Users size={12} color="#7689a3" strokeWidth={1.5} />
+          <span style={{ fontSize: '11px', color: '#7689a3' }}>
             {confirmations} confirmation{confirmations !== 1 ? 's' : ''}
           </span>
         </div>

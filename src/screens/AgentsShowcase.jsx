@@ -93,7 +93,7 @@ function ReasoningChain({ steps, color }) {
       borderLeft: `1px solid ${color}33`,
       display: 'flex', flexDirection: 'column', gap: '7px',
     }}>
-      <span style={{ fontSize: '9px', fontWeight: '600', color: '#4a6280',
+      <span style={{ fontSize: '9px', fontWeight: '600', color: '#7689a3',
                      textTransform: 'uppercase', letterSpacing: '0.7px' }}>
         Reasoning steps · {steps.length}
       </span>
@@ -145,7 +145,7 @@ function StepRow({ step }) {
           <div style={{ fontSize: '12px', color: '#94a3b8', marginTop: '1px' }}>{step.summary}</div>
         )}
         {step.detail && (
-          <div style={{ fontSize: '11px', color: '#4a6280', marginTop: '1px', lineHeight: 1.4 }}>{step.detail}</div>
+          <div style={{ fontSize: '11px', color: '#7689a3', marginTop: '1px', lineHeight: 1.4 }}>{step.detail}</div>
         )}
         {step.reasoning?.length > 0 && <ReasoningChain steps={step.reasoning} color={color} />}
       </div>
@@ -218,12 +218,12 @@ export default function AgentsShowcase() {
             </div>
             <div style={{ minWidth: 0 }}>
               <div style={{ fontSize: '12px', fontWeight: '700', color: '#f0f6ff' }}>Autonomous Coordinator</div>
-              <div style={{ fontSize: '11px', color: '#4a6280' }}>Agent 7 · reasons &amp; acts in a loop</div>
+              <div style={{ fontSize: '11px', color: '#7689a3' }}>Agent 7 · reasons &amp; acts in a loop</div>
             </div>
           </div>
           <div style={{ textAlign: 'right', flexShrink: 0 }}>
             <div style={{ fontSize: '22px', fontWeight: '800', color: '#a855f7', lineHeight: 1 }}>{stats.coordinated}</div>
-            <div style={{ fontSize: '10px', color: '#4a6280' }}>coordinated</div>
+            <div style={{ fontSize: '10px', color: '#7689a3' }}>coordinated</div>
           </div>
         </div>
 
@@ -269,7 +269,7 @@ export default function AgentsShowcase() {
                   backgroundColor: '#112035', borderRadius: '10px',
                   border: `0.5px solid ${agent.color}33`, padding: '10px', marginBottom: '10px',
                 }}>
-                  <span style={{ fontSize: '10px', fontWeight: '500', color: '#4a6280',
+                  <span style={{ fontSize: '10px', fontWeight: '500', color: '#7689a3',
                                  textTransform: 'uppercase', letterSpacing: '0.7px' }}>
                     Latest reasoning
                   </span>
@@ -286,7 +286,7 @@ export default function AgentsShowcase() {
 
               <div style={{ display: 'flex', justifyContent: 'space-between',
                             alignItems: 'center' }}>
-                <span style={{ fontSize: '11px', color: '#4a6280' }}>
+                <span style={{ fontSize: '11px', color: '#7689a3' }}>
                   {agent.tech || 'Powered by: Gemini 2.5 Flash + Firebase'}
                 </span>
                 <span style={{ fontSize: '13px', fontWeight: '700', color: agent.color }}>
@@ -310,8 +310,8 @@ export default function AgentsShowcase() {
             backgroundColor: '#0d1b2e', borderRadius: '14px', border: '0.5px solid #1a2f4a',
             padding: '20px', textAlign: 'center',
           }}>
-            <Bot size={28} color="#4a6280" strokeWidth={1} style={{ margin: '0 auto 8px' }} />
-            <p style={{ fontSize: '13px', color: '#4a6280' }}>
+            <Bot size={28} color="#7689a3" strokeWidth={1} style={{ margin: '0 auto 8px' }} />
+            <p style={{ fontSize: '13px', color: '#7689a3' }}>
               No pipeline runs yet. Report an issue to watch the agents collaborate.
             </p>
           </div>
@@ -340,7 +340,7 @@ export default function AgentsShowcase() {
                     </span>
                   </div>
                   <span style={{ display: 'flex', alignItems: 'center', gap: '4px', flexShrink: 0,
-                                 fontSize: '11px', color: '#4a6280' }}>
+                                 fontSize: '11px', color: '#7689a3' }}>
                     <Clock size={11} strokeWidth={1.5} />
                     {timeAgo(run.createdAt)}
                   </span>
@@ -349,7 +349,7 @@ export default function AgentsShowcase() {
                   <div style={{ padding: '0 16px 12px' }}>
                     {(run.steps || []).map((step, i) => <StepRow key={i} step={step} />)}
                     {typeof run.durationMs === 'number' && (
-                      <div style={{ fontSize: '10px', color: '#4a6280', marginTop: '6px',
+                      <div style={{ fontSize: '10px', color: '#7689a3', marginTop: '6px',
                                     textTransform: 'uppercase', letterSpacing: '0.7px' }}>
                         Pipeline completed in {(run.durationMs / 1000).toFixed(1)}s
                       </div>
@@ -363,7 +363,7 @@ export default function AgentsShowcase() {
 
         {/* Flow Diagram */}
         <div style={{ marginTop: '20px' }}>
-          <span style={{ fontSize: '11px', fontWeight: '500', color: '#4a6280',
+          <span style={{ fontSize: '11px', fontWeight: '500', color: '#7689a3',
                          textTransform: 'uppercase', letterSpacing: '0.7px' }}>
             AGENT PIPELINE
           </span>

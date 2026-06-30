@@ -43,9 +43,9 @@ export default function ActivityTimeline({ events = [], loading }) {
       </div>
 
       {loading ? (
-        <p style={{ fontSize: '13px', color: '#4a6280' }}>Loading activity…</p>
+        <p style={{ fontSize: '13px', color: '#7689a3' }}>Loading activity…</p>
       ) : events.length === 0 ? (
-        <p style={{ fontSize: '13px', color: '#4a6280' }}>No activity yet — be the first to contribute.</p>
+        <p style={{ fontSize: '13px', color: '#7689a3' }}>No activity yet — be the first to contribute.</p>
       ) : (
         <div style={{ position: 'relative' }}>
           {/* vertical connector */}
@@ -68,7 +68,7 @@ export default function ActivityTimeline({ events = [], loading }) {
                   <div style={{ fontSize: '13px', color: '#f0f6ff' }}>
                     <span style={{ fontWeight: '600' }}>{e.displayName || 'Citizen'}</span>{' '}
                     <span style={{ color: '#94a3b8' }}>{VERB[e.action] || e.action}</span>
-                    <span style={{ fontSize: '11px', color: '#4a6280', marginLeft: '6px' }}>· {ago(e.createdAt)}</span>
+                    <span style={{ fontSize: '11px', color: '#7689a3', marginLeft: '6px' }}>· {ago(e.createdAt)}</span>
                   </div>
                   {e.message && VERB[e.action] !== e.message && (
                     <div style={{ fontSize: '12px', color: '#94a3b8', marginTop: '3px', lineHeight: 1.4 }}>{e.message}</div>

@@ -187,7 +187,7 @@ export default function AffiliationPicker({ value, onChange }) {
                   style={{
                     flex: 1, padding: '9px', borderRadius: '10px', border: 'none',
                     backgroundColor: (manualName.trim() && manualPin) ? '#00d4ff' : '#112035',
-                    color: (manualName.trim() && manualPin) ? '#04091a' : '#4a6280',
+                    color: (manualName.trim() && manualPin) ? '#04091a' : '#7689a3',
                     fontSize: '12px', fontWeight: '600',
                     cursor: (manualName.trim() && manualPin) ? 'pointer' : 'not-allowed',
                   }}>Save organization</button>
@@ -201,7 +201,7 @@ export default function AffiliationPicker({ value, onChange }) {
           ) : (
             <>
               <div style={{ position: 'relative', marginBottom: '8px' }}>
-                <Search size={14} color="#4a6280" strokeWidth={1.5} style={{
+                <Search size={14} color="#7689a3" strokeWidth={1.5} style={{
                   position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)' }} />
                 <input value={query} onChange={e => setQuery(e.target.value)}
                   placeholder={`Search ${orgType === 'college' ? 'colleges' : 'companies'}…`}
@@ -215,13 +215,13 @@ export default function AffiliationPicker({ value, onChange }) {
                     color: '#f0f6ff', fontSize: '12px', fontWeight: '500',
                   }}>
                     {o.name}
-                    <span style={{ color: '#4a6280', marginLeft: '6px', fontSize: '10px' }}>
+                    <span style={{ color: '#7689a3', marginLeft: '6px', fontSize: '10px' }}>
                       {o.zoneName?.split(',').slice(-1)[0]?.trim()}
                     </span>
                   </button>
                 ))}
                 {suggestions.length === 0 && (
-                  <span style={{ fontSize: '12px', color: '#4a6280', padding: '4px 0' }}>
+                  <span style={{ fontSize: '12px', color: '#7689a3', padding: '4px 0' }}>
                     No match — add it manually below.
                   </span>
                 )}
@@ -242,7 +242,7 @@ export default function AffiliationPicker({ value, onChange }) {
 }
 
 const labelStyle = {
-  fontSize: '11px', fontWeight: '500', color: '#4a6280',
+  fontSize: '11px', fontWeight: '500', color: '#7689a3',
   textTransform: 'uppercase', letterSpacing: '0.7px',
   marginBottom: '6px', display: 'block',
 };

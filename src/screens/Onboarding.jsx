@@ -177,25 +177,25 @@ export default function Onboarding() {
             <div style={{ width: '100%', maxWidth: '340px' }}>
               <AffiliationPicker value={affiliation} onChange={setAffiliation} />
 
-              <label style={{ fontSize: '11px', fontWeight: '500', color: '#4a6280',
+              <label style={{ fontSize: '11px', fontWeight: '500', color: '#7689a3',
                               textTransform: 'uppercase', letterSpacing: '0.7px',
                               marginBottom: '6px', display: 'block', marginTop: '16px' }}>X Handle</label>
               <input value={xHandle} onChange={e => setXHandle(e.target.value)}
                 placeholder="@username"
                 style={{ ...inputStyle, marginBottom: '4px' }} />
-              <p style={{ fontSize: '11px', color: '#4a6280', marginBottom: '24px' }}>
+              <p style={{ fontSize: '11px', color: '#7689a3', marginBottom: '24px' }}>
                 Get tagged when we post your issues
               </p>
 
               <button onClick={handleComplete} disabled={saving || !isAffiliationValid} style={{
                 width: '100%', padding: '14px', borderRadius: '10px', border: 'none',
                 backgroundColor: (isAffiliationValid && !saving) ? '#16a34a' : '#112035',
-                color: (isAffiliationValid && !saving) ? '#ffffff' : '#4a6280',
+                color: (isAffiliationValid && !saving) ? '#ffffff' : '#7689a3',
                 fontSize: '14px', fontWeight: '600',
                 cursor: saving ? 'wait' : (isAffiliationValid ? 'pointer' : 'not-allowed'),
               }}>{saving ? 'Saving…' : 'Start Reporting'}</button>
               {!isAffiliationValid && (
-                <p style={{ fontSize: '11px', color: '#4a6280', textAlign: 'center', marginTop: '8px' }}>
+                <p style={{ fontSize: '11px', color: '#7689a3', textAlign: 'center', marginTop: '8px' }}>
                   Select your {affiliation.role === 'student' ? 'college' : affiliation.role === 'employee' ? 'company' : 'role'} to continue
                 </p>
               )}
