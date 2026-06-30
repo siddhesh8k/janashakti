@@ -1,0 +1,22 @@
+# Keep the build context small + never leak local secrets/artifacts into the image.
+# NOTE: do NOT ignore the Dockerfile itself (Cloud Build needs to read it).
+node_modules
+dist
+.git
+.gitignore
+.env
+.env.*
+coverage
+e2e/report
+e2e/.artifacts
+e2e/test-results
+playwright-report
+.playwright
+tests/reports/report-*.json
+tests/reports/test-report-*.html
+*-debug.log
+firebase-export-*
+scripts/serviceAccountKey.json
+.vscode
+.idea
+.firebase

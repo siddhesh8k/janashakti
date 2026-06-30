@@ -1,0 +1,92 @@
+# Cloud Build → Cloud Run pipeline for JanaShakti (region asia-south1).
+#
+# To use: in your Cloud Build trigger, set the build configuration type to
+# "Cloud Build configuration file (yaml)" pointing at /cloudbuild.yaml, then add the VITE
+# values as SUBSTITUTION VARIABLES on the trigger (_VITE_FIREBASE_API_KEY, _VITE_GEMINI_API_KEY,
+# ...). They are passed as Docker --build-args so Vite can inline them into the bundle.
+# (If you keep a Dockerfile-only trigger instead, just add the same VITE_* build args there.)
+
+substitutions:
+  _REGION: asia-south1
+  _SERVICE: janashakti
+  _REPO: cloud-run-source-deploy   # Artifact Registry repo (created by Cloud Run source deploys)
+  _VITE_FIREBASE_API_KEY: ''
+  _VITE_FIREBASE_AUTH_DOMAIN: ''
+  _VITE_FIREBASE_PROJECT_ID: ''
+  _VITE_FIREBASE_STORAGE_BUCKET: ''
+  _VITE_FIREBASE_MESSAGING_SENDER_ID: ''
+  _VITE_FIREBASE_APP_ID: ''
+  _VITE_FIREBASE_MEASUREMENT_ID: ''
+  _VITE_GEMINI_API_KEY: ''
+  _VITE_GOOGLE_MAPS_KEY: ''
+  _VITE_CLOUDINARY_CLOUD_NAME: ''
+  _VITE_CLOUDINARY_UPLOAD_PRESET: ''
+  _VITE_N8N_AI_WEBHOOK: ''
+  _VITE_N8N_ISSUE_WEBHOOK: ''
+  _VITE_N8N_SOCIAL_WEBHOOK: ''
+  _VITE_N8N_AUTH_WEBHOOK: ''
+  _VITE_N8N_ESCALATE_WEBHOOK: ''
+
+options:
+  logging: CLOUD_LOGGING_ONLY
+
+images:
+  - '${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/${_SERVICE}:$COMMIT_SHA'
+
+steps:
+  - id: build
+    name: gcr.io/cloud-builders/docker
+    args:
+      - build
+      - -t
+      - '${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/${_SERVICE}:$COMMIT_SHA'
+      - --build-arg
+      - 'VITE_FIREBASE_API_KEY=${_VITE_FIREBASE_API_KEY}'
+      - --build-arg
+      - 'VITE_FIREBASE_AUTH_DOMAIN=${_VITE_FIREBASE_AUTH_DOMAIN}'
+      - --build-arg
+      - 'VITE_FIREBASE_PROJECT_ID=${_VITE_FIREBASE_PROJECT_ID}'
+      - --build-arg
+      - 'VITE_FIREBASE_STORAGE_BUCKET=${_VITE_FIREBASE_STORAGE_BUCKET}'
+      - --build-arg
+      - 'VITE_FIREBASE_MESSAGING_SENDER_ID=${_VITE_FIREBASE_MESSAGING_SENDER_ID}'
+      - --build-arg
+      - 'VITE_FIREBASE_APP_ID=${_VITE_FIREBASE_APP_ID}'
+      - --build-arg
+      - 'VITE_FIREBASE_MEASUREMENT_ID=${_VITE_FIREBASE_MEASUREMENT_ID}'
+      - --build-arg
+      - 'VITE_GEMINI_API_KEY=${_VITE_GEMINI_API_KEY}'
+      - --build-arg
+      - 'VITE_GOOGLE_MAPS_KEY=${_VITE_GOOGLE_MAPS_KEY}'
+      - --build-arg
+      - 'VITE_CLOUDINARY_CLOUD_NAME=${_VITE_CLOUDINARY_CLOUD_NAME}'
+      - --build-arg
+      - 'VITE_CLOUDINARY_UPLOAD_PRESET=${_VITE_CLOUDINARY_UPLOAD_PRESET}'
+      - --build-arg
+      - 'VITE_N8N_AI_WEBHOOK=${_VITE_N8N_AI_WEBHOOK}'
+      - --build-arg
+      - 'VITE_N8N_ISSUE_WEBHOOK=${_VITE_N8N_ISSUE_WEBHOOK}'
+      - --build-arg
+      - 'VITE_N8N_SOCIAL_WEBHOOK=${_VITE_N8N_SOCIAL_WEBHOOK}'
+      - --build-arg
+      - 'VITE_N8N_AUTH_WEBHOOK=${_VITE_N8N_AUTH_WEBHOOK}'
+      - --build-arg
+      - 'VITE_N8N_ESCALATE_WEBHOOK=${_VITE_N8N_ESCALATE_WEBHOOK}'
+      - .
+
+  - id: push
+    name: gcr.io/cloud-builders/docker
+    args: ['push', '${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/${_SERVICE}:$COMMIT_SHA']
+
+  - id: deploy
+    name: gcr.io/google.com/cloudsdktool/cloud-sdk
+    entrypoint: gcloud
+    args:
+      - run
+      - deploy
+      - '${_SERVICE}'
+      - '--image=${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/${_SERVICE}:$COMMIT_SHA'
+      - '--region=${_REGION}'
+      - '--platform=managed'
+      - '--allow-unauthenticated'
+      - '--port=8080'
