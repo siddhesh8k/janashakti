@@ -40,8 +40,20 @@ vi.mock('../../../src/utils/publicProfile', () => ({
   mirrorPublicIdentity: vi.fn(() => Promise.resolve()),
 }));
 
+// Leaderboard imports calculateScorecard, aggregateByRole AND CIVIC_ROLES from this
+// module. CIVIC_ROLES is read during render (claimRole state init + the role <select>),
+// so it must be a non-empty array or the screen throws on mount.
 vi.mock('../../../src/constants/representatives', () => ({
   calculateScorecard: vi.fn(() => []),
+  aggregateByRole: vi.fn(() => []),
+  CIVIC_ROLES: [
+    'Elected Corporator',
+    'Resident Welfare Assoc.',
+    'Ward Volunteer',
+    'Municipal Officer',
+    'NGO / Civil Society',
+    'Independent / Citizen Rep',
+  ],
 }));
 
 describe('Leaderboard Screen (Smoke Test)', () => {

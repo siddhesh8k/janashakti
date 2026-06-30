@@ -105,7 +105,7 @@ const AiInsights = memo(function AiInsights({ issues }) {
       )}
 
       {!loading && fetched && insights.length === 0 && (
-        <p style={{ fontSize: '12px', color: '#4a6280' }}>Insights unavailable right now — try again later.</p>
+        <p style={{ fontSize: '12px', color: '#7689a3' }}>Insights unavailable right now — try again later.</p>
       )}
     </div>
   );
@@ -155,12 +155,12 @@ const ESGTab = memo(function ESGTab({ city, esg, navigate }) {
         <div style={{ fontSize: '13px', fontWeight: '700', color: grade.color, marginTop: '6px' }}>
           {esg.cityScore.toFixed(1)}/10 ESG Score
         </div>
-        <div style={{ fontSize: '12px', color: '#4a6280', marginTop: '8px' }}>
+        <div style={{ fontSize: '12px', color: '#7689a3', marginTop: '8px' }}>
           Based on {esg.thisMonth} issues resolved this month
         </div>
         <div style={{ marginTop: '14px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px',
-                        color: '#4a6280', marginBottom: '4px' }}>
+                        color: '#7689a3', marginBottom: '4px' }}>
             <span>vs last month</span>
             <span style={{ color: esg.improvement >= 0 ? '#16a34a' : '#ef4444', fontWeight: '600' }}>
               {esg.improvement >= 0 ? '+' : ''}{esg.improvement}%
@@ -181,7 +181,7 @@ const ESGTab = memo(function ESGTab({ city, esg, navigate }) {
           <span style={{ fontSize: '14px', fontWeight: '600', color: '#f0f6ff' }}>SDG Contributions</span>
         </div>
         {sdgShown.length === 0 ? (
-          <p style={{ fontSize: '12px', color: '#4a6280' }}>No SDG data yet.</p>
+          <p style={{ fontSize: '12px', color: '#7689a3' }}>No SDG data yet.</p>
         ) : sdgShown.map((r) => (
           <div key={r.sdg} style={{ marginBottom: '10px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -192,7 +192,7 @@ const ESGTab = memo(function ESGTab({ city, esg, navigate }) {
                           marginTop: '6px', overflow: 'hidden' }}>
               <div style={{ height: '100%', borderRadius: '999px',
                 width: `${esg.sdgTotal ? (r.count / esg.sdgTotal) * 100 : 0}%`,
-                backgroundColor: SDG_COLORS[r.sdg] || '#4a6280' }} />
+                backgroundColor: SDG_COLORS[r.sdg] || '#7689a3' }} />
             </div>
           </div>
         ))}
@@ -214,7 +214,7 @@ const ESGTab = memo(function ESGTab({ city, esg, navigate }) {
         </div>
         <p style={{ fontSize: '11px', color: '#00d4ff', marginBottom: '12px' }}>Powered by Gemini AI</p>
         {ESG_LEADERBOARD.map((c) => (<CityESGCard key={c.rank} {...c} />))}
-        <p style={{ fontSize: '11px', color: '#4a6280', marginTop: '6px', textAlign: 'center' }}>
+        <p style={{ fontSize: '11px', color: '#7689a3', marginTop: '6px', textAlign: 'center' }}>
           Rankings update monthly via AI analysis
         </p>
       </div>
@@ -226,7 +226,7 @@ const ESGTab = memo(function ESGTab({ city, esg, navigate }) {
           <span style={{ fontSize: '14px', fontWeight: '600', color: '#f0f6ff' }}>Top Environmental Impact</span>
         </div>
         {esg.topEnv.length === 0 ? (
-          <p style={{ fontSize: '12px', color: '#4a6280' }}>No ESG-scored resolutions yet.</p>
+          <p style={{ fontSize: '12px', color: '#7689a3' }}>No ESG-scored resolutions yet.</p>
         ) : esg.topEnv.map((i) => (
           <div key={i.id} onClick={() => navigate(`/issue/${i.id}`)} style={{
             backgroundColor: '#0d1b2e', borderRadius: '12px', border: '0.5px solid #1a2f4a',
@@ -239,7 +239,7 @@ const ESGTab = memo(function ESGTab({ city, esg, navigate }) {
               </span>
               {i.esgScore?.sdg_tags?.[0] && <SDGBadge sdgId={i.esgScore.sdg_tags[0]} size="sm" />}
             </div>
-            <div style={{ fontSize: '11px', color: '#4a6280', marginTop: '2px',
+            <div style={{ fontSize: '11px', color: '#7689a3', marginTop: '2px',
                           overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
               {i.locationText}
             </div>
@@ -357,6 +357,18 @@ export default function AnalyticsDashboard() {
     issues.reduce((acc, i) => { acc[i.status] = (acc[i.status] || 0) + 1; return acc; }, {})
   ).map(([name, value]) => ({ name, value, color: STATUS_COLORS[name] || '#475569' }));
 
+  // Per-city breakdown (the page is "City Intelligence" — show issues w.r.t. each city).
+  // city is tagged at report time (Bangalore / Mumbai / Delhi / Other).
+  const byCity = Object.entries(
+    issues.reduce((acc, i) => {
+      const c = i.city || 'Other';
+      if (!acc[c]) acc[c] = { total: 0, open: 0, resolved: 0 };
+      acc[c].total += 1;
+      if (i.status === 'Resolved') acc[c].resolved += 1; else acc[c].open += 1;
+      return acc;
+    }, {})
+  ).map(([name, v]) => ({ name, ...v })).sort((a, b) => b.total - a.total);
+
   const trend = trendSeries(issues);
 
   const tooltipStyle = {
@@ -370,7 +382,7 @@ export default function AnalyticsDashboard() {
 
   // The three charts share one carousel card (saves vertical space). Each slide is the
   // chart body only — ChartCarousel supplies the card chrome + title + swipe/dots.
-  const noData = <p style={{ color: '#4a6280', fontSize: '12px' }}>No data</p>;
+  const noData = <p style={{ color: '#7689a3', fontSize: '12px' }}>No data</p>;
   const chartSlides = [
     {
       title: 'Issues by Type',
@@ -404,8 +416,8 @@ export default function AnalyticsDashboard() {
       content: byStatus.length > 0 ? (
         <ResponsiveContainer width="100%" height={200}>
           <BarChart data={byStatus} margin={{ top: 16, right: 0, left: -20, bottom: 0 }}>
-            <XAxis dataKey="name" tick={{ fill: '#4a6280', fontSize: 10 }} axisLine={false} tickLine={false} />
-            <YAxis tick={{ fill: '#4a6280', fontSize: 10 }} axisLine={false} tickLine={false} />
+            <XAxis dataKey="name" tick={{ fill: '#7689a3', fontSize: 10 }} axisLine={false} tickLine={false} />
+            <YAxis tick={{ fill: '#7689a3', fontSize: 10 }} axisLine={false} tickLine={false} />
             <Tooltip contentStyle={tooltipStyle} itemStyle={tipItemStyle} labelStyle={tipLabelStyle} cursor={{ fill: '#ffffff10' }} />
             <Bar dataKey="value" radius={[4, 4, 0, 0]}>
               {byStatus.map((entry, i) => (<Cell key={i} fill={entry.color} />))}
@@ -420,8 +432,8 @@ export default function AnalyticsDashboard() {
         <ResponsiveContainer width="100%" height={210}>
           <LineChart data={trend} margin={{ top: 16, right: 8, left: -20, bottom: 0 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="#1a2f4a" vertical={false} />
-            <XAxis dataKey="week" tick={{ fill: '#4a6280', fontSize: 10 }} axisLine={false} tickLine={false} />
-            <YAxis tick={{ fill: '#4a6280', fontSize: 10 }} axisLine={false} tickLine={false} allowDecimals={false} />
+            <XAxis dataKey="week" tick={{ fill: '#7689a3', fontSize: 10 }} axisLine={false} tickLine={false} />
+            <YAxis tick={{ fill: '#7689a3', fontSize: 10 }} axisLine={false} tickLine={false} allowDecimals={false} />
             <Tooltip contentStyle={tooltipStyle} itemStyle={tipItemStyle} labelStyle={tipLabelStyle} />
             <Legend wrapperStyle={{ fontSize: '11px' }} />
             <Line type="monotone" dataKey="reported" name="Reported" stroke="#00d4ff" strokeWidth={2} dot={{ r: 2 }} />
@@ -465,7 +477,7 @@ export default function AnalyticsDashboard() {
               borderTop: `3px solid ${s.color}`,
             }}>
               <div style={{ fontSize: '22px', fontWeight: '700', color: s.color }}>{s.value}</div>
-              <div style={{ fontSize: '10px', color: '#4a6280', textTransform: 'uppercase' }}>{s.label}</div>
+              <div style={{ fontSize: '10px', color: '#7689a3', textTransform: 'uppercase' }}>{s.label}</div>
             </div>
           ))}
         </div>
@@ -508,6 +520,43 @@ export default function AnalyticsDashboard() {
         {/* Charts — carousel to keep the page compact (swipe / arrows / dots) */}
         <ChartCarousel slides={chartSlides} />
 
+        {/* Issues by City — real per-city breakdown with open/resolved + resolution rate */}
+        {byCity.length > 0 && (
+          <div style={{ marginTop: '20px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '12px' }}>
+              <MapPin size={16} color="#00d4ff" strokeWidth={1.5} />
+              <span style={{ fontSize: '14px', fontWeight: '600', color: '#f0f6ff' }}>Issues by City</span>
+            </div>
+            {byCity.map((c) => {
+              const pct = c.total ? Math.round((c.resolved / c.total) * 100) : 0;
+              return (
+                <div key={c.name} style={{
+                  backgroundColor: '#0d1b2e', borderRadius: '12px',
+                  border: '0.5px solid #1a2f4a', padding: '12px 14px', marginBottom: '8px',
+                }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '8px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0 }}>
+                      <MapPin size={14} color="#00d4ff" strokeWidth={1.5} style={{ flexShrink: 0 }} />
+                      <span style={{ fontSize: '14px', fontWeight: '600', color: '#f0f6ff',
+                                     overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{c.name}</span>
+                    </div>
+                    <span style={{ fontSize: '13px', fontWeight: '700', color: '#00d4ff', flexShrink: 0 }}>{c.total}</span>
+                  </div>
+                  <div style={{ display: 'flex', gap: '14px', marginTop: '6px', alignItems: 'center' }}>
+                    <span style={{ fontSize: '11px', color: '#f97316' }}>{c.open} open</span>
+                    <span style={{ fontSize: '11px', color: '#16a34a' }}>{c.resolved} resolved</span>
+                    <span style={{ fontSize: '11px', color: '#7689a3', marginLeft: 'auto' }}>{pct}% resolved</span>
+                  </div>
+                  <div style={{ height: '5px', borderRadius: '999px', backgroundColor: '#112035',
+                                marginTop: '8px', overflow: 'hidden' }}>
+                    <div style={{ height: '100%', borderRadius: '999px', width: `${pct}%`, backgroundColor: '#16a34a' }} />
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+
         {/* Wall of Shame */}
         {wallOfShameIssues.length > 0 && (
           <div style={{ marginTop: '20px' }}>
@@ -517,7 +566,7 @@ export default function AnalyticsDashboard() {
                 Wall of Shame ({wallOfShameIssues.length})
               </span>
             </div>
-            <p style={{ fontSize: '12px', color: '#4a6280', marginBottom: '10px' }}>
+            <p style={{ fontSize: '12px', color: '#7689a3', marginBottom: '10px' }}>
               Issues ignored for 30+ days
             </p>
             {wos.visible.map(i => <IssueCard key={i.id} issue={i} compact />)}

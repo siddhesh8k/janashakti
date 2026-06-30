@@ -34,10 +34,10 @@ export default function BottomNav() {
                 backgroundColor: 'transparent', border: 'none',
                 cursor: 'pointer', gap: '4px',
               }}>
-              <Icon size={22} color={active ? '#00d4ff' : '#4a6280'} strokeWidth={1.5} />
+              <Icon size={22} color={active ? '#00d4ff' : '#7689a3'} strokeWidth={1.5} />
               <span style={{
                 fontSize: '10px', fontWeight: active ? '600' : '400',
-                color: active ? '#00d4ff' : '#4a6280',
+                color: active ? '#00d4ff' : '#7689a3',
               }}>{tab.label}</span>
             </button>
           );
@@ -51,10 +51,10 @@ export default function BottomNav() {
               backgroundColor: 'transparent', border: 'none',
               cursor: 'pointer', gap: '4px',
             }}>
-            <Icon size={22} color={active ? '#00d4ff' : '#4a6280'} strokeWidth={1.5} />
+            <Icon size={22} color={active ? '#00d4ff' : '#7689a3'} strokeWidth={1.5} />
             <span style={{
               fontSize: '10px', fontWeight: active ? '600' : '400',
-              color: active ? '#00d4ff' : '#4a6280',
+              color: active ? '#00d4ff' : '#7689a3',
             }}>{tab.label}</span>
           </button>
         );

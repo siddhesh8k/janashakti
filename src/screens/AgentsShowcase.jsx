@@ -15,13 +15,15 @@ const AGENTS = [
   },
   {
     num: 2, key: 'detector', icon: Search, name: 'Duplicate Detector', color: '#3b82f6',
-    desc: 'Checks for duplicate reports within 200m radius using geo-proximity and AI similarity analysis. Prevents spam and aggregates community confirmations.',
+    desc: 'Reasons in a multi-step loop: scans nearby open reports, compares candidates with Gemini similarity, adaptively widens the search radius if needed, then decides — preventing spam and aggregating community confirmations.',
     statKey: 'duplicatesCaught',
+    tech: 'Google AI Studio · Gemini 2.5 Flash · function-calling (ReAct loop)',
   },
   {
     num: 3, key: 'router', icon: MailCheck, name: 'Authority Router', color: '#16a34a',
-    desc: 'Routes issues to the correct government department and officer. Sends formal complaint emails automatically via n8n workflows.',
+    desc: 'Reasons in a multi-step loop: looks the issue up in the official department catalog, checks how similar past reports were routed and resolved, then finalizes the department, officer and SLA and emails the authority via n8n.',
     statKey: 'authoritiesNotified',
+    tech: 'Google AI Studio · Gemini 2.5 Flash · function-calling (ReAct loop)',
   },
   {
     num: 4, key: 'predictor', icon: BarChart3, name: 'Resolution Predictor', color: '#f97316',
@@ -81,6 +83,46 @@ function StepStatus({ status }) {
   return <CheckCircle size={13} color="#16a34a" strokeWidth={2} />;
 }
 
+// Indented thought → tool → observation chain for an agent that reasons in a loop.
+// Renders the per-step `reasoning` trace the ReAct agents (Router, Detector) now emit.
+function ReasoningChain({ steps, color }) {
+  if (!steps || steps.length === 0) return null;
+  return (
+    <div style={{
+      marginTop: '8px', marginLeft: '2px', paddingLeft: '10px',
+      borderLeft: `1px solid ${color}33`,
+      display: 'flex', flexDirection: 'column', gap: '7px',
+    }}>
+      <span style={{ fontSize: '9px', fontWeight: '600', color: '#7689a3',
+                     textTransform: 'uppercase', letterSpacing: '0.7px' }}>
+        Reasoning steps · {steps.length}
+      </span>
+      {steps.map((s, i) => (
+        <div key={i} style={{ display: 'flex', gap: '7px' }}>
+          <div style={{
+            width: '15px', height: '15px', borderRadius: '50%', flexShrink: 0, marginTop: '1px',
+            backgroundColor: color + '1a', border: `0.5px solid ${color}40`,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            fontSize: '8px', fontWeight: '700', color,
+          }}>{i + 1}</div>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ fontSize: '11px', fontWeight: '600', color: '#cde3f5' }}>{s.name || s.action}</div>
+            {s.summary && (
+              <div style={{ fontSize: '10.5px', color: '#94a3b8', marginTop: '1px', lineHeight: 1.4 }}>{s.summary}</div>
+            )}
+            {s.detail && (
+              <div style={{
+                fontSize: '10.5px', color, marginTop: '2px', lineHeight: 1.4,
+                backgroundColor: color + '12', borderRadius: '6px', padding: '3px 7px',
+              }}>{s.detail}</div>
+            )}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 // One agent's reasoning row inside a run's trace.
 function StepRow({ step }) {
   const Icon = AGENT_ICON[step.agent] || Bot;
@@ -103,8 +145,9 @@ function StepRow({ step }) {
           <div style={{ fontSize: '12px', color: '#94a3b8', marginTop: '1px' }}>{step.summary}</div>
         )}
         {step.detail && (
-          <div style={{ fontSize: '11px', color: '#4a6280', marginTop: '1px', lineHeight: 1.4 }}>{step.detail}</div>
+          <div style={{ fontSize: '11px', color: '#7689a3', marginTop: '1px', lineHeight: 1.4 }}>{step.detail}</div>
         )}
+        {step.reasoning?.length > 0 && <ReasoningChain steps={step.reasoning} color={color} />}
       </div>
     </div>
   );
@@ -175,12 +218,12 @@ export default function AgentsShowcase() {
             </div>
             <div style={{ minWidth: 0 }}>
               <div style={{ fontSize: '12px', fontWeight: '700', color: '#f0f6ff' }}>Autonomous Coordinator</div>
-              <div style={{ fontSize: '11px', color: '#4a6280' }}>Agent 7 · reasons &amp; acts in a loop</div>
+              <div style={{ fontSize: '11px', color: '#7689a3' }}>Agent 7 · reasons &amp; acts in a loop</div>
             </div>
           </div>
           <div style={{ textAlign: 'right', flexShrink: 0 }}>
             <div style={{ fontSize: '22px', fontWeight: '800', color: '#a855f7', lineHeight: 1 }}>{stats.coordinated}</div>
-            <div style={{ fontSize: '10px', color: '#4a6280' }}>coordinated</div>
+            <div style={{ fontSize: '10px', color: '#7689a3' }}>coordinated</div>
           </div>
         </div>
 
@@ -226,7 +269,7 @@ export default function AgentsShowcase() {
                   backgroundColor: '#112035', borderRadius: '10px',
                   border: `0.5px solid ${agent.color}33`, padding: '10px', marginBottom: '10px',
                 }}>
-                  <span style={{ fontSize: '10px', fontWeight: '500', color: '#4a6280',
+                  <span style={{ fontSize: '10px', fontWeight: '500', color: '#7689a3',
                                  textTransform: 'uppercase', letterSpacing: '0.7px' }}>
                     Latest reasoning
                   </span>
@@ -243,7 +286,7 @@ export default function AgentsShowcase() {
 
               <div style={{ display: 'flex', justifyContent: 'space-between',
                             alignItems: 'center' }}>
-                <span style={{ fontSize: '11px', color: '#4a6280' }}>
+                <span style={{ fontSize: '11px', color: '#7689a3' }}>
                   {agent.tech || 'Powered by: Gemini 2.5 Flash + Firebase'}
                 </span>
                 <span style={{ fontSize: '13px', fontWeight: '700', color: agent.color }}>
@@ -267,8 +310,8 @@ export default function AgentsShowcase() {
             backgroundColor: '#0d1b2e', borderRadius: '14px', border: '0.5px solid #1a2f4a',
             padding: '20px', textAlign: 'center',
           }}>
-            <Bot size={28} color="#4a6280" strokeWidth={1} style={{ margin: '0 auto 8px' }} />
-            <p style={{ fontSize: '13px', color: '#4a6280' }}>
+            <Bot size={28} color="#7689a3" strokeWidth={1} style={{ margin: '0 auto 8px' }} />
+            <p style={{ fontSize: '13px', color: '#7689a3' }}>
               No pipeline runs yet. Report an issue to watch the agents collaborate.
             </p>
           </div>
@@ -297,7 +340,7 @@ export default function AgentsShowcase() {
                     </span>
                   </div>
                   <span style={{ display: 'flex', alignItems: 'center', gap: '4px', flexShrink: 0,
-                                 fontSize: '11px', color: '#4a6280' }}>
+                                 fontSize: '11px', color: '#7689a3' }}>
                     <Clock size={11} strokeWidth={1.5} />
                     {timeAgo(run.createdAt)}
                   </span>
@@ -306,7 +349,7 @@ export default function AgentsShowcase() {
                   <div style={{ padding: '0 16px 12px' }}>
                     {(run.steps || []).map((step, i) => <StepRow key={i} step={step} />)}
                     {typeof run.durationMs === 'number' && (
-                      <div style={{ fontSize: '10px', color: '#4a6280', marginTop: '6px',
+                      <div style={{ fontSize: '10px', color: '#7689a3', marginTop: '6px',
                                     textTransform: 'uppercase', letterSpacing: '0.7px' }}>
                         Pipeline completed in {(run.durationMs / 1000).toFixed(1)}s
                       </div>
@@ -320,7 +363,7 @@ export default function AgentsShowcase() {
 
         {/* Flow Diagram */}
         <div style={{ marginTop: '20px' }}>
-          <span style={{ fontSize: '11px', fontWeight: '500', color: '#4a6280',
+          <span style={{ fontSize: '11px', fontWeight: '500', color: '#7689a3',
                          textTransform: 'uppercase', letterSpacing: '0.7px' }}>
             AGENT PIPELINE
           </span>

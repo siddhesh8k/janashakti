@@ -2,7 +2,7 @@ import { memo } from 'react';
 import { SDG_COLORS } from '../constants/esg';
 
 function SDGBadge({ sdgId, name, size = 'md' }) {
-  const color = SDG_COLORS[sdgId] || '#4a6280';
+  const color = SDG_COLORS[sdgId] || '#7689a3';
   const sm = size === 'sm';
 
   return (

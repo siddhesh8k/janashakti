@@ -13,7 +13,7 @@ function StatsCard({ label, value, color = '#00d4ff', icon: Icon }) {
         {value ?? 0}
       </div>
       <div style={{
-        fontSize: '10px', fontWeight: '500', color: '#4a6280',
+        fontSize: '10px', fontWeight: '500', color: '#7689a3',
         textTransform: 'uppercase', letterSpacing: '0.5px', marginTop: '2px',
       }}>
         {label}

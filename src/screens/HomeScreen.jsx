@@ -115,7 +115,7 @@ export default function HomeScreen() {
         }}>
           Continue as Guest
         </button>
-        <span style={{ fontSize: '11px', color: '#4a6280', marginBottom: '16px' }}>
+        <span style={{ fontSize: '11px', color: '#7689a3', marginBottom: '16px' }}>
           No account needed
         </span>
 
@@ -141,7 +141,7 @@ export default function HomeScreen() {
               style={{
                 width: '100%', backgroundColor: '#112035', color: '#f0f6ff',
                 border: '0.5px solid #1a2f4a', borderRadius: '10px',
-                padding: '12px 14px', fontSize: '14px', marginBottom: '8px',
+                padding: '12px 14px', fontSize: '14px',
                 outline: 'none', boxSizing: 'border-box', marginBottom: '12px',
               }} />
             <div style={{ display: 'flex', gap: '8px' }}>
@@ -209,7 +209,7 @@ export default function HomeScreen() {
         {/* Agent Status Row */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center',
                       marginTop: '16px', marginBottom: '10px' }}>
-          <span style={{ fontSize: '11px', fontWeight: '500', color: '#4a6280',
+          <span style={{ fontSize: '11px', fontWeight: '500', color: '#7689a3',
                          letterSpacing: '0.7px', textTransform: 'uppercase' }}>AI AGENTS</span>
           <button onClick={() => navigate('/agents')} style={{
             background: 'none', border: 'none', color: '#00d4ff',
@@ -241,7 +241,7 @@ export default function HomeScreen() {
         {/* Stats Row */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center',
                       marginTop: '16px', marginBottom: '10px' }}>
-          <span style={{ fontSize: '11px', fontWeight: '500', color: '#4a6280',
+          <span style={{ fontSize: '11px', fontWeight: '500', color: '#7689a3',
                          letterSpacing: '0.7px', textTransform: 'uppercase' }}>COMMUNITY</span>
           <button onClick={() => navigate('/leaderboard')} style={{
             background: 'none', border: 'none', color: '#00d4ff',
@@ -302,7 +302,7 @@ export default function HomeScreen() {
 
         {/* Explore shortcuts — surfaced above the feed so they're not missed */}
         <div style={{ marginTop: '20px', marginBottom: '10px' }}>
-          <span style={{ fontSize: '11px', fontWeight: '500', color: '#4a6280',
+          <span style={{ fontSize: '11px', fontWeight: '500', color: '#7689a3',
                          letterSpacing: '0.7px', textTransform: 'uppercase' }}>EXPLORE</span>
         </div>
         <div style={{ display: 'flex', gap: '8px', marginBottom: '8px' }}>

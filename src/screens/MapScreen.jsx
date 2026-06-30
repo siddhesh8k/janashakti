@@ -316,7 +316,7 @@ export default function MapScreen() {
             <div style="font-weight:600;font-size:13px;margin-bottom:4px;">${issue.issueType}</div>
             <div style="font-size:11px;color:${color};font-weight:600;margin-bottom:6px;">${issue.severity}</div>
             <div style="font-size:11px;color:#94a3b8;margin-bottom:8px;line-height:1.4;">${(issue.description || '').substring(0, 80)}...</div>
-            <div style="font-size:10px;color:#4a6280;">${issue.confirmations || 0} confirmed</div>
+            <div style="font-size:10px;color:#7689a3;">${issue.confirmations || 0} confirmed</div>
           </div>`,
       });
       marker.addListener('click', () => {
@@ -340,7 +340,7 @@ export default function MapScreen() {
           + `<div style="font-weight:600;font-size:12px;color:#f0f6ff;">${i.issueType}`
           + `<span style="font-size:10px;color:${c};font-weight:600;margin-left:6px;">${i.severity}</span></div>`
           + (desc ? `<div style="font-size:10px;color:#94a3b8;margin-top:2px;line-height:1.35;">${desc}${full.length > 48 ? '…' : ''}</div>` : '')
-          + `<div style="font-size:9px;color:#4a6280;margin-top:3px;">${i.confirmations || 0} confirmed · tap to open</div>`
+          + `<div style="font-size:9px;color:#7689a3;margin-top:3px;">${i.confirmations || 0} confirmed · tap to open</div>`
           + `</div>`;
       }).join('');
       info.setContent(
@@ -440,7 +440,7 @@ export default function MapScreen() {
           <p style={{ color: '#94a3b8', fontSize: '12px', textAlign: 'center', maxWidth: '320px', lineHeight: '1.5' }}>
             {mapError}
           </p>
-          <p style={{ color: '#4a6280', fontSize: '11px', marginTop: '12px', textAlign: 'center' }}>
+          <p style={{ color: '#7689a3', fontSize: '11px', marginTop: '12px', textAlign: 'center' }}>
             Enable <strong style={{ color: '#94a3b8' }}>Maps JavaScript API</strong> in Google Cloud Console and ensure billing is active.
           </p>
         </div>

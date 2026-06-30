@@ -29,7 +29,7 @@ export const colors = {
 
   textPrimary:   '#f0f6ff',
   textSecondary: '#94a3b8',
-  textMuted:     '#4a6280',
+  textMuted:     '#7689a3',
   textCyan:      '#00d4ff',
   textGreen:     '#86efac',
   textLink:      '#00d4ff',

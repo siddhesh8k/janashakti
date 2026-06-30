@@ -64,7 +64,7 @@ function ESGScoreCard({ esgScore }) {
             <div style={{ minWidth: 0, flex: 1 }}>
               <div style={{ display: 'flex', alignItems: 'baseline', gap: '6px' }}>
                 <span style={{ fontSize: '14px', fontWeight: '700', color: r.color }}>{fmt(r.score)}/10</span>
-                <span style={{ fontSize: '11px', fontWeight: '500', color: '#4a6280' }}>{r.label}</span>
+                <span style={{ fontSize: '11px', fontWeight: '500', color: '#7689a3' }}>{r.label}</span>
               </div>
               {r.impact && (
                 <p style={{ fontSize: '13px', color: '#94a3b8', lineHeight: 1.5, margin: '2px 0 0' }}>
@@ -88,14 +88,14 @@ function ESGScoreCard({ esgScore }) {
       {tags.length > 0 && (
         <div>
           <div style={{
-            fontSize: '11px', fontWeight: '500', color: '#4a6280',
+            fontSize: '11px', fontWeight: '500', color: '#7689a3',
             letterSpacing: '0.7px', textTransform: 'uppercase', marginBottom: '8px',
           }}>
             SDG Alignment
           </div>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
             {tags.map((tag, i) => {
-              const c = SDG_COLORS[tag] || '#4a6280';
+              const c = SDG_COLORS[tag] || '#7689a3';
               return (
                 <span key={tag} title={names[i] || tag} style={{
                   backgroundColor: c + '25', color: c,

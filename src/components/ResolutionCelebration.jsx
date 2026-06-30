@@ -81,12 +81,12 @@ function ResolutionCelebration({ issue, onClose }) {
             <div style={{ fontSize: '22px', fontWeight: '800', color: '#00d4ff' }}>
               {issue?.confirmations || 0}
             </div>
-            <div style={{ fontSize: '10px', color: '#4a6280', textTransform: 'uppercase',
+            <div style={{ fontSize: '10px', color: '#7689a3', textTransform: 'uppercase',
                           letterSpacing: '0.5px', marginTop: '2px' }}>Confirmations</div>
           </div>
           <div style={statBox}>
             <div style={{ fontSize: '22px', fontWeight: '800', color: '#16a34a' }}>+25</div>
-            <div style={{ fontSize: '10px', color: '#4a6280', textTransform: 'uppercase',
+            <div style={{ fontSize: '10px', color: '#7689a3', textTransform: 'uppercase',
                           letterSpacing: '0.5px', marginTop: '2px' }}>Civic Points</div>
           </div>
         </div>
@@ -100,7 +100,7 @@ function ResolutionCelebration({ issue, onClose }) {
           <Star size={16} color="#eab308" strokeWidth={1.5} />
         </div>
 
-        <span style={{ fontSize: '11px', color: '#4a6280' }}>Tap anywhere to close</span>
+        <span style={{ fontSize: '11px', color: '#7689a3' }}>Tap anywhere to close</span>
       </div>
     </div>
   );

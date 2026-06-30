@@ -132,7 +132,7 @@ function IssueCard({ issue, compact = false, fillHeight = false }) {
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px', minWidth: 0, flex: 1 }}>
           {issue.locationText && (
             <span style={{ display: 'flex', alignItems: 'center', gap: '3px', minWidth: 0,
-                           fontSize: '11px', color: '#4a6280' }}>
+                           fontSize: '11px', color: '#7689a3' }}>
               <MapPin size={11} strokeWidth={1.5} style={{ flexShrink: 0 }} />
               <span title={issue.locationText || ''} style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                 {issue.locationText?.split(',')[0] || ''}
@@ -140,13 +140,13 @@ function IssueCard({ issue, compact = false, fillHeight = false }) {
             </span>
           )}
           <span style={{ display: 'flex', alignItems: 'center', gap: '3px', flexShrink: 0,
-                         fontSize: '11px', color: '#4a6280' }}>
+                         fontSize: '11px', color: '#7689a3' }}>
             <Users size={11} strokeWidth={1.5} />
             {issue.confirmations || 0}
           </span>
         </div>
         <span style={{ display: 'flex', alignItems: 'center', gap: '3px', flexShrink: 0,
-                       fontSize: '11px', color: '#4a6280' }}>
+                       fontSize: '11px', color: '#7689a3' }}>
           <Clock size={11} strokeWidth={1.5} />
           {timeAgo(issue.createdAt)}
         </span>

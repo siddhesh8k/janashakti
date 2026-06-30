@@ -35,15 +35,15 @@ This document catalogues **what JanaShakti does**, **why each feature matters**,
 - **GPS auto-location + reverse geocoding** — A single app-wide geolocation watch (`LocationProvider`) captures coordinates; **Google Geocoding API** (`utils/geocode.js`) converts them to a human address, editable before submit. *Why:* accurate, low-friction location without typing.
 - **Photo + short video reports** — Photos are compressed to inline base64 (< 900 KB, kept under Firestore's 1 MiB doc limit); short (≤ 10 s) videos upload to **Cloudinary** (unsigned preset) with only the URL stored. *Why:* fully free-tier (Firebase Spark) friendly — no paid Cloud Storage.
 
-### 4-Agent Intelligence Pipeline
+### Multi-Agent Intelligence Pipeline
 
-Orchestrated by `agents/orchestrator.js` (`orchestrateIssue`), each agent's output is **passed into the next** — Agent 3's routed department feeds Agent 4's prediction — and every step streams a live reasoning trace to the on-screen `AgentPipelineOverlay`.
+Orchestrated by `agents/orchestrator.js` (`orchestrateIssue`), each agent's output is **passed into the next** — Agent 3's routed department feeds Agent 4's prediction — and every step streams a live reasoning trace to the on-screen `AgentPipelineOverlay`. **Agents 2 & 3 reason in bounded ReAct loops** (multi-step tool use via Gemini function-calling, sharing `agents/reactLoop.js`), not single calls.
 
 | Agent | File | Model mode | Produces |
 |---|---|---|---|
 | **1 · Issue Analyzer** | `issueAnalyzer.js` | Gemini Vision + function-calling | type, severity, description, department, complaint, legal right, confidence, genuineness |
-| **2 · Duplicate & Recurrence Detector** | `duplicateDetector.js` | Firestore geo-query + Gemini text | `isDuplicate` (geo ±0.002° ≈ 200 m + similarity > 65%); `checkRecurrence` flags a **resolved** issue that recurs at the same spot within **365 days** → the new report links the prior complaint and the authority email carries a "RECURRENCE NOTICE" |
-| **3 · Authority Router** | `authorityRouter.js` | Gemini text + n8n | department, officer title, email subject, urgency, SLA hours, escalation path |
+| **2 · Duplicate & Recurrence Detector** | `duplicateDetector.js` | geo-query + **ReAct loop** | `isDuplicate` (geo ±0.002° ≈ 200 m + similarity > 65%); `checkRecurrence` flags a **resolved** issue that recurs at the same spot within **365 days** → the new report links the prior complaint and the authority email carries a "RECURRENCE NOTICE" |
+| **3 · Authority Router** | `authorityRouter.js` | **ReAct loop** + n8n | department, officer title, email subject, urgency, SLA hours, escalation path |
 | **4 · Resolution Predictor** | `resolutionPredictor.js` | Gemini text | priority score, predicted days, escalation risk, recommendation, factors |
 | **5 · Resolution Verifier** | `resolutionVerifier.js` | Gemini Vision | is the fix photo genuine & resolved? (flags, never blocks) |
 | **6 · ESG Impact Scorer** | `esgScorer.js` | Gemini text | post-resolution ESG score across E/S/G + UN SDG mapping |
@@ -179,7 +179,7 @@ Features no other civic platform has shipped together.
 
 ### Autonomous Resolution Coordinator (Agent 7)
 
-- **A true agent, not a pipeline step** — `agents/resolutionCoordinator.js` (`coordinateResolution`) runs a bounded **ReAct loop** (reason → act → observe → repeat). Where Agents 1–6 are each one fixed Gemini call, Agent 7 **decides its own next action** each turn, executes it for real, observes the result, and adapts.
+- **A true agent, not a pipeline step** — `agents/resolutionCoordinator.js` (`coordinateResolution`) runs a bounded **ReAct loop** (reason → act → observe → repeat). Agents 2 & 3 also reason in bounded ReAct loops (scoped to dedupe / routing) and Agents 1, 4, 5, 6 are single Gemini calls — but Agent 7 is the **open-ended** one: it **decides its own next action** each turn from a menu of real tools, executes it for real, observes the result, and adapts.
 - **Five real tools, all reused** — every turn it chooses one: **escalate** (`checkAndEscalate` — bumps the authority tier + fires n8n), **draft an RTI** (`generateRTI`), **re-route** (`routeToAuthority`), **request community verification** (`markNeedsVerification`), or **wait / done**. No new tool plumbing — it orchestrates the functions the app already ships.
 - **Observe-and-adapt + self-correction** — each tool's real result is fed into the next decision. If escalation can't run (already at the top tier), the agent *sees* that observation and pivots to a different action — visibly, in the trace, instead of silently retrying.
 - **Built on Gemini function-calling** — `callGeminiFunction` returns a typed `{ action, reasoning, expected_outcome }` (JSON-in-prose fallback). The model's **reasoning for every step is shown live** in the UI via the `onStep` stream.
@@ -194,11 +194,11 @@ Features no other civic platform has shipped together.
 - **Join Issue** — any signed-in user joins an issue as a civic role (Resident / Volunteer / NGO / Student / Social Worker / Municipal Employee) → a public contributor (`utils/collaboration.js` → `joinIssue`).
 - **Activity timeline** — immutable, append-only `issues/{id}/timeline` subcollection renders a GitHub-style log (created → joined → evidence → update → resolution-requested → verified → resolved / reopened).
 - **Evidence** — contributors upload photos/receipts/RTI responses (compressed **base64** in `issues/{id}/evidence`, no Cloud Storage); a **Gemini-Vision relevance gate** awards points only for relevant images, capped at 5/issue.
-- **Community verification** — a contributor marks an issue **Needs Verification**; nearby users vote Yes/Partial/No, **gated to within 2 km (live GPS)** + a **24h-since-join** rule; at the threshold (≥5 votes, ≥70% positive) it flips to **Resolved** (or reopens).
+- **Community verification** — a contributor marks an issue **Needs Verification**; nearby users vote Yes/Partial/No, **gated to within 500 m (live GPS)** + a **24h-since-join** rule; at the threshold (≥5 votes, ≥70% positive) it flips to **Resolved** (or reopens).
 - **Community Reputation** — extends `civicScore`: +5 join, +15 accepted evidence, +10 update, +5 verify vote, +25 on-close for **active** contributors (**claim-on-view**, no cross-user writes), with penalties for spam/false evidence. New badges: Neighborhood Hero, Road Guardian, Evidence Expert, Community Builder, Top Verifier.
 - **Lead moderation** — the reporter (and Civic-Authority holders) can open/close joining and remove contributors.
 - **Two-sided notifications** — the notification feed is no longer reporter-only: a contributor is now notified about issues they **joined** — resolved (→ open to **claim the +25**), status change, needs-their-verification vote, evidence/updates by other contributors, and removal. Purely client-derived (a second `useIssues` query on `contributedUids` + timeline reads → the pure `utils/notifications.js`), so the bell badge and `/notifications` both light up for contributors with no backend.
-- **Anti-abuse** — Vision evidence check, 5-evidence cap, 24h-to-vote, 2 km geo-gate, reporter-can't-double-earn. (Phone/device-fingerprint defenses are future work.)
+- **Anti-abuse** — Vision evidence check, 5-evidence cap, 24h-to-vote, 500 m geo-gate, reporter-can't-double-earn. (Phone/device-fingerprint defenses are future work.)
 - **Additive & free-plan** — layered on the existing app (representatives/authority/ESG untouched); base64 + subcollections, Lucide icons, Gemini Flash.
 
 ## 2.4 Gamification System
@@ -295,7 +295,7 @@ Three **Gemini-powered** Node dev agents (`tests/agents/`) that write, run, and 
 
 AI-generated tests live under `tests/ai/**` and are **isolated** from `npm test`, so a flaky AI test can never red the deterministic suite. Models: `gemini-2.5-flash → gemini-2.5-flash-lite → gemini-2.0-flash-lite`.
 
-**Latest run:** 158 deterministic tests passing across 23 files (`npm test`), plus the AI-generated tier under `tests/ai/**` — see `tests/reports/latest.html`.
+**Latest run:** 176 deterministic tests passing across 26 files (`npm test`), plus the AI-generated tier under `tests/ai/**` — see `tests/reports/latest.html`.
 
 ---
 

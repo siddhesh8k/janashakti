@@ -15,7 +15,7 @@ credits, and the security model.
 | **Language** | JSX only (React 18) — zero TypeScript |
 | **Build** | Vite 5 + `vite-plugin-pwa` (Workbox) |
 | **Data** | Google Firebase — Auth + Cloud Firestore + Hosting |
-| **AI** | Google Gemini 2.5 Flash (via Google AI Studio) — 6-agent pipeline |
+| **AI** | Google Gemini 2.5 Flash (via Google AI Studio) — 7-agent pipeline |
 | **Maps** | Google Maps JavaScript API + Geocoding API |
 | **Automation** | n8n Cloud — 4 webhook workflows |
 | **Media** | Photos inline as base64 in Firestore · short videos on Cloudinary |
@@ -33,7 +33,7 @@ credits, and the security model.
 ## 1. System Architecture Overview
 
 JanaShakti is a four-tier system. A user action in the **React PWA** writes to
-**Cloud Firestore**; the write is orchestrated through a **6-agent Gemini pipeline**;
+**Cloud Firestore**; the write is orchestrated through a **7-agent Gemini pipeline**;
 side effects (authority email, social amplification, escalation) are dispatched to
 **n8n Cloud** webhooks. Real-time `onSnapshot` listeners stream every change back to
 the UI.
@@ -288,11 +288,15 @@ data, English/Hindi, location-aware), `ErrorBoundary` (class component), `Instal
 
 ## 3. AI Agent Pipeline
 
-JanaShakti ships **6 Gemini-powered agents**. Four run as a coordinated pipeline at
-submit time via `agents/orchestrator.js`; the fifth (Verifier) runs when an authority
-uploads resolution proof; the sixth (ESG Impact Scorer) runs **after an issue is
-Resolved**. Every agent call routes through `utils/gemini.js`
-(`callGeminiText` / `callGeminiVision` / `callGeminiVisionFunction` /
+JanaShakti ships **7 Gemini-powered agents**. Four run as a coordinated pipeline at
+submit time via `agents/orchestrator.js` — and within that pipeline **Agents 2 (Duplicate
+Detector) and 3 (Authority Router) reason in bounded ReAct loops** (multi-step
+reason→tool→observe via Gemini function-calling, sharing `agents/reactLoop.js`), not single
+calls. The fifth (Verifier) runs when an authority uploads resolution proof; the sixth (ESG
+Impact Scorer) runs **after an issue is Resolved**; and the seventh (Resolution Coordinator,
+detailed below) is an **autonomous** ReAct agent triggered on demand for a stalled issue.
+Every agent call routes through `utils/gemini.js`
+(`callGeminiText` / `callGeminiFunction` / `callGeminiVision` / `callGeminiVisionFunction` /
 `callGeminiPlainText`) and logs to the `agents_log` collection via `logAgent()`.
 
 ```mermaid
@@ -304,12 +308,12 @@ flowchart TB
     Gate -->|no| Block([🚫 Blocked: 'Not a civic issue'])
     Gate -->|yes| A2
 
-    A2["<b>Agent 2 — Duplicate Detector</b><br/>duplicateDetector.js<br/>geo ±0.002° + Gemini similarity"]
+    A2["<b>Agent 2 — Duplicate Detector</b><br/>duplicateDetector.js<br/>geo ±0.002° · ReAct loop (compare/widen/decide)"]
     A2 -->|"isDuplicate &&<br/>similarity > 65%"| Dup([↩️ Confirm existing issue, STOP])
     A2 -->|unique| Save[(addDoc → issues)]
 
     Save --> A3
-    A3["<b>Agent 3 — Authority Router</b><br/>authorityRouter.js<br/>Gemini text → dept + SLA<br/>triggerN8N('authority_email')"]
+    A3["<b>Agent 3 — Authority Router</b><br/>authorityRouter.js<br/>ReAct loop (look-up/check/finalize) → dept + SLA<br/>triggerN8N('authority_email')"]
     A3 -->|"routedTo {dept, sla, urgency}"| A4
 
     A4["<b>Agent 4 — Resolution Predictor</b><br/>resolutionPredictor.js<br/>Gemini text → priority + ETA<br/>(receives Agent 3 output)"]
@@ -338,9 +342,9 @@ flowchart LR
     subgraph Orchestrator["orchestrateIssue() — sequenced, each guarded by withTimeout"]
         direction TB
         S1["emit: Analyzer done<br/>(from capture)"]
-        S2["run Agent 2 (10s timeout)"]
+        S2["run Agent 2 ReAct (15s timeout)"]
         S3["saveIssue() → docId"]
-        S4["run Agent 3 (20s timeout)"]
+        S4["run Agent 3 ReAct (26s timeout)"]
         S5["run Agent 4 (20s timeout)<br/><b>input ← Agent 3 output</b>"]
         S6["updateDoc routedTo+prediction"]
         S7["addDoc agent_runs"]
@@ -367,9 +371,9 @@ flowchart LR
 |---|---|
 | **Trigger** | First step inside `orchestrateIssue`, before save |
 | **Input** | new issue data (location, issueType, description) |
-| **Method** | Query `issues` where `status in [Reported, Verified, In Progress]` and `issueType ==`, then filter to **±0.002° (`NEARBY_GEO_BOUND`, ~200 m)**. If neighbours exist, ask Gemini for similarity |
-| **Prompt summary** | "Are these two civic issue reports describing the same problem? Report A (new) … Report B (existing) … Return `{ isDuplicate, similarity, reasoning }`." |
-| **Output** | `{ isDuplicate: (result && similarity > 65), existingIssueId, similarity }` |
+| **Method** | A **bounded ReAct loop** (`runReActLoop`, shared `reactLoop.js`, ≤3 turns). A tight geo scan (`status in [Reported, Verified, In Progress, Needs Verification]`, `issueType ==`, **±0.002° ≈ 200 m**, `NEARBY_GEO_BOUND`) seeds candidates; then each turn the model picks `compare` a candidate (Gemini similarity), `search_wider` (double the radius once), or terminal `decide`. Zero candidates → returns unique with **no AI call** (common fast path) |
+| **Prompt summary** | Per-turn action menu over the candidate list; the `compare` tool asks "Are these two civic issue reports describing the same problem? Report A (new) … Report B (existing) … Return `{ isDuplicate, similarity, reasoning }`." |
+| **Output** | `{ isDuplicate: (similarity > 65), existingIssueId, similarity, trace }` — `trace` is the step-by-step reasoning rendered in the Agents Showcase |
 | **Recurrence** | `checkRecurrence` additionally scans **Resolved** issues of the same type within **~200 m** that were resolved in the last **`RECURRENCE_WINDOW_DAYS` (365)** days. A match means the new report is a *recurrence* — the earlier fix didn't hold. The new issue is saved with `recurrenceOf` / `recurrenceOfComplaintId` / `recurrenceResolvedAt` / `recurrenceDaysSince` / `recurrenceCount`; the detector step flags it live; Agent 3's authority email cites the prior complaint; IssueDetail shows a "Recurring issue" banner linking the earlier report. **Deterministic** (no AI) — "same type, same spot, recently closed" is the recurrence grain |
 | **Firestore** | reads `issues`; writes `agents_log` (`duplicate_detector`) |
 | **Error handling** | Any failure → logs `success:false` and returns `{ isDuplicate:false }` (fail-open: a new report is created rather than lost); `checkRecurrence` fails-open to `{ isRecurrence:false }` |
@@ -379,8 +383,8 @@ flowchart LR
 |---|---|
 | **Trigger** | After save, inside orchestrator |
 | **Input** | issue (city, ward, type, severity, description) + `DEPARTMENT_MAP` default |
-| **Prompt summary** | "For this civic issue in India … Return `{ departmentName, departmentCode, wardOffice, officerTitle, emailSubject, urgencyLevel, slaHours, escalationPath }`." `departmentCode` & `slaHours` seeded from the static `DEPARTMENT_MAP` |
-| **Output** | router result **+** `{ emailSent:true, emailSentAt }` |
+| **Method** | A **bounded ReAct loop** (`runReActLoop`, ≤3 turns). Each turn the model picks `lookup_department` (canonical `DEPARTMENT_MAP` entry), `check_prior_routings` (Firestore — how similar past issues were routed and how many resolved), or terminal `finalize_routing` → `{ departmentName, departmentCode, wardOffice, officerTitle, emailSubject, urgencyLevel, slaHours, escalationPath }`. `departmentCode` & `slaHours` default from the static `DEPARTMENT_MAP` |
+| **Output** | router result **+** `{ emailSent, emailSentAt, trace }` (`trace` = the ReAct reasoning steps) |
 | **Side effect** | `triggerN8N('authority_email', …)` with the full complaint payload + `issueUrl` |
 | **Firestore** | writes `agents_log` (`authority_router`); orchestrator persists `routedTo` onto the issue |
 | **Error handling** | Logs failure, returns a deterministic fallback from `DEPARTMENT_MAP[issueType]` (`emailSent:false`) so routing always yields a department |
@@ -739,7 +743,7 @@ paths are unchanged). Any signed-in user **Joins** as a civic role (`utils/colla
 a Gemini-Vision relevance check before awarding **+15**, capped 5/issue) or **updates**
 (`postUpdate` → **+10**). The lead (reporter or a Civic-Authority holder) can open/close
 joining and remove contributors. A contributor marks the issue resolved → status
-**Needs Verification**; nearby users vote Yes/Partial/No (`submitVerificationVote`, a **2 km**
+**Needs Verification**; nearby users vote Yes/Partial/No (`submitVerificationVote`, a **500 m**
 live-GPS gate + a **24 h**-since-join rule for contributors); at the threshold (≥ N votes and
 ≥ 70 % positive, via `checkVerificationThreshold`) it flips to **Resolved** (or reopens). On
 close, each active contributor self-awards **+25** on view (`claimCloseReward`, idempotent via
@@ -1193,7 +1197,7 @@ and are **excluded from `npm test`** (which runs only the deterministic `src/**`
 chains Agent 1 → Agent 3. Vitest config + coverage (`@vitest/coverage-v8`,
 `json-summary`) is in `vite.config.js`.
 
-**Latest run:** 158 deterministic tests passing across 23 files (`npm test` — `src/**`
+**Latest run:** 176 deterministic tests passing across 26 files (`npm test` — `src/**`
 + hand-written `tests/unit`), plus the Gemini-generated tier under `tests/ai/`
 (unit · components · hooks · screen-smoke). Snapshot: `tests/reports/latest.html`.
 
@@ -1206,9 +1210,9 @@ the Google-collaborated hackathon track:
 
 | Google product | Where it powers JanaShakti |
 |---|---|
-| **Gemini 2.5 Flash** (Google AI Studio) | The entire 6-agent intelligence: photo analysis, duplicate detection, authority routing, resolution prediction, resolution verification, and post-resolution ESG impact scoring (E/S/G pillars + UN SDG mapping) — plus RTI letters, press releases, CSR reports, SEBI-BRSR-style corporate ESG reports, social captions, and city insights. Uses Gemini **vision**, **text**, and native **function-calling**. |
+| **Gemini 2.5 Flash** (Google AI Studio) | The entire 7-agent intelligence: photo analysis, duplicate detection and authority routing (both **bounded ReAct loops**), resolution prediction, resolution verification, post-resolution ESG impact scoring (E/S/G pillars + UN SDG mapping), and an **autonomous Resolution Coordinator** — plus RTI letters, press releases, CSR reports, SEBI-BRSR-style corporate ESG reports, social captions, and city insights. Uses Gemini **vision**, **text**, and native **function-calling** (incl. ReAct decision loops). |
 | **Firebase Authentication** | Google / Anonymous / Email sign-in. |
-| **Cloud Firestore** | Real-time database of record (8 collections) with offline IndexedDB persistence. |
+| **Cloud Firestore** | Real-time database of record (9 collections) with offline IndexedDB persistence. |
 | **Firebase Hosting** | Global SPA + PWA delivery with SPA rewrites and auth-popup COOP headers. |
 | **Google Maps JavaScript API** | Live issue map, severity markers, corporate/campus adopted-zone overlays, draggable location picker. |
 | **Google Maps Geocoding API** | Reverse-geocoding GPS to addresses and forward-geocoding org addresses. |

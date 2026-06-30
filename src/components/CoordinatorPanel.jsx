@@ -125,7 +125,7 @@ export default function CoordinatorPanel({ issue }) {
                 <Sparkles size={9} strokeWidth={2} /> Autonomous
               </span>
             </div>
-            <div style={{ fontSize: '11px', color: '#4a6280', marginTop: '1px' }}>Reasons &amp; acts, step by step</div>
+            <div style={{ fontSize: '11px', color: '#7689a3', marginTop: '1px' }}>Reasons &amp; acts, step by step</div>
           </div>
         </div>
         <button onClick={run} disabled={busy} style={{
@@ -172,7 +172,7 @@ export default function CoordinatorPanel({ issue }) {
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
             <Sparkles size={12} color={ACCENT} strokeWidth={1.8} />
-            <span style={{ fontSize: '10px', fontWeight: '600', color: '#4a6280',
+            <span style={{ fontSize: '10px', fontWeight: '600', color: '#7689a3',
               textTransform: 'uppercase', letterSpacing: '0.7px' }}>Coordinator summary</span>
           </div>
           <div style={{ fontSize: '12.5px', color: '#f0f6ff', marginTop: '5px', lineHeight: 1.5 }}>{result.summary}</div>

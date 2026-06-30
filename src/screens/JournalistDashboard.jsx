@@ -20,7 +20,7 @@ const FILTERS = ['All Stories', 'Critical', '30+ Days', 'High Pressure'];
 // Evidence pill — boolean criteria use green/gray check/cross; magnitude criteria
 // (days, escalation) pass an explicit color + icon and ignore the met flag.
 function EvidencePill({ met, label, color, icon: Icon }) {
-  const fg = color || (met ? '#16a34a' : '#4a6280');
+  const fg = color || (met ? '#16a34a' : '#7689a3');
   const bg = color ? color + '1a' : (met ? '#16a34a1a' : '#1a2f4a');
   const PillIcon = Icon || (met ? CheckCircle : XCircle);
   return (
@@ -58,7 +58,7 @@ function PressRelease({ release, onCopy }) {
       )}
       {release.dateline && (
         <div style={{
-          fontSize: '11px', color: '#4a6280', textTransform: 'uppercase',
+          fontSize: '11px', color: '#7689a3', textTransform: 'uppercase',
           letterSpacing: '0.5px', marginTop: '8px', marginBottom: '8px',
         }}>
           {release.dateline}
@@ -109,7 +109,7 @@ function PressRelease({ release, onCopy }) {
 
       {release.editorNote && (
         <p style={{
-          fontSize: '11px', color: '#4a6280', fontStyle: 'italic',
+          fontSize: '11px', color: '#7689a3', fontStyle: 'italic',
           borderTop: '0.5px solid #1a2f4a', paddingTop: '8px',
         }}>
           {release.editorNote}
@@ -122,9 +122,9 @@ function PressRelease({ release, onCopy }) {
 function StoryCard({ issue, myUid, release, generating, onGenerate, onClaim, onCopy }) {
   const days = daysOpenOf(issue);
   const claim = claimStatus(issue, myUid);
-  const daysColor = days >= 30 ? '#ef4444' : days >= 14 ? '#f97316' : '#4a6280';
+  const daysColor = days >= 30 ? '#ef4444' : days >= 14 ? '#f97316' : '#7689a3';
   const level = issue.escalationLevel || 0;
-  const escColor = ['#4a6280', '#eab308', '#f97316', '#ef4444'][Math.min(level, 3)];
+  const escColor = ['#7689a3', '#eab308', '#f97316', '#ef4444'][Math.min(level, 3)];
 
   return (
     <div style={{
@@ -159,8 +159,8 @@ function StoryCard({ issue, myUid, release, generating, onGenerate, onClaim, onC
 
       {/* Location + Complaint ID */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginBottom: '6px' }}>
-        <MapPin size={12} color="#4a6280" strokeWidth={1.5} />
-        <span style={{ fontSize: '11px', color: '#4a6280' }}>
+        <MapPin size={12} color="#7689a3" strokeWidth={1.5} />
+        <span style={{ fontSize: '11px', color: '#7689a3' }}>
           {issue.locationText?.split(',').slice(0, 2).join(',') || 'Unknown location'}
         </span>
       </div>
@@ -179,7 +179,7 @@ function StoryCard({ issue, myUid, release, generating, onGenerate, onClaim, onC
       {claim.state === 'locked' && (
         <div style={{ display: 'flex', alignItems: 'center', gap: '5px', marginBottom: '8px' }}>
           <Lock size={12} color="#ef4444" strokeWidth={1.5} />
-          <span style={{ fontSize: '11px', color: '#4a6280' }}>
+          <span style={{ fontSize: '11px', color: '#7689a3' }}>
             Claimed — available in {claim.hoursRemaining}h
           </span>
         </div>
@@ -388,7 +388,7 @@ export default function JournalistDashboard() {
             message="Issues need 14+ days and 5+ confirmations to become story-ready."
           />
         ) : visible.length === 0 ? (
-          <p style={{ fontSize: '13px', color: '#4a6280', textAlign: 'center', padding: '24px' }}>
+          <p style={{ fontSize: '13px', color: '#7689a3', textAlign: 'center', padding: '24px' }}>
             No story-ready issues match this filter.
           </p>
         ) : (

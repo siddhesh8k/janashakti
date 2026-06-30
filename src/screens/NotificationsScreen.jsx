@@ -80,7 +80,7 @@ export default function NotificationsScreen() {
                       {n.note}
                     </div>
                   )}
-                  <div style={{ fontSize: '11px', color: '#4a6280', marginTop: '4px' }}>
+                  <div style={{ fontSize: '11px', color: '#7689a3', marginTop: '4px' }}>
                     {timeAgo(n.time)}
                   </div>
                 </div>

@@ -2,12 +2,13 @@ import { useState } from 'react';
 import { ShieldCheck, Check, Minus, X } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { useToast } from '../ToastProvider';
-import { distanceKm } from '../../utils/geo';
+import { distanceKm, VERIFY_RADIUS_KM } from '../../utils/geo';
 import { submitVerificationVote, checkVerificationThreshold } from '../../utils/collaboration';
 import { bumpOrgCivic } from '../../utils/organizations';
 import { CIVIC_SCORE_POINTS } from '../../constants/issueTypes';
 
-const VOTE_RADIUS_KM = 2;       // loophole #6: voters must be near the issue
+// loophole #6: voters must be near the issue — same 500 m geofence as the IssueDetail
+// "verify resolved" gate (VERIFY_RADIUS_KM), so verification + resolution share one range.
 const MIN_JOIN_HOURS = 24;      // loophole #1: contributors wait 24h before voting
 
 const here = () => new Promise((resolve) => {
@@ -20,7 +21,7 @@ const here = () => new Promise((resolve) => {
 });
 
 // Shown only when status === 'Needs Verification'. Yes / Partial / No, gated by live
-// geolocation (within 2 km) and a 24h-since-join rule for contributors.
+// geolocation (within 500 m) and a 24h-since-join rule for contributors.
 export default function CommunityVerification({ issue }) {
   const { user, userProfile } = useAuth();
   const toast = useToast();
@@ -45,11 +46,11 @@ export default function CommunityVerification({ issue }) {
       if (hrs < MIN_JOIN_HOURS) { toast.show('Contributors can verify 24h after joining', 'error'); return; }
     }
     setBusy(true);
-    // 2 km live-location gate
+    // 500 m live-location gate (distanceKm takes lat1, lng1, lat2, lng2 — not objects).
     const pos = await here();
     if (!pos) { toast.show('Location needed to verify (enable GPS)', 'error'); setBusy(false); return; }
-    if (issue.location && distanceKm(pos, issue.location) > VOTE_RADIUS_KM) {
-      toast.show(`You must be within ${VOTE_RADIUS_KM} km of the issue to verify`, 'error'); setBusy(false); return;
+    if (issue.location && distanceKm(pos.lat, pos.lng, issue.location.lat, issue.location.lng) > VERIFY_RADIUS_KM) {
+      toast.show(`Move within ${VERIFY_RADIUS_KM * 1000}m of the issue to verify`, 'error'); setBusy(false); return;
     }
     const res = await submitVerificationVote(issue.id, user, choice);
     if (res?.ok) {
@@ -93,7 +94,7 @@ export default function CommunityVerification({ issue }) {
       <div style={{ height: '6px', backgroundColor: '#112035', borderRadius: '999px', overflow: 'hidden', marginBottom: '6px' }}>
         <div style={{ height: '100%', width: `${Math.min(100, (total / threshold) * 100)}%`, backgroundColor: '#a855f7' }} />
       </div>
-      <div style={{ fontSize: '11px', color: '#4a6280' }}>
+      <div style={{ fontSize: '11px', color: '#7689a3' }}>
         {total} of {threshold} votes · {positivePct}% positive
         {alreadyVoted ? ' · you verified' : ''}
       </div>

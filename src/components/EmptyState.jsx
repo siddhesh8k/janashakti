@@ -10,7 +10,7 @@ export default function EmptyState({ title = 'No items yet', message = '', icon:
         {title}
       </p>
       {message && (
-        <p style={{ fontSize: '13px', color: '#4a6280' }}>{message}</p>
+        <p style={{ fontSize: '13px', color: '#7689a3' }}>{message}</p>
       )}
     </div>
   );

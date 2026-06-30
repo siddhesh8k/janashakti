@@ -178,7 +178,7 @@ export default function InstallBanner() {
               Tap to see how
             </span>
           </span>
-          <ChevronRight size={16} color="#4a6280" strokeWidth={1.5} style={{ flexShrink: 0, marginLeft: 'auto' }} />
+          <ChevronRight size={16} color="#7689a3" strokeWidth={1.5} style={{ flexShrink: 0, marginLeft: 'auto' }} />
         </button>
         <button onClick={dismissIos} aria-label="Dismiss" style={{
           background: '#112035', borderLeft: '0.5px solid #1a2f4a', border: 'none',

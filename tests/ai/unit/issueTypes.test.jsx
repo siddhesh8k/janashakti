@@ -69,12 +69,12 @@ describe('issueTypes constants', () => {
       expect(Array.isArray(STATUS_PIPELINE)).toBe(true);
     });
 
-    it('should contain exactly 4 status levels', () => {
-      expect(STATUS_PIPELINE.length).toBe(4);
+    it('should contain exactly 5 status levels', () => {
+      expect(STATUS_PIPELINE.length).toBe(5);
     });
 
-    it('should contain "Reported", "Verified", "In Progress", and "Resolved"', () => {
-      expect(STATUS_PIPELINE).toEqual(['Reported', 'Verified', 'In Progress', 'Resolved']);
+    it('should contain Reported, Verified, In Progress, Needs Verification, and Resolved', () => {
+      expect(STATUS_PIPELINE).toEqual(['Reported', 'Verified', 'In Progress', 'Needs Verification', 'Resolved']);
     });
   });
 
@@ -91,10 +91,14 @@ describe('issueTypes constants', () => {
       expect(CIVIC_SCORE_POINTS).toHaveProperty('AUTHORITY_RESOLVE', 15);
     });
 
-    it('all point values should be positive numbers', () => {
+    it('reward values are positive and PENALTY_* values are negative', () => {
       for (const key in CIVIC_SCORE_POINTS) {
         expect(typeof CIVIC_SCORE_POINTS[key]).toBe('number');
-        expect(CIVIC_SCORE_POINTS[key]).toBeGreaterThan(0);
+        if (key.startsWith('PENALTY_')) {
+          expect(CIVIC_SCORE_POINTS[key]).toBeLessThan(0);
+        } else {
+          expect(CIVIC_SCORE_POINTS[key]).toBeGreaterThan(0);
+        }
       }
     });
   });

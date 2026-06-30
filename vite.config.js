@@ -24,6 +24,19 @@ export default defineConfig({
       },
     }),
   ],
+  // Vendor chunking — split the big, cache-stable deps (Firebase, React, charts) out of the
+  // main bundle for better long-term caching + parallel download (was one ~791 KB chunk).
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'vendor-firebase': ['firebase/app', 'firebase/auth', 'firebase/firestore'],
+          'vendor-react': ['react', 'react-dom', 'react-router-dom'],
+          'vendor-charts': ['recharts'],
+        },
+      },
+    },
+  },
   // Vitest config. `include` covers BOTH the existing src tests and the new tests/ tree
   // (hand-written core + AI-generated under tests/ai). The default `npm test` script
   // narrows to the deterministic set via positional args; `test:ai` / `test:analyze`

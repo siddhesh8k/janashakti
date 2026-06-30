@@ -121,12 +121,18 @@ describe('representatives.js', () => {
     it('should use the currently active list of representatives', () => {
       const newReps = [{ wardNo: 1, name: 'New Ward', city: 'New City', center: { lat: 0, lng: 0 }, radiusKm: 1, representative: { name: 'New Rep', party: 'New Party', since: '2024', phone: null } }];
       setRepresentatives(newReps);
+      // setRepresentatives MERGES claims over the built-in fallback (claims win by
+      // ward), so the new ward is added on top of the fallback wards.
       const rep = getRepresentativeForCity('New City');
       expect(rep).not.toBeNull();
       expect(rep.city).toBe('New City');
       expect(rep.representative.name).toBe('New Rep');
+      // Fallback Bangalore wards persist after a merge (they were not overridden),
+      // so Koramangala (ward 45) is still resolvable.
       const oldRep = getRepresentativeForCity('Bangalore');
-      expect(oldRep).toBeNull(); // Should not find Bangalore from the old list
+      expect(oldRep).not.toBeNull();
+      expect(oldRep.wardNo).toBe(45);
+      expect(oldRep.representative.name).toBe('Ramesh Kumar');
     });
   });
 
@@ -184,14 +190,19 @@ describe('representatives.js', () => {
     it('should use the currently active list of representatives', () => {
       const newReps = [{ wardNo: 1, name: 'New Ward', city: 'New City', center: { lat: 0, lng: 0 }, radiusKm: 1, representative: { name: 'New Rep', party: 'New Party', since: '2024', phone: null } }];
       setRepresentatives(newReps);
+      // The new ward is merged in, so a point inside its radius resolves to it.
       const ward = getWardRepresentative(0.001, 0.001); // Slightly off (0,0) but within radius 1
       expect(ward).not.toBeNull();
       expect(ward.wardNo).toBe(1);
       expect(ward.representative.name).toBe('New Rep');
 
-      // Ensure old wards are not found
+      // setRepresentatives MERGES over the built-in fallback rather than replacing
+      // it, so the original Koramangala ward is still active and a point inside its
+      // radius still resolves to it.
       const oldWard = getWardRepresentative(12.9360, 77.6250);
-      expect(oldWard).toBeNull();
+      expect(oldWard).not.toBeNull();
+      expect(oldWard.wardNo).toBe(45);
+      expect(oldWard.representative.name).toBe('Ramesh Kumar');
     });
 
     it('should handle coordinates exactly on the radius boundary (or very close)', () => {

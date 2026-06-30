@@ -18,6 +18,7 @@ import { shouldAutoPost } from '../utils/social';
 import { buildComplaintLetter } from '../utils/complaint';
 // (adoption now comes from the reporter's saved profile affiliation, not GPS zones)
 import { generateComplaintId } from '../utils/complaintId';
+import { detectCity } from '../utils/cityDetect';
 import { getWardRepresentative } from '../constants/representatives';
 import SeverityBadge from '../components/SeverityBadge';
 import AgentPipelineOverlay from '../components/AgentPipelineOverlay';
@@ -199,9 +200,7 @@ export default function ReportScreen() {
       }
 
       const finalAddress = editableAddress || locationText || 'Location not available';
-      const cityName = finalAddress.includes('Bangalore') || finalAddress.includes('Bengaluru') ? 'Bangalore' :
-        finalAddress.includes('Mumbai') ? 'Mumbai' :
-        finalAddress.includes('Delhi') ? 'Delhi' : 'Other';
+      const cityName = detectCity(finalAddress);
       // Tag the issue to the reporter's saved affiliation (set in Onboarding/Profile),
       // and the reporter is already tagged via that affiliation on their profile.
       const aff = userProfile?.affiliation;
@@ -681,7 +680,7 @@ export default function ReportScreen() {
                     position: 'absolute', top: '8px', right: '8px',
                     background: 'none', border: 'none', cursor: 'pointer',
                   }}>
-                    <Copy size={14} color="#4a6280" strokeWidth={1.5} />
+                    <Copy size={14} color="#7689a3" strokeWidth={1.5} />
                   </button>
                   <p style={{ fontSize: '12px', color: '#94a3b8', lineHeight: 1.6,
                               whiteSpace: 'pre-wrap' }}>{complaintLetter}</p>

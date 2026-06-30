@@ -10,7 +10,7 @@
 [![Firebase](https://img.shields.io/badge/Firebase-Auth%20%2B%20Firestore%20%2B%20Hosting-ffca28?logo=firebase&logoColor=black)](https://firebase.google.com)
 [![Gemini](https://img.shields.io/badge/Google%20Gemini-2.5%20Flash-4285F4?logo=google&logoColor=white)](https://ai.google.dev)
 [![Language](https://img.shields.io/badge/JSX-only%20·%20no%20TypeScript-16a34a)](#)
-[![Tests](https://img.shields.io/badge/tests-138%20passing-16a34a)](#-testing--ai-testing-pipeline)
+[![Tests](https://img.shields.io/badge/tests-176%20passing-16a34a)](#-testing--ai-testing-pipeline)
 
 **Report civic issues. Build community pressure. Hold authorities accountable.**
 
@@ -30,7 +30,7 @@ It closes the loop that every Indian civic-complaint app leaves open: **after yo
 - an **n8n automation layer** that emails the department and posts to social media;
 - a **time-based escalation engine** that climbs Ward Officer → Department Head → Commissioner → Media at 7 / 14 / 30 days;
 - a **transparency layer** where ward representatives — corporators, RWAs, volunteers, officers, NGOs, or independents — **self-enrol to represent their ward** and are ranked by their real resolution rate (with a neutral by-role view, never party-vs-party), journalists get story-ready feeds, and companies/colleges adopt civic zones;
-- a **civic collaboration layer** ("GitHub for civic issues") — anyone can **Join** an issue, post **evidence/updates** to a public **activity timeline**, and **community-verify** the fix (2 km geo-gated voting), earning **Community Reputation** and badges, with AI-checked evidence and anti-shill defenses.
+- a **civic collaboration layer** ("GitHub for civic issues") — anyone can **Join** an issue, post **evidence/updates** to a public **activity timeline**, and **community-verify** the fix (500 m geo-gated voting), earning **Community Reputation** and badges, with AI-checked evidence and anti-shill defenses.
 
 Built **end-to-end on Google's stack** (Gemini · Firebase · Google Maps) with **no custom backend** — all business logic runs client-side and is secured by Firestore Security Rules.
 
@@ -76,12 +76,12 @@ Built **end-to-end on Google's stack** (Gemini · Firebase · Google Maps) with 
 - GPS auto-location + Google reverse geocoding
 - Photo (inline base64) + short video (Cloudinary) reports
 
-**🧠 4-Agent Intelligence Pipeline (+5th verifier)**
-- Analyzer → Duplicate Detector → Authority Router → Resolution Predictor
-- Each agent's output feeds the next
-- Resolution Verifier judges fix photos (flags, never blocks)
-- Live reasoning trace + `agents_log` / `agent_runs` logging
-- Model fallback chain for rate-limit resilience
+**🧠 7-Agent Intelligence System**
+- Submit pipeline: Analyzer → Duplicate Detector → Authority Router → Resolution Predictor (each output feeds the next)
+- Detector & Router reason in **bounded ReAct loops** (multi-step tool use), not single prompts
+- Verifier judges fix photos (flags, never blocks); ESG Scorer rates resolved issues
+- Autonomous **Resolution Coordinator** (Agent 7) — ReAct loop that escalates / drafts RTI / re-routes
+- Live reasoning trace + `agents_log` / `agent_runs` logging + model fallback chain
 
 **🔥 Community Pressure System**
 - Pressure Meter (confirmation-threshold bar)
@@ -143,15 +143,15 @@ Built **end-to-end on Google's stack** (Gemini · Firebase · Google Maps) with 
 
 ## 🧠 The 7-Agent Gemini System
 
-All AI routes through `fetchAI()` in [`src/utils/gemini.js`](src/utils/gemini.js). Agents 1–4 run as a coordinated pipeline (`src/agents/orchestrator.js`) — **each agent's output feeds the next** — and every step streams a live trace to the on-screen overlay. Agent 7 is different: a **truly autonomous** agent that reasons and acts in a loop on demand.
+All AI routes through `fetchAI()` in [`src/utils/gemini.js`](src/utils/gemini.js). Agents 1–4 run as a coordinated pipeline (`src/agents/orchestrator.js`) — **each agent's output feeds the next** — and every step streams a live trace to the on-screen overlay. **Agents 2 & 3 reason in bounded ReAct loops** (multi-step tool use via Gemini function-calling, sharing `src/agents/reactLoop.js`), and Agent 7 is fully autonomous: it reasons and acts in a loop on demand.
 
 ```mermaid
 flowchart LR
     Photo([📷 Photo]) --> A1
     A1["<b>Agent 1</b><br/>Issue Analyzer<br/>Vision + fn-calling"]
-    A1 -->|genuine?| A2["<b>Agent 2</b><br/>Duplicate & Recurrence Detector<br/>geo 200m + text"]
+    A1 -->|genuine?| A2["<b>Agent 2</b><br/>Duplicate & Recurrence Detector<br/>geo 200m · ReAct loop"]
     A2 -->|unique| Save[(addDoc → issues)]
-    Save --> A3["<b>Agent 3</b><br/>Authority Router<br/>text + n8n email"]
+    Save --> A3["<b>Agent 3</b><br/>Authority Router<br/>ReAct loop + n8n email"]
     A3 -->|routedTo| A4["<b>Agent 4</b><br/>Resolution Predictor<br/>text · uses A3 output"]
     A4 --> Persist[(updateDoc + agent_runs trace)]
     Fix([🛠️ Fix photo]) --> A5["<b>Agent 5</b><br/>Resolution Verifier<br/>Vision · flags never blocks"]
@@ -162,8 +162,8 @@ flowchart LR
 | Agent | File | Gemini mode | Output |
 |---|---|---|---|
 | **1 · Issue Analyzer** | `agents/issueAnalyzer.js` | Vision + function-calling | type, severity, description, department, complaint, legal right, confidence, genuineness |
-| **2 · Duplicate & Recurrence Detector** | `agents/duplicateDetector.js` | Firestore geo + text | `isDuplicate` (±0.002° ≈ 200 m + similarity > 65%); `checkRecurrence` flags a **resolved** issue that recurs at the same spot within **365 days** → links the prior complaint + "RECURRENCE NOTICE" in the authority email |
-| **3 · Authority Router** | `agents/authorityRouter.js` | text + n8n | department, officer, email subject, urgency, SLA, escalation path |
+| **2 · Duplicate & Recurrence Detector** | `agents/duplicateDetector.js` | geo + **ReAct loop** (compare → widen → decide) | `isDuplicate` (±0.002° ≈ 200 m + similarity > 65%); `checkRecurrence` flags a **resolved** issue that recurs at the same spot within **365 days** → links the prior complaint + "RECURRENCE NOTICE" in the authority email |
+| **3 · Authority Router** | `agents/authorityRouter.js` | **ReAct loop** (look-up → check priors → finalize) + n8n | department, officer, email subject, urgency, SLA, escalation path |
 | **4 · Resolution Predictor** | `agents/resolutionPredictor.js` | text | priority score, predicted days, escalation risk, recommendation, factors |
 | **5 · Resolution Verifier** | `agents/resolutionVerifier.js` | Vision | is the fix genuine & resolved? |
 | **6 · ESG Impact Scorer** | `agents/esgScorer.js` | text | post-resolution ESG score across E/S/G + UN SDG mapping |
@@ -223,7 +223,7 @@ flowchart TB
     UI -->|uploadVideo| Cloud
     Host -->|serves bundle| Client
     N -.->|email| Dept["🏛️ Department"]
-    N -.->|@JanaShaktiApp| Social["📣 X / LinkedIn"]
+    N -.->|"@JanaShaktiApp"| Social["📣 X / LinkedIn"]
 ```
 
 - **No backend / no Cloud Functions** — Firestore is the single source of truth; security is enforced entirely by **Firestore Security Rules**.
@@ -245,9 +245,10 @@ janashakti/
 │   ├── index.css                # The only CSS file (per CLAUDE.md)
 │   ├── agents/                  # AI agents
 │   │   ├── orchestrator.js      # Coordinates the 4-agent submit pipeline
+│   │   ├── reactLoop.js         # Shared bounded ReAct-loop helper (Agents 2 & 3)
 │   │   ├── issueAnalyzer.js     # Agent 1 — Gemini Vision + function-calling
-│   │   ├── duplicateDetector.js # Agent 2 — geo + Gemini text
-│   │   ├── authorityRouter.js   # Agent 3 — Gemini text + n8n email
+│   │   ├── duplicateDetector.js # Agent 2 — geo + ReAct loop
+│   │   ├── authorityRouter.js   # Agent 3 — ReAct loop + n8n email
 │   │   ├── resolutionPredictor.js # Agent 4 — Gemini text
 │   │   ├── resolutionVerifier.js  # Agent 5 — Gemini Vision (resolution proof)
 │   │   ├── esgScorer.js           # Agent 6 — Gemini text (ESG + SDG)
@@ -257,14 +258,15 @@ janashakti/
 │   │   ├── IssueDetail.jsx · AnalyticsDashboard.jsx · AuthorityDashboard.jsx
 │   │   ├── AgentsShowcase.jsx · Leaderboard.jsx · JournalistDashboard.jsx
 │   │   └── NotificationsScreen.jsx · Onboarding.jsx
-│   ├── components/              # 26 reusable components (IssueCard, PressureMeter,
+│   ├── components/              # 30 reusable components (IssueCard, PressureMeter,
 │   │                            #   VoiceAssistant, BeforeAfterSlider, ChartCarousel…)
 │   ├── hooks/                   # useAuth · useUser · useIssues · useAgents ·
 │   │                            #   useLocation · useNotifications · usePagination
 │   ├── utils/                   # gemini · n8n · social · escalation · confirmIssue ·
 │   │                            #   rti · pressRelease · csrReport · story · exportToExcel ·
 │   │                            #   representatives · organizations · orgStats · geocode ·
-│   │                            #   googleMaps · cloudinary · complaintId · voiceAssistant …
+│   │                            #   googleMaps · cloudinary · complaintId · cityDetect ·
+│   │                            #   geo · voiceAssistant …
 │   ├── constants/               # issueTypes · departments · cities · representatives ·
 │   │                            #   mapStyle · voiceLang
 │   └── theme/                   # colors · typography · spacing · components
@@ -273,9 +275,9 @@ janashakti/
 │   ├── ai/                      # AI-GENERATED tests (isolated from `npm test`)
 │   ├── agents/                  # 3 Gemini testing agents (writer · analyzer · reporter)
 │   └── reports/                 # Branded HTML/JSON test reports
-├── scripts/                     # Admin-SDK importers (Excel data, representatives, logo)
+├── scripts/                     # Admin-SDK importers + maintenance (Excel data, representatives, logo, city backfill)
 ├── n8n/                         # n8n workflow JSON + setup README
-├── docs/                        # ARCHITECTURE · FEATURES · TIMELINE · SUBMISSION
+├── docs/                        # ARCHITECTURE · FEATURES · TIMELINE · SUBMISSION · E2E_CHECKLIST
 ├── public/                      # logo, icons, manifest.json
 ├── firestore.rules              # Field-level security rules
 ├── firestore.indexes.json       # Composite indexes
@@ -422,7 +424,7 @@ flowchart LR
 2. **Test Analyzer** — runs the suite, classifies failures (`MOCK_ISSUE / IMPORT_ERROR / LOGIC_BUG / TEST_ISSUE`) + health note.
 3. **Report Generator** — runs suite + coverage, Gemini health/risk assessment → branded HTML report.
 
-> **Latest run:** **158 deterministic tests passing** across 23 files (`npm test` — `src/**` + `tests/unit`), plus the Gemini-generated tier under `tests/ai/**`. Testing-agent models: `gemini-2.5-flash → gemini-2.5-flash-lite → gemini-2.0-flash`.
+> **Latest run:** **176 deterministic tests passing** across 26 files (`npm test` — `src/**` + `tests/unit`), plus the Gemini-generated tier under `tests/ai/**`. Testing-agent models: `gemini-2.5-flash → gemini-2.5-flash-lite → gemini-2.0-flash`.
 
 ---
 
@@ -468,7 +470,7 @@ A strict palette derived from the JanaShakti holographic-fist logo (see `src/the
 | Green (secondary) | `#16a34a` | Success, civic score, resolved |
 | Screen background | `#080f1e` | All screens |
 | Card background | `#0d1b2e` | All cards (0.5px border `#1a2f4a`) |
-| Text primary / body / muted | `#f0f6ff` / `#94a3b8` / `#4a6280` | Typography hierarchy |
+| Text primary / body / muted | `#f0f6ff` / `#94a3b8` / `#7689a3` | Typography hierarchy |
 
 Severity: Critical `#ef4444` · High `#f97316` · Medium `#eab308` · Low `#22c55e`.
 **Rules:** JSX only · Lucide icons only (no emoji UI icons) · string font-weights · LinkedIn-style cards.
@@ -511,6 +513,7 @@ Reference data (wards, representatives, civic baselines) is designed to ingest v
 | **[docs/FEATURES.md](docs/FEATURES.md)** | Every feature with what / why / how, gamification tables, issue types, cities, PWA |
 | **[docs/TIMELINE.md](docs/TIMELINE.md)** | Day-by-day build log (June 24–29, 2026) |
 | **[docs/SUBMISSION.md](docs/SUBMISSION.md)** | Official Vibe2Ship 2026 submission — overview, features, Google-tech detail |
+| **[docs/E2E_CHECKLIST.md](docs/E2E_CHECKLIST.md)** | Manual end-to-end QA checklist — report → verify → resolve, collaboration, gamification |
 
 ---
 
