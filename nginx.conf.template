@@ -3,7 +3,6 @@
 # untouched because they aren't environment variables).
 server {
     listen       ${PORT};
-    listen       [::]:${PORT};
     server_name  _;
 
     root   /usr/share/nginx/html;
