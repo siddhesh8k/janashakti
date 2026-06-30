@@ -15,6 +15,10 @@
     "test:analyze": "node tests/agents/testAnalyzer.js",
     "test:report": "node tests/agents/reportGenerator.js",
     "test:full": "node tests/agents/testWriter.js && node tests/agents/reportGenerator.js",
+    "test:e2e": "playwright test",
+    "test:e2e:report": "playwright show-report e2e/report",
+    "emulators": "firebase emulators:start --only auth,firestore",
+    "test:e2e:emulator": "firebase emulators:exec --only auth,firestore --project janashakti-9ded8 \"playwright test --config playwright.emulator.config.js\"",
     "deploy": "vite build && firebase deploy --only hosting,firestore:rules,firestore:indexes",
     "deploy:rules": "firebase deploy --only firestore:rules,firestore:indexes",
     "import:data": "node scripts/importExcel.mjs"
@@ -28,6 +32,7 @@
     "recharts": "^2.12.0"
   },
   "devDependencies": {
+    "@playwright/test": "^1.61.1",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",
     "@testing-library/user-event": "^14.6.1",

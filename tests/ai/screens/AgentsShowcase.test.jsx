@@ -26,6 +26,9 @@ describe('AgentsShowcase Smoke Test', () => {
     );
 
   beforeEach(() => {
+    // Mirror the real useAgents() shape: all seven stat keys (the screen reads
+    // esgScored + coordinated too) plus an empty recentRuns and loading:false so the
+    // loaded view — including the empty-state for runs — actually renders.
     mockUseAgents.mockReturnValue({
       stats: {
         analyzed: 0,
@@ -33,6 +36,8 @@ describe('AgentsShowcase Smoke Test', () => {
         authoritiesNotified: 0,
         predictionsGenerated: 0,
         resolutionsVerified: 0,
+        esgScored: 0,
+        coordinated: 0,
       },
       recentRuns: [],
       loading: false,
@@ -59,8 +64,9 @@ describe('AgentsShowcase Smoke Test', () => {
   it('displays the "No pipeline runs yet" message when there are no recent runs', () => {
     const { container } = renderComponent();
     expect(container).toBeTruthy();
+    // Match the exact copy the component renders (see AgentsShowcase.jsx empty state).
     expect(
-      screen.getByText('No pipeline runs yet. Report an issue to watch all 4 agents collaborate.')
+      screen.getByText('No pipeline runs yet. Report an issue to watch the agents collaborate.')
     ).toBeInTheDocument();
   });
 

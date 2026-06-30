@@ -12,3 +12,14 @@ firebase-debug.log
 firestore-debug.log
 scripts/serviceAccountKey.json
 logo-full.png
+e2e/report/
+e2e/.artifacts/
+test-results/
+playwright-report/
+.playwright/
+# Generated test artifacts (not source of truth)
+coverage/
+tests/reports/report-*.json
+tests/reports/test-report-*.html
+*-debug.log
+firebase-export-*/

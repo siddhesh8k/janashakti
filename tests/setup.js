@@ -18,6 +18,7 @@ vi.mock('../src/firebase', () => ({
   signInWithEmail: vi.fn(),
   logOut: vi.fn(),
   createUserProfile: vi.fn(),
+  completeRedirectSignIn: vi.fn(() => Promise.resolve(null)),
 }));
 
 // Mock Firestore SDK.
@@ -48,6 +49,8 @@ vi.mock('firebase/auth', () => ({
   onAuthStateChanged: vi.fn((auth, cb) => { cb({ uid: 'test-user-123', displayName: 'Test Citizen' }); return vi.fn(); }),
   GoogleAuthProvider: vi.fn(),
   signInWithPopup: vi.fn(),
+  signInWithRedirect: vi.fn(),
+  getRedirectResult: vi.fn(() => Promise.resolve(null)),
   signInAnonymously: vi.fn(),
   createUserWithEmailAndPassword: vi.fn(),
   signInWithEmailAndPassword: vi.fn(),

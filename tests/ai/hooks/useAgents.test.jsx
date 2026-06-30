@@ -28,6 +28,7 @@ describe('useAgents', () => {
       predictionsGenerated: 0,
       resolutionsVerified: 0,
       esgScored: 0,
+      coordinated: 0,
     });
     expect(result.current.recentRuns).toEqual([]);
     expect(result.current.loading).toBe(true);
@@ -58,19 +59,23 @@ describe('useAgents', () => {
       predictionsGenerated: 0,
       resolutionsVerified: 0,
       esgScored: 0,
+      coordinated: 0,
     });
     expect(result.current.recentRuns).toEqual([]);
   });
 
   it('should fetch and update stats and recent runs with mocked data', async () => {
-    // Mock getCountFromServer for each call in the Promise.all array
+    // Mock getCountFromServer for each call in the Promise.all array (order matches
+    // the hook: issue_analyzer, duplicate_detector, authority_router,
+    // resolution_predictor, resolution_verifier, esg_scorer, resolution_coordinator)
     getCountFromServer
       .mockResolvedValueOnce({ data: () => ({ count: 10 }) }) // issue_analyzer
       .mockResolvedValueOnce({ data: () => ({ count: 5 }) })  // duplicate_detector
       .mockResolvedValueOnce({ data: () => ({ count: 3 }) })  // authority_router
       .mockResolvedValueOnce({ data: () => ({ count: 8 }) })  // resolution_predictor
       .mockResolvedValueOnce({ data: () => ({ count: 2 }) })  // resolution_verifier
-      .mockResolvedValueOnce({ data: () => ({ count: 1 }) }); // esg_scorer
+      .mockResolvedValueOnce({ data: () => ({ count: 1 }) })  // esg_scorer
+      .mockResolvedValueOnce({ data: () => ({ count: 4 }) }); // resolution_coordinator
 
     // Mock getDocs for agent_runs
     const mockRunDocs = [
@@ -97,6 +102,7 @@ describe('useAgents', () => {
       predictionsGenerated: 8,
       resolutionsVerified: 2,
       esgScored: 1,
+      coordinated: 4,
     });
 
     expect(result.current.recentRuns).toHaveLength(2);
@@ -123,7 +129,7 @@ describe('useAgents', () => {
     // Stats should still be default zeros as that part of the fetch might succeed
     expect(result.current.stats).toEqual({
       analyzed: 0, duplicatesCaught: 0, authoritiesNotified: 0,
-      predictionsGenerated: 0, resolutionsVerified: 0, esgScored: 0,
+      predictionsGenerated: 0, resolutionsVerified: 0, esgScored: 0, coordinated: 0,
     });
     // Recent runs should be an empty array because the error is caught and handled
     expect(result.current.recentRuns).toEqual([]);
@@ -155,7 +161,7 @@ describe('useAgents', () => {
     // Stats should remain at initial zeros due to the error
     expect(result.current.stats).toEqual({
       analyzed: 0, duplicatesCaught: 0, authoritiesNotified: 0,
-      predictionsGenerated: 0, resolutionsVerified: 0, esgScored: 0,
+      predictionsGenerated: 0, resolutionsVerified: 0, esgScored: 0, coordinated: 0,
     });
     // Recent runs should still be an empty array (or whatever getDocs returns)
     expect(result.current.recentRuns).toEqual([]);

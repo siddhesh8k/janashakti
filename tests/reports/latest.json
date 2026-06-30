@@ -1,28 +1,28 @@
 {
-  "timestamp": "2026-06-29T11:19:04.521Z",
+  "timestamp": "2026-06-30T14:37:37.224Z",
   "app": "JanaShakti",
   "version": "1.0.0",
   "tests": {
-    "total": 410,
-    "passed": 410,
+    "total": 468,
+    "passed": 468,
     "failed": 0,
     "skipped": 0,
     "passRate": 100,
-    "duration": "189.14s"
+    "duration": "201.20s"
   },
   "coverage": {
-    "lines": 48.35,
-    "functions": 41.3,
-    "branches": 70.65,
-    "statements": 48.35
+    "lines": 49.54,
+    "functions": 42.22,
+    "branches": 69.9,
+    "statements": 49.54
   },
   "source": {
-    "files": 96,
-    "jsx": 43,
-    "js": 53
+    "files": 113,
+    "jsx": 52,
+    "js": 61
   },
-  "testFiles": 52,
-  "aiAnalysis": "1. Health assessment:\nThe test suite currently passes all 410 tests, indicating stability for the covered features. However, the very low line coverage of 48.35% means a significant portion of the application remains untested, masking potential issues.\n\n2. Top 3 areas that need more test coverage:\na. User authentication, authorization, and profile management flows.\nb. End-to-end issue submission, including image/location uploads and Gemini AI processing integration.\nc. Error handling and data integrity across all Firebase interactions and API calls.\n\n3. Risk assessment:\nThe biggest untested risk for production deployment is critical user flows failing silently due to untested integration points (Firebase, Gemini) or edge cases, leading to lost reports or data corruption.\n\n4. One specific recommendation for improving test quality:\nImplement end-to-end (E2E) tests for the most critical user journeys, such as reporting an issue from start to finish, to validate the entire system's functionality and integration points.",
+  "testFiles": 60,
+  "aiAnalysis": "Health Assessment:\nThe test suite shows excellent stability with a 100% pass rate. However, the very low 49.54% line coverage indicates a significant portion of the application's code remains untested, leaving many features vulnerable to undetected issues.\n\nTop 3 areas that need more test coverage:\n1.  Core User Reporting Workflow: Submission, validation, media uploads, and location tagging.\n2.  Firebase/Gemini Integrations: Data persistence, authentication, and AI processing logic.\n3.  Error Handling & Edge Cases: Robustness for invalid inputs, network issues, and API failures.\n\nRisk Assessment:\nThe biggest untested risk for production deployment is the potential for critical user reporting workflows to fail due to unhandled edge cases or integration issues with Firebase/Gemini, leading to data loss or incorrect report processing.\n\nSpecific Recommendation:\nImplement end-to-end (E2E) tests for the complete report submission and viewing lifecycle, ensuring critical user journeys are validated across all integrated components.",
   "status": "PASS",
   "generatedBy": "Gemini 2.5 Flash (Agent 3)"
 }

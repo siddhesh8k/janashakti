@@ -11,12 +11,31 @@ const { mockOnSnapshot, mockUpdateDoc, mockUnsubscribe } = vi.hoisted(() => ({
   mockUnsubscribe: vi.fn(),
 }));
 
-// Override Firestore (setup.js mocks it globally; per-file mock takes precedence).
+// Override Firestore (setup.js mocks it globally; per-file mock takes precedence, so it
+// must re-declare EVERY export the screen's dependency tree touches — IssueDetail pulls in
+// useIssueTimeline / useIssueEvidence and the collaboration utils, which use query helpers,
+// getDoc(s), addDoc, serverTimestamp, arrayUnion and runTransaction).
 vi.mock('firebase/firestore', () => ({
   doc: vi.fn(),
+  collection: vi.fn(),
   onSnapshot: mockOnSnapshot,
   updateDoc: mockUpdateDoc,
   increment: vi.fn((n) => n),
+  query: vi.fn(),
+  where: vi.fn(),
+  orderBy: vi.fn(),
+  limit: vi.fn(),
+  getDoc: vi.fn(() => Promise.resolve({ exists: () => false, data: () => ({}) })),
+  getDocs: vi.fn(() => Promise.resolve({ docs: [], size: 0 })),
+  getCountFromServer: vi.fn(() => Promise.resolve({ data: () => ({ count: 0 }) })),
+  setDoc: vi.fn(() => Promise.resolve()),
+  addDoc: vi.fn(() => Promise.resolve({ id: 'mock-doc-123' })),
+  deleteDoc: vi.fn(() => Promise.resolve()),
+  arrayUnion: vi.fn(),
+  arrayRemove: vi.fn(),
+  serverTimestamp: vi.fn(() => new Date()),
+  runTransaction: vi.fn(() => Promise.resolve()),
+  writeBatch: vi.fn(() => ({ set: vi.fn(), update: vi.fn(), delete: vi.fn(), commit: vi.fn(() => Promise.resolve()) })),
 }));
 
 // Heavy / external utilities and components — no-op stubs.
@@ -104,8 +123,11 @@ describe('IssueDetail (Smoke Test)', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     // Default: snapshot resolves to a valid existing issue.
-    mockOnSnapshot.mockImplementation((_docRef, cb) => {
-      cb({ exists: () => true, id: mockIssue.id, data: () => mockIssue });
+    // The same onSnapshot mock backs three listeners — IssueDetail's single issue doc
+    // (reads exists()/id/data()) and the timeline/evidence collection listeners (read
+    // .docs). The snapshot satisfies both shapes so none of them throws.
+    mockOnSnapshot.mockImplementation((_ref, cb) => {
+      cb({ exists: () => true, id: mockIssue.id, data: () => mockIssue, docs: [] });
       return mockUnsubscribe;
     });
   });
@@ -119,8 +141,8 @@ describe('IssueDetail (Smoke Test)', () => {
   });
 
   it('displays "Issue not found" when the issue does not exist', async () => {
-    mockOnSnapshot.mockImplementation((_docRef, cb) => {
-      cb({ exists: () => false, id: 'non-existent-id', data: () => null });
+    mockOnSnapshot.mockImplementation((_ref, cb) => {
+      cb({ exists: () => false, id: 'non-existent-id', data: () => null, docs: [] });
       return mockUnsubscribe;
     });
     const { container } = renderAt('non-existent-id');

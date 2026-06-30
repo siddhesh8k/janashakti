@@ -40,6 +40,12 @@ describe('useNotifications', () => {
   // Firestore Timestamp object) as `time` — the hook does NOT convert it to ISO.
   // Items where changedBy === uid, changedBy === 'seed', or status === 'Reported'
   // are skipped.
+  // The mock returns the SAME issues for both useIssues calls (owned + joined) and
+  // the issues carry no `userId`, so they are never treated as "owned" by the
+  // contributor branch. That branch therefore also emits a `status` notification
+  // (key `c-<id>-sh-1`) for the InProgress change made by `another-user`. Resolved /
+  // Reported / Needs Verification status changes are excluded from the contributor
+  // branch, so only the InProgress one is duplicated.
   it('should generate notifications for status changes made by users other than the reporter or "seed"', () => {
     const issueId = 'issue-status-change';
     const now = new Date();
@@ -67,7 +73,9 @@ describe('useNotifications', () => {
 
     const { result } = renderHook(() => useNotifications(MOCK_UID));
 
-    expect(result.current.items).toHaveLength(2); // Two valid status change notifications
+    // Two owner-side notifications (InProgress + Resolved) plus one contributor-side
+    // notification for the same InProgress change (see comment above).
+    expect(result.current.items).toHaveLength(3);
 
     const resolved = result.current.items.find((i) => i.kind === 'resolved');
     expect(resolved).toMatchObject({
@@ -79,12 +87,24 @@ describe('useNotifications', () => {
       time: resolvedTs, // raw Timestamp object, unchanged
     });
 
-    const status = result.current.items.find((i) => i.kind === 'status');
-    expect(status).toMatchObject({
+    // Owner-side status notification for the InProgress change.
+    const ownerStatus = result.current.items.find((i) => i.key === `${issueId}-sh-1`);
+    expect(ownerStatus).toMatchObject({
       key: `${issueId}-sh-1`, // Index 1 in statusHistory
       issueId,
       kind: 'status',
       title: 'Your Bug report was marked InProgress',
+      note: '',
+      time: inProgressTs, // raw Timestamp object, unchanged
+    });
+
+    // Contributor-side status notification for the same InProgress change.
+    const contributorStatus = result.current.items.find((i) => i.key === `c-${issueId}-sh-1`);
+    expect(contributorStatus).toMatchObject({
+      key: `c-${issueId}-sh-1`, // Index 1 in statusHistory, contributor branch
+      issueId,
+      kind: 'status',
+      title: 'A Bug you joined is now InProgress',
       note: '',
       time: inProgressTs, // raw Timestamp object, unchanged
     });
@@ -191,22 +211,31 @@ describe('useNotifications', () => {
 
     const { result } = renderHook(() => useNotifications(MOCK_UID));
 
-    // Expected notifications:
-    // 1. Status change from issue-time-formats (validDate, raw Timestamp object)
+    // Expected notifications (the mock returns the same issues for the owned + joined
+    // useIssues calls, and the issues have no `userId`, so the contributor branch also
+    // runs — see Test Case 3 comment):
+    // 1. Owner status change from issue-time-formats (validDate, raw Timestamp object)
     // 2. Milestone from issue-time-formats (validIsoString)
     // 3. Escalation from issue-time-formats (validIsoString)
     // 4. Social from issue-time-formats (validIsoString)
     // 5. Milestone from issue-date-object (validDateObject -> ISO string)
-    expect(result.current.items).toHaveLength(5);
+    // 6. Contributor status change from issue-time-formats (validDate, raw Timestamp)
+    // The null/undefined-changedAt status entries and the null-updatedAt milestone are
+    // filtered out by the truthy-time filter.
+    expect(result.current.items).toHaveLength(6);
 
     // Every kept item has a truthy time.
     result.current.items.forEach((item) => {
       expect(item.time).toBeTruthy();
     });
 
-    // Status-history item keeps the raw Timestamp object as time.
+    // Owner-side status-history item keeps the raw Timestamp object as time.
     expect(result.current.items).toContainEqual(
       expect.objectContaining({ key: `${issueId}-sh-0`, time: validDateTs })
+    );
+    // Contributor-side status-history item keeps the same raw Timestamp object as time.
+    expect(result.current.items).toContainEqual(
+      expect.objectContaining({ key: `c-${issueId}-sh-0`, time: validDateTs })
     );
     // Derived events convert to ISO strings.
     expect(result.current.items).toContainEqual(
