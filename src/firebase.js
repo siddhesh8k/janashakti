@@ -1,7 +1,8 @@
 import { initializeApp } from 'firebase/app';
-import { getAuth, GoogleAuthProvider, signInWithPopup, signInAnonymously,
-         createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut } from 'firebase/auth';
-import { getFirestore, initializeFirestore, persistentLocalCache,
+import { getAuth, connectAuthEmulator, GoogleAuthProvider, signInWithPopup, signInWithRedirect,
+         getRedirectResult, signInAnonymously, createUserWithEmailAndPassword,
+         signInWithEmailAndPassword, signOut } from 'firebase/auth';
+import { getFirestore, initializeFirestore, connectFirestoreEmulator, persistentLocalCache,
          persistentMultipleTabManager, doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
 
 const firebaseConfig = {
@@ -39,7 +40,45 @@ try {
 }
 export const db = firestore;
 
+// Local development / deterministic E2E against the Firebase Emulator Suite. Enabled by
+// VITE_FIREBASE_EMULATOR=1 — routes Auth + Firestore to the local emulators instead of the
+// production project, so tests can sign up, write, and resolve issues without touching real
+// data or quota. A no-op in normal builds (the flag is unset).
+if (import.meta.env.VITE_FIREBASE_EMULATOR === '1') {
+  try {
+    connectAuthEmulator(auth, 'http://127.0.0.1:9099', { disableWarnings: true });
+    connectFirestoreEmulator(db, '127.0.0.1', 8080);
+    console.info('[firebase] Using local emulators (auth:9099, firestore:8080)');
+  } catch (e) {
+    console.error('[firebase emulator]:', e.message);
+  }
+}
+
 const googleProvider = new GoogleAuthProvider();
+googleProvider.setCustomParameters({ prompt: 'select_account' });
+
+// An installed PWA runs in a standalone window. A Google sign-in POPUP cannot return
+// its result to that window (there's no opener to postMessage back to) — on iOS this
+// hangs/crashes the app and on desktop the popup is blocked — so in standalone mode we
+// must use a full-page REDIRECT instead. matchMedia covers Android/desktop installed
+// PWAs; navigator.standalone covers iOS Safari "Add to Home Screen".
+const isStandalonePWA = () => {
+  if (typeof window === 'undefined') return false;
+  return window.matchMedia?.('(display-mode: standalone)')?.matches === true
+    || window.matchMedia?.('(display-mode: fullscreen)')?.matches === true
+    || window.matchMedia?.('(display-mode: minimal-ui)')?.matches === true
+    || window.navigator?.standalone === true;
+};
+
+// Popup errors that mean "this environment can't do popups" — fall back to redirect.
+const POPUP_FALLBACK_CODES = new Set([
+  'auth/popup-blocked',
+  'auth/cancelled-popup-request',
+  'auth/popup-closed-by-user',
+  'auth/operation-not-supported-in-this-environment',
+  'auth/web-storage-unsupported',
+  'auth/internal-error',
+]);
 
 const createUserProfile = async (user, extra = {}) => {
   try {
@@ -112,14 +151,46 @@ const createUserProfile = async (user, extra = {}) => {
 };
 
 export const signInWithGoogle = async () => {
+  // Installed PWA → go straight to a full-page redirect (popups can't return here).
+  if (isStandalonePWA()) {
+    await signInWithRedirect(auth, googleProvider);
+    return null; // page navigates away; completeRedirectSignIn() finishes on return.
+  }
   try {
     const result = await signInWithPopup(auth, googleProvider);
     await createUserProfile(result.user, { authMethod: 'google' });
     return result.user;
   } catch (err) {
+    // Popup unsupported/blocked in this browser context — fall back to redirect.
+    if (POPUP_FALLBACK_CODES.has(err?.code)) {
+      await signInWithRedirect(auth, googleProvider);
+      return null;
+    }
     console.error('[signInWithGoogle]:', err);
     throw err;
   }
+};
+
+// Completes a redirect-based Google sign-in after the app reloads, and provisions the
+// user profile (the popup path does this inline; the redirect path lands here instead).
+// Memoized so the many useAuth() consumers all share a single getRedirectResult call.
+let redirectPromise = null;
+export const completeRedirectSignIn = () => {
+  if (!redirectPromise) {
+    redirectPromise = (async () => {
+      try {
+        const result = await getRedirectResult(auth);
+        if (result?.user) {
+          await createUserProfile(result.user, { authMethod: 'google' });
+          return result.user;
+        }
+      } catch (err) {
+        console.error('[completeRedirectSignIn]:', err);
+      }
+      return null;
+    })();
+  }
+  return redirectPromise;
 };
 
 export const signInAsGuest = async () => {

@@ -357,6 +357,18 @@ export default function AnalyticsDashboard() {
     issues.reduce((acc, i) => { acc[i.status] = (acc[i.status] || 0) + 1; return acc; }, {})
   ).map(([name, value]) => ({ name, value, color: STATUS_COLORS[name] || '#475569' }));
 
+  // Per-city breakdown (the page is "City Intelligence" — show issues w.r.t. each city).
+  // city is tagged at report time (Bangalore / Mumbai / Delhi / Other).
+  const byCity = Object.entries(
+    issues.reduce((acc, i) => {
+      const c = i.city || 'Other';
+      if (!acc[c]) acc[c] = { total: 0, open: 0, resolved: 0 };
+      acc[c].total += 1;
+      if (i.status === 'Resolved') acc[c].resolved += 1; else acc[c].open += 1;
+      return acc;
+    }, {})
+  ).map(([name, v]) => ({ name, ...v })).sort((a, b) => b.total - a.total);
+
   const trend = trendSeries(issues);
 
   const tooltipStyle = {
@@ -507,6 +519,43 @@ export default function AnalyticsDashboard() {
 
         {/* Charts — carousel to keep the page compact (swipe / arrows / dots) */}
         <ChartCarousel slides={chartSlides} />
+
+        {/* Issues by City — real per-city breakdown with open/resolved + resolution rate */}
+        {byCity.length > 0 && (
+          <div style={{ marginTop: '20px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '12px' }}>
+              <MapPin size={16} color="#00d4ff" strokeWidth={1.5} />
+              <span style={{ fontSize: '14px', fontWeight: '600', color: '#f0f6ff' }}>Issues by City</span>
+            </div>
+            {byCity.map((c) => {
+              const pct = c.total ? Math.round((c.resolved / c.total) * 100) : 0;
+              return (
+                <div key={c.name} style={{
+                  backgroundColor: '#0d1b2e', borderRadius: '12px',
+                  border: '0.5px solid #1a2f4a', padding: '12px 14px', marginBottom: '8px',
+                }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '8px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0 }}>
+                      <MapPin size={14} color="#00d4ff" strokeWidth={1.5} style={{ flexShrink: 0 }} />
+                      <span style={{ fontSize: '14px', fontWeight: '600', color: '#f0f6ff',
+                                     overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{c.name}</span>
+                    </div>
+                    <span style={{ fontSize: '13px', fontWeight: '700', color: '#00d4ff', flexShrink: 0 }}>{c.total}</span>
+                  </div>
+                  <div style={{ display: 'flex', gap: '14px', marginTop: '6px', alignItems: 'center' }}>
+                    <span style={{ fontSize: '11px', color: '#f97316' }}>{c.open} open</span>
+                    <span style={{ fontSize: '11px', color: '#16a34a' }}>{c.resolved} resolved</span>
+                    <span style={{ fontSize: '11px', color: '#4a6280', marginLeft: 'auto' }}>{pct}% resolved</span>
+                  </div>
+                  <div style={{ height: '5px', borderRadius: '999px', backgroundColor: '#112035',
+                                marginTop: '8px', overflow: 'hidden' }}>
+                    <div style={{ height: '100%', borderRadius: '999px', width: `${pct}%`, backgroundColor: '#16a34a' }} />
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
 
         {/* Wall of Shame */}
         {wallOfShameIssues.length > 0 && (

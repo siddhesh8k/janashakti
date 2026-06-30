@@ -49,7 +49,7 @@ export const orchestrateIssue = async ({ analysis, issueData, tempId, onStep, sa
   emit({ agent: 'detector', name: 'Duplicate Detector', status: 'running', summary: 'Scanning 200m radius…' });
   let duplicate = { isDuplicate: false, existingIssueId: null };
   try {
-    duplicate = await withTimeout(checkDuplicate(issueData, tempId), 10000, 'Duplicate check');
+    duplicate = await withTimeout(checkDuplicate(issueData, tempId), 15000, 'Duplicate check');
   } catch (e) {
     console.error('[Orchestrator/detector]:', e);
   }
@@ -58,6 +58,7 @@ export const orchestrateIssue = async ({ analysis, issueData, tempId, onStep, sa
       agent: 'detector', status: 'done',
       summary: `Duplicate found (${duplicate.similarity ?? 0}% match)`,
       detail: 'Routing your confirmation to the existing report.',
+      reasoning: duplicate.trace,
     });
     // Caller owns the confirm/redirect path. Nothing is saved.
     return { duplicate, analysis, routing: null, prediction: null, steps, docId: null, finishedAt: Date.now() };
@@ -84,9 +85,10 @@ export const orchestrateIssue = async ({ analysis, issueData, tempId, onStep, sa
       agent: 'detector', status: 'done',
       summary: `Recurrence of a resolved issue (#${recurrence.recurrenceCount})`,
       detail: `Previously resolved ${recurrence.daysSinceResolved}d ago${recurrence.priorComplaintId ? ` · ${recurrence.priorComplaintId}` : ''} — the earlier fix did not hold. Flagged for the authority.`,
+      reasoning: duplicate.trace,
     });
   } else {
-    emit({ agent: 'detector', status: 'done', summary: 'No duplicate — new report', detail: 'Unique within 200m.' });
+    emit({ agent: 'detector', status: 'done', summary: 'No duplicate — new report', detail: 'Unique within 200m.', reasoning: duplicate.trace });
   }
 
   // ── Save the issue (caller's addDoc) → docId ──
@@ -96,11 +98,15 @@ export const orchestrateIssue = async ({ analysis, issueData, tempId, onStep, sa
   emit({ agent: 'router', name: 'Authority Router', status: 'running', summary: 'Routing to department…' });
   let routing = null;
   try {
-    routing = await withTimeout(routeToAuthority(issueToSave, docId), 20000, 'Authority routing');
+    const routerResult = await withTimeout(routeToAuthority(issueToSave, docId), 26000, 'Authority routing');
+    // Keep the verbose reasoning trace out of the persisted routedTo — surface it on the step.
+    const { trace: routerTrace, ...routingClean } = routerResult || {};
+    routing = routingClean;
     emit({
       agent: 'router', status: 'done',
       summary: routing?.departmentName || 'Department notified',
       detail: `${routing?.urgencyLevel || 'Routine'} · SLA ${routing?.slaHours ?? '—'}h${routing?.emailSent ? ' · email sent' : ''}`,
+      reasoning: routerTrace,
     });
   } catch (e) {
     console.error('[Orchestrator/router]:', e);

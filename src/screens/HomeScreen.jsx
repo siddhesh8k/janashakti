@@ -141,7 +141,7 @@ export default function HomeScreen() {
               style={{
                 width: '100%', backgroundColor: '#112035', color: '#f0f6ff',
                 border: '0.5px solid #1a2f4a', borderRadius: '10px',
-                padding: '12px 14px', fontSize: '14px', marginBottom: '8px',
+                padding: '12px 14px', fontSize: '14px',
                 outline: 'none', boxSizing: 'border-box', marginBottom: '12px',
               }} />
             <div style={{ display: 'flex', gap: '8px' }}>
