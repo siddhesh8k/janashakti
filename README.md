@@ -277,7 +277,7 @@ janashakti/
 │   └── reports/                 # Branded HTML/JSON test reports
 ├── scripts/                     # Admin-SDK importers + maintenance (Excel data, representatives, logo, city backfill)
 ├── n8n/                         # n8n workflow JSON + setup README
-├── docs/                        # ARCHITECTURE · FEATURES · TIMELINE · SUBMISSION
+├── docs/                        # ARCHITECTURE · FEATURES · TIMELINE · SUBMISSION · E2E_CHECKLIST
 ├── public/                      # logo, icons, manifest.json
 ├── firestore.rules              # Field-level security rules
 ├── firestore.indexes.json       # Composite indexes
@@ -513,6 +513,7 @@ Reference data (wards, representatives, civic baselines) is designed to ingest v
 | **[docs/FEATURES.md](docs/FEATURES.md)** | Every feature with what / why / how, gamification tables, issue types, cities, PWA |
 | **[docs/TIMELINE.md](docs/TIMELINE.md)** | Day-by-day build log (June 24–29, 2026) |
 | **[docs/SUBMISSION.md](docs/SUBMISSION.md)** | Official Vibe2Ship 2026 submission — overview, features, Google-tech detail |
+| **[docs/E2E_CHECKLIST.md](docs/E2E_CHECKLIST.md)** | Manual end-to-end QA checklist — report → verify → resolve, collaboration, gamification |
 
 ---
 
