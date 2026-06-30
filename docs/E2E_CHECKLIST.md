@@ -37,8 +37,16 @@ If all six pass, the core loop is healthy. Full coverage below.
 
 ## 3. Agent pipeline (`AgentPipelineOverlay` + `AgentsShowcase`)
 - [ ] Overlay streams a live trace: **Analyzer → Detector → Router → Predictor**, each "done".
-- [ ] `/agents` shows the **ESG summary card** + 6 agent cards (incl. **Agent 6 — ESG Impact Scorer**) and an **"ESG Scored"** live stat.
+- [ ] `/agents` shows the **ESG summary card** + 7 agent cards (incl. **Agent 6 — ESG Impact Scorer** and **Agent 7 — Resolution Coordinator**) and **"ESG Scored"** + **"Coordinated"** live stats.
 - [ ] The pipeline flow diagram ends `… → Resolved → ESG Score → SDG Tagged`.
+
+## 3b. Autonomous Resolution Coordinator (Agent 7)
+- [ ] On an **owned, unresolved** issue (`IssueDetail`, below AI Prediction) the **Run AI Coordinator** button appears and is hidden once Resolved.
+- [ ] Running it streams a **live reasoning trace** (each step: action name + reasoning + observation), ending with a summary; a re-run is possible.
+- [ ] On a **stalled/overdue** issue it actually **escalates** (tier bumps, n8n fires) and/or **drafts an RTI** (Copy RTI draft works) — and feeds each result into the next decision.
+- [ ] On an issue **already at the top escalation tier**, escalate **no-ops** and the agent **pivots** to a different action (self-correction visible in the trace).
+- [ ] As an **enrolled authority** (civicScore ≥ 100), the **AI Coordinator** action on `AuthorityDashboard` runs the same loop with **no permission error**.
+- [ ] A new `agent_runs` trace (kind `coordinator`) appears in **Recent Pipeline Runs**, and the issue gains a `coordination` field.
 
 ## 4. Map & community (`MapScreen`, `IssueDetail`)
 - [ ] Map shows severity-coloured markers; adopted-zone overlay renders (if any).
@@ -77,8 +85,9 @@ If all six pass, the core loop is healthy. Full coverage below.
 
 ## 9. PWA install
 - [ ] **Android Chrome / desktop Chrome** — after ~30s an **Install** banner appears; installs the app.
-- [ ] **iOS Safari** — after a few seconds a **"tap Share → Add to Home Screen"** hint appears (no Install button — expected). Adding to Home Screen launches the app **full-screen/standalone**. *(Chrome/Firefox on iOS won't show the hint — by design.)*
-- [ ] Dismissing the iOS hint is remembered (doesn't reappear on reload).
+- [ ] **iOS Safari** — after a few seconds a tappable **"Add JanaShakti to your Home Screen — Tap to see how"** banner appears; tapping it opens a step-by-step guide (Share → Add to Home Screen → Add). Following it launches the app **full-screen/standalone**.
+- [ ] **iOS non-Safari** (Chrome/Firefox/in-app webview) — the banner still appears; its guide tells the user to **open the page in Safari first** (install is Safari-only on iOS).
+- [ ] Dismissing the iOS banner/guide is remembered (doesn't reappear on reload).
 
 ## 10. Resilience
 - [ ] With n8n webhooks unset/down, the app still works (fire-and-forget, never blocks).
@@ -95,6 +104,7 @@ If all six pass, the core loop is healthy. Full coverage below.
 - [ ] **Lead moderation** (reporter / Civic-Authority): close/reopen joining + remove a contributor (× on their row).
 - [ ] **Refresh prediction** (owner, on the AI Prediction card) re-runs Agent 4 with live contributor/evidence/activity signals.
 - [ ] **Profile** shows **Community Reputation** + Joined / Evidence / Verify-Votes tiles + new badges (Neighborhood Hero, Road Guardian, Evidence Expert, Community Builder, Top Verifier).
+- [ ] **Contributor notifications** (the joining account's bell): after the owner/authority advances the joined issue, the **bell shows unread** and `/notifications` lists *"A {type} you joined is now In Progress"*, *"…needs your verification"*, and on resolve *"…resolved — open to claim +25"* (tapping it opens the issue and auto-claims). A 2nd contributor posting evidence/an update produces an **activity** notification; being **removed** produces a *"You were removed…"* notification. Reporter-side notifications are unchanged.
 - [ ] Existing features intact: representatives, authority resolve, ESG, escalation, leaderboard.
 
 ---

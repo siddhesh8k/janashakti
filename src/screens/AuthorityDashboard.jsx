@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { doc, updateDoc, setDoc, serverTimestamp, arrayUnion, increment } from 'firebase/firestore';
-import { AlertTriangle, Clock, CheckCircle, Camera, ThumbsUp, Timer, ShieldCheck, Download, Lock } from 'lucide-react';
+import { AlertTriangle, Clock, CheckCircle, Camera, ThumbsUp, Timer, ShieldCheck, Download, Lock, Workflow } from 'lucide-react';
 import { db, auth } from '../firebase';
 import { compressImage } from '../utils/gemini';
 import { useIssues } from '../hooks/useIssues';
@@ -20,6 +20,7 @@ import { exportToExcel } from '../utils/exportToExcel';
 import { useAuth } from '../hooks/useAuth';
 import { bumpPublicProfile } from '../utils/publicProfile';
 import { AUTHORITY_THRESHOLD, CIVIC_SCORE_POINTS } from '../constants/issueTypes';
+import CoordinatorPanel from '../components/CoordinatorPanel';
 
 // Which department owns an issue (derived from its type, same mapping the agents/
 // import use). Falls back to the routed name, then the general dept.
@@ -41,6 +42,7 @@ export default function AuthorityDashboard() {
   const [resolving, setResolving] = useState(null);
   const [noteFor, setNoteFor] = useState(null);
   const [noteText, setNoteText] = useState('');
+  const [coordinatingFor, setCoordinatingFor] = useState(null);
   const [authorized, setAuthorized] = useState(false);
   const [enrolling, setEnrolling] = useState(false);
   // Authority actions require BOTH allowlist enrolment AND current qualification
@@ -415,34 +417,52 @@ export default function AuthorityDashboard() {
               )}
 
               {canAct && (
-                <div style={{ display: 'flex', gap: '6px' }}>
-                  {issue.status === 'Reported' && (
-                    <button onClick={() => handleStatusUpdate(issue.id, 'Verified')} style={{
-                      flex: 1, padding: '8px', backgroundColor: '#3b82f61a',
-                      color: '#3b82f6', border: '0.5px solid #3b82f640',
+                <>
+                  <div style={{ display: 'flex', gap: '6px' }}>
+                    {issue.status === 'Reported' && (
+                      <button onClick={() => handleStatusUpdate(issue.id, 'Verified')} style={{
+                        flex: 1, padding: '8px', backgroundColor: '#3b82f61a',
+                        color: '#3b82f6', border: '0.5px solid #3b82f640',
+                        borderRadius: '8px', fontSize: '11px', fontWeight: '600', cursor: 'pointer',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px',
+                      }}>
+                        <ThumbsUp size={12} strokeWidth={1.5} /> Verify
+                      </button>
+                    )}
+                    <button onClick={() => { setNoteFor(issue.id); setNoteText(''); }} style={{
+                      flex: 1, padding: '8px', backgroundColor: '#f973161a',
+                      color: '#f97316', border: '0.5px solid #f9731640',
+                      borderRadius: '8px', fontSize: '11px', fontWeight: '600', cursor: 'pointer',
+                    }}>In Progress</button>
+                    <button onClick={() => {
+                      setResolving(issue.id);
+                      fileRef.current?.click();
+                    }} style={{
+                      flex: 1, padding: '8px', backgroundColor: '#16a34a1a',
+                      color: '#16a34a', border: '0.5px solid #16a34a40',
                       borderRadius: '8px', fontSize: '11px', fontWeight: '600', cursor: 'pointer',
                       display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px',
                     }}>
-                      <ThumbsUp size={12} strokeWidth={1.5} /> Verify
+                      <Camera size={12} strokeWidth={1.5} /> Resolved
                     </button>
+                  </div>
+                  {issue.status !== 'Resolved' && (
+                    <div style={{ marginTop: '8px', paddingTop: '8px', borderTop: '0.5px solid #14233b' }}>
+                      <button onClick={() => setCoordinatingFor(coordinatingFor === issue.id ? null : issue.id)} style={{
+                        width: '100%', padding: '9px', backgroundColor: '#a855f71a',
+                        color: '#a855f7', border: '0.5px solid #a855f740', borderRadius: '8px',
+                        fontSize: '11px', fontWeight: '700', cursor: 'pointer',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '5px',
+                      }}>
+                        <Workflow size={13} strokeWidth={1.8} />
+                        {coordinatingFor === issue.id ? 'Hide AI Coordinator' : 'AI Coordinator — auto-decide next step'}
+                      </button>
+                    </div>
                   )}
-                  <button onClick={() => { setNoteFor(issue.id); setNoteText(''); }} style={{
-                    flex: 1, padding: '8px', backgroundColor: '#f973161a',
-                    color: '#f97316', border: '0.5px solid #f9731640',
-                    borderRadius: '8px', fontSize: '11px', fontWeight: '600', cursor: 'pointer',
-                  }}>In Progress</button>
-                  <button onClick={() => {
-                    setResolving(issue.id);
-                    fileRef.current?.click();
-                  }} style={{
-                    flex: 1, padding: '8px', backgroundColor: '#16a34a1a',
-                    color: '#16a34a', border: '0.5px solid #16a34a40',
-                    borderRadius: '8px', fontSize: '11px', fontWeight: '600', cursor: 'pointer',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px',
-                  }}>
-                    <Camera size={12} strokeWidth={1.5} /> Resolved
-                  </button>
-                </div>
+                  {coordinatingFor === issue.id && (
+                    <div className="anim-slide-up" style={{ marginTop: '8px' }}><CoordinatorPanel issue={issue} /></div>
+                  )}
+                </>
               )}
             </div>
           );

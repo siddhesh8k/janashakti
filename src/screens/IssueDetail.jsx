@@ -38,6 +38,7 @@ import LoadingSkeleton from '../components/LoadingSkeleton';
 import ESGScoreCard from '../components/ESGScoreCard';
 import SDGBadge from '../components/SDGBadge';
 import { scoreESGImpact } from '../agents/esgScorer';
+import CoordinatorPanel from '../components/CoordinatorPanel';
 import { predictResolution } from '../agents/resolutionPredictor';
 import { ISSUE_SDG_MAP } from '../constants/esg';
 
@@ -566,6 +567,9 @@ export default function IssueDetail() {
             </div>
           </div>
         )}
+
+        {/* AI Resolution Coordinator (Agent 7) — owner-triggered autonomous loop */}
+        {auth.currentUser?.uid === issue.userId && <CoordinatorPanel issue={issue} />}
 
         {/* Escalation Chain */}
         {issue.status !== 'Resolved' && (() => {

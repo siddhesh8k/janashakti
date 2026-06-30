@@ -58,13 +58,21 @@ function IssueCard({ issue, compact = false, fillHeight = false }) {
         border: '0.5px solid #1a2f4a', padding: '14px 14px 14px 16px',
         marginBottom: fillHeight ? 0 : '10px', cursor: 'pointer',
         borderLeft: `3px solid ${borderColor}`,
-        transition: 'background-color 0.15s',
+        transition: 'background-color 0.15s ease, transform 0.18s ease, box-shadow 0.18s ease',
         // Equal-height cards (e.g. the Critical Alerts carousel): fill the wrapper
         // and push the meta row to the bottom so every tile is the same size.
         ...(fillHeight && { height: '100%', width: '100%', display: 'flex', flexDirection: 'column' }),
       }}
-      onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#152540'}
-      onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#0d1b2e'}
+      onMouseEnter={(e) => {
+        e.currentTarget.style.backgroundColor = '#152540';
+        e.currentTarget.style.transform = 'translateY(-2px)';
+        e.currentTarget.style.boxShadow = '0 12px 28px -20px rgba(0, 0, 0, 0.95)';
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.backgroundColor = '#0d1b2e';
+        e.currentTarget.style.transform = 'translateY(0)';
+        e.currentTarget.style.boxShadow = 'none';
+      }}
     >
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0, flex: 1 }}>

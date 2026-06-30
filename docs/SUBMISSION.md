@@ -13,7 +13,7 @@
 
 ## Solution Overview
 
-JanaShakti turns the everyday frustration of broken civic infrastructure into organised, accountable action. A citizen photographs a pothole, dead streetlight, or overflowing bin; a **5-agent Google Gemini pipeline** instantly classifies it, scores its severity, drafts a formal complaint, identifies the citizen's legal rights, detects duplicates, routes it to the correct municipal department (emailing them via n8n), and predicts a resolution timeline. The community then verifies the issue under a GPS geofence, building visible pressure; authority powers to advance and resolve issues are **earned through civic points** (the Civic Authority badge unlocks at 100 points), not granted freely. If it's ignored, a time-based engine **auto-escalates** it from Ward Officer to Department Head to Commissioner to Media at 7/14/30 days. JanaShakti uniquely closes the accountability loop: it generates **RTI applications**, ranks **elected representatives** by real resolution rate, equips **journalists** with story-ready feeds and AI press releases, lets **companies and colleges** adopt civic zones with auto-generated CSR reports, and answers questions through a bilingual **Gemini voice assistant** grounded in live data. Once an issue is resolved, a **6th Gemini agent** scores its **ESG impact** across Environmental, Social, and Governance pillars and maps it to the **UN Sustainable Development Goals** — keeping civic action not just accountable, but measurable — all on Google's stack with **no custom backend**.
+JanaShakti turns the everyday frustration of broken civic infrastructure into organised, accountable action. A citizen photographs a pothole, dead streetlight, or overflowing bin; a **5-agent Google Gemini pipeline** instantly classifies it, scores its severity, drafts a formal complaint, identifies the citizen's legal rights, detects duplicates, routes it to the correct municipal department (emailing them via n8n), and predicts a resolution timeline. The community then verifies the issue under a GPS geofence, building visible pressure; authority powers to advance and resolve issues are **earned through civic points** (the Civic Authority badge unlocks at 100 points), not granted freely. If it's ignored, a time-based engine **auto-escalates** it from Ward Officer to Department Head to Commissioner to Media at 7/14/30 days. JanaShakti uniquely closes the accountability loop: it generates **RTI applications**, ranks **elected representatives** by real resolution rate, equips **journalists** with story-ready feeds and AI press releases, lets **companies and colleges** adopt civic zones with auto-generated CSR reports, and answers questions through a bilingual **Gemini voice assistant** grounded in live data. Once an issue is resolved, a **6th Gemini agent** scores its **ESG impact** across Environmental, Social, and Governance pillars and maps it to the **UN Sustainable Development Goals** — keeping civic action not just accountable, but measurable. And when an issue stalls, a **7th, *autonomous* agent — the Resolution Coordinator** — reasons over it in a ReAct loop and decides + executes its own next action (escalate / draft RTI / re-route / request verification), adapting to each tool's result. All on Google's stack with **no custom backend**.
 
 *(~190 words)*
 
@@ -85,7 +85,7 @@ flowchart LR
     A3 -->|"branded HTML + JSON"| Rep2[(tests/reports/latest.html)]
 ```
 
-Latest run: **138 deterministic tests passing** across 21 files (`npm test`), plus the AI-generated tier under `tests/ai/**`. Models: `gemini-2.5-flash → gemini-2.5-flash-lite → gemini-2.0-flash`.
+Latest run: **158 deterministic tests passing** across 23 files (`npm test`), plus the AI-generated tier under `tests/ai/**`. Models: `gemini-2.5-flash → gemini-2.5-flash-lite → gemini-2.0-flash`.
 
 ### 15. Civic Collaboration Layer
 - **Every issue is a public collaboration space: any citizen *Joins* (as a civic role), posts evidence/updates to an immutable activity timeline, and the community *verifies* the fix (2 km live-GPS + 24h-since-join gates) — earning Community Reputation + badges. AI-checked evidence, claim-on-view rewards, lead moderation.** *GitHub-for-civic-issues — every report becomes an open, evidence-backed, community-verified effort, not just a complaint.*
@@ -105,7 +105,7 @@ Latest run: **138 deterministic tests passing** across 21 files (`npm test`), pl
 | **recharts** | ^2.12.0 | Analytics charts (pie / bar / line) |
 | **lucide-react** | ^0.383.0 | Icon system (no emoji UI icons) |
 | **firebase** (web SDK) | ^10.12.0 | Auth + Cloud Firestore + Hosting |
-| **Google Gemini 2.5 Flash** | API (AI Studio) | All AI: 5 agents + RTI, press release, CSR, insights, captions, voice |
+| **Google Gemini 2.5 Flash** | API (AI Studio) | All AI: 7 agents (incl. the autonomous Resolution Coordinator) + RTI, press release, CSR, insights, captions, voice |
 | **Google Maps JavaScript API** | API | Map, severity markers, adopted-zone overlays |
 | **Google Maps Geocoding API** | API | Reverse + forward geocoding |
 | **n8n Cloud** | 14-day trial | 4 automation webhooks (+ optional AI proxy) |
@@ -145,6 +145,7 @@ All Gemini calls route through `fetchAI()` in `utils/gemini.js` and use Gemini's
 | 14 | **Report Generator Agent** | Text — produces a codebase health/risk assessment and top coverage gaps for the branded HTML/JSON test report. |
 | 15 | **Agent 6 — ESG Impact Scorer** | Text — scores a resolved issue across Environmental / Social / Governance (each /10, with a plain-English impact + metric per pillar); the overall score is a deterministic weighted blend (E×0.35 + S×0.35 + G×0.30), and the issue is mapped to UN SDGs with a one-line highlight. |
 | 16 | **Corporate ESG Report Generator** | Text — produces a SEBI-BRSR-style corporate ESG report for the Area Adoption / CSR program. |
+| 17 | **Agent 7 — Resolution Coordinator** (*autonomous*) | Function-calling **ReAct loop** — given a stalled issue's live state + everything it has already tried, Gemini returns one `{ action, reasoning, expected_outcome }` per turn. The agent executes the chosen tool for real (escalate / draft RTI / re-route / request verification), observes the result, and decides again — adapting and self-correcting (e.g. pivots when escalation is maxed). Bounded to 4 turns; every decision's reasoning is shown live. |
 
 **Model fallback chain** (verified against the live key, June 2026; falls through on 404/429/503):
 `gemini-2.5-flash → gemini-2.5-flash-lite → gemini-2.0-flash` (app) ·
@@ -219,7 +220,7 @@ flowchart LR
     User <--> UI
     UI <--> Auth
     UI <-->|onSnapshot / getDocs| FS
-    UI -->|"5-agent pipeline"| Gem
+    UI -->|"7-agent system"| Gem
     UI --> Maps
     UI -->|"triggerN8N()"| N8N
     Host -->|serves bundle| PWA

@@ -1,7 +1,8 @@
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { doc, updateDoc } from 'firebase/firestore';
-import { Bell, Clock, CheckCircle, ShieldAlert, Users, Twitter } from 'lucide-react';
+import { Bell, Clock, CheckCircle, ShieldAlert, Users, Twitter,
+         Award, ThumbsUp, Activity, UserMinus } from 'lucide-react';
 import { db } from '../firebase';
 import { useAuth } from '../hooks/useAuth';
 import { useNotifications } from '../hooks/useNotifications';
@@ -14,6 +15,11 @@ const KIND_ICON = {
   milestone:  { icon: Users,       color: '#00d4ff' },
   escalation: { icon: ShieldAlert, color: '#f97316' },
   social:     { icon: Twitter,     color: '#00d4ff' },
+  // Contributor-side kinds
+  reward:     { icon: Award,       color: '#16a34a' },
+  vote:       { icon: ThumbsUp,    color: '#a855f7' },
+  activity:   { icon: Activity,    color: '#3b82f6' },
+  removed:    { icon: UserMinus,   color: '#ef4444' },
 };
 
 const timeAgo = (iso) => {
@@ -46,7 +52,7 @@ export default function NotificationsScreen() {
           <EmptyState
             icon={Bell}
             title="No notifications yet"
-            message="Updates on your reported issues will show up here."
+            message="Updates on issues you reported or joined will show up here."
           />
         ) : (
           items.map(n => {

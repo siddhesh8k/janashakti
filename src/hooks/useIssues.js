@@ -4,8 +4,11 @@ import { collection, query, orderBy, limit,
 import { db } from '../firebase';
 
 // Server-side ordered query. The filter+createdAt combos are backed by the
-// composite indexes in firestore.indexes.json (userId / severity / status × createdAt).
-export function useIssues({ userId, severity, status, limitCount = 20 } = {}) {
+// composite indexes in firestore.indexes.json (userId / severity / status / contributedUids × createdAt).
+// `contributorUid` filters to issues the user has contributed to (array-contains on
+// `contributedUids`) — used by the notification feed. Pass a sentinel (e.g. 'none') rather
+// than a falsy value so a signed-out caller matches nothing instead of the global feed.
+export function useIssues({ userId, severity, status, contributorUid, limitCount = 20 } = {}) {
   const [issues, setIssues] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -16,6 +19,7 @@ export function useIssues({ userId, severity, status, limitCount = 20 } = {}) {
       if (userId) constraints.push(where('userId', '==', userId));
       if (severity) constraints.push(where('severity', '==', severity));
       if (status) constraints.push(where('status', '==', status));
+      if (contributorUid) constraints.push(where('contributedUids', 'array-contains', contributorUid));
       constraints.push(orderBy('createdAt', 'desc'), limit(limitCount));
 
       const q = query(collection(db, 'issues'), ...constraints);
@@ -37,7 +41,7 @@ export function useIssues({ userId, severity, status, limitCount = 20 } = {}) {
       setLoading(false);
       console.error('[useIssues]:', err);
     }
-  }, [userId, severity, status, limitCount]);
+  }, [userId, severity, status, contributorUid, limitCount]);
 
   return { issues, loading, error };
 }

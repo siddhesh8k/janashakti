@@ -261,7 +261,7 @@ flowchart LR
 | `useAgents` | `getCountFromServer` ×6 + `getDocs` | `{ stats, recentRuns, loading }` | aggregates `agents_log` (incl. `esg_scorer`); reads `agent_runs` |
 | `useGeoLocation` | `watchPosition` | `{ location, locationText, accuracy, error }` | calls Google reverse-geocode |
 | `useSharedLocation` | `LocationProvider` context | same shape as `useGeoLocation` | one app-wide GPS watch shared by all screens (de-dupes the former per-screen watches) |
-| `useNotifications(uid)` | derives from `useIssues` | `{ items }` | none (client-derived from statusHistory + flags) |
+| `useNotifications(uid)` | derives from `useIssues` (×2: owned + joined) + timeline reads | `{ items }` | client-derived, two-sided: reporter events (own issues) **+ contributor events** (issues where `uid ∈ contributedUids`): resolved→claim +25, status, needs-verification vote, evidence/updates by others, removal. Pure builder in `utils/notifications.js` |
 | `usePagination(items, pageSize)` | local state | `{ visible, hasMore, remaining, showMore }` | none (client-side "Show more") |
 
 ### 2.5 Shared components
@@ -416,6 +416,42 @@ flowchart LR
 | **Firestore writes** | `updateDoc(issues)` → `esgScore` + `esgScoredAt`; then increments the **reporter's** `users` doc (`esgIssuesResolved`, `totalPeopleImpacted` via `increment()`, `sdgsContributed` via `arrayUnion()`) inside its **own** try/catch — a cross-user stats write denied by the rules never nullifies the already-saved score. Logs `agents_log` (`agentName: esg_scorer`) |
 | **Corporate report** | `generateCorporateESGReport` uses `callGeminiPlainText` (plain text, not JSON) to produce a **SEBI-BRSR-style** report |
 | **Constants** | `constants/esg.js` — `ISSUE_SDG_MAP`, `SDG_COLORS`, `ESG_WEIGHTS`, `IMPACT_ESTIMATES`, `ESG_GRADES`, `ESG_BADGES` |
+
+#### Agent 7 — Resolution Coordinator (`resolutionCoordinator.js`) — *autonomous*
+
+Agents 1–6 are each a single Gemini call sequenced deterministically by the orchestrator.
+**Agent 7 is different: a true autonomous agent** — a bounded **ReAct loop** (reason → act →
+observe → repeat) that *plans, chooses a tool, executes it, observes the real result, and
+decides its next move.* This is the platform's answer to "agentic depth": the agent is not on
+rails, it adapts to what actually happens.
+
+| | |
+|---|---|
+| **Trigger** | **On-demand** (not in the submit pipeline). Owner runs it from `IssueDetail` (below the AI Prediction card); enrolled authorities run it from `AuthorityDashboard` (an "AI Coordinator" action). Most useful on **stalled / aged / recurring** issues. Hidden once Resolved |
+| **Export** | `coordinateResolution(issue, { user, onStep })` → `{ actions, summary, steps, rtiDraft? }` |
+| **Method** | Each turn calls native Gemini **function-calling** (`decide_next_action` typed schema, `callGeminiFunction`) with a JSON-in-prose fallback (`callGeminiText`). The prompt carries the issue's **live state** + the **history of actions already taken and their observed results**, and the model returns one `{ action, reasoning, expected_outcome }` |
+| **Tools (all reuse existing fns)** | `escalate` → `checkAndEscalate` (escalation.js, bumps tier + fires n8n) · `draft_rti` → `generateRTI` (gemini.js) · `reroute` → `routeToAuthority` (authorityRouter.js) + `updateDoc(routedTo)` · `request_verification` → `markNeedsVerification` (collaboration.js) · `wait` / `done` (terminal) |
+| **Observe → adapt** | Each tool's real result is fed back into the next prompt. **Self-correction:** if `escalate` can't run (already at the top tier) the observation says so and the model pivots (e.g. to `draft_rti`) — visible in the trace, not silently retried |
+| **Guardrails** | Each mutating action runs **at most once** per run; `escalate` skips when already maxed; `wait`/`done` are terminal; the loop is capped at **4 iterations** (forces `done`) |
+| **Output / writes** | Persists one new field `coordination = { ranAt, ranByUid, actions[], summary, rtiDraft? }` to the issue; writes an `agent_runs` trace (`steps[].agent: 'coordinator'`, `kind: 'coordinator'`) for the Showcase; logs `agents_log` (`agentName: resolution_coordinator`) |
+| **Authorization** | Owner uses the rules' "owner may change anything" branch; authority writes go through `authorityFields()` — `coordination` + `communityVerification` were added there so an authority's `request_verification` is permitted. `reroute` writes only `routedTo` + `updatedAt` to satisfy the authority `hasOnly` check |
+| **Error handling** | AI/tool failures are caught per-iteration (a failed tool's observation lets the agent choose differently); a total failure logs `success:false` and returns a graceful `{ error }` — the app never crashes |
+
+```mermaid
+flowchart LR
+    Start([Owner / Authority taps<br/>Run AI Coordinator]) --> State[Build live state snapshot<br/>status · daysOpen · tier · routing · prediction · recurrence]
+    State --> Decide{{"Gemini decide_next_action<br/>(function-calling)"}}
+    Decide -->|escalate| T1[checkAndEscalate]
+    Decide -->|draft_rti| T2[generateRTI]
+    Decide -->|reroute| T3[routeToAuthority]
+    Decide -->|request_verification| T4[markNeedsVerification]
+    Decide -->|wait / done| End([Persist coordination<br/>+ agent_runs + agents_log])
+    T1 --> Obs[Observation fed back] --> Decide
+    T2 --> Obs
+    T3 --> Obs
+    T4 --> Obs
+    Decide -.->|max 4 iterations| End
+```
 
 ---
 
@@ -771,6 +807,7 @@ noted ISO.
 | `prediction` | object | Agent 4 result `{priority_score, predicted_days, escalation_risk, recommendation, confidence, factors[]}` |
 | `esgScore` | object\|null | Agent 6 result (post-resolution) — per-pillar `e_score`/`s_score`/`g_score` (+ impact + metric), blended `overall_esg` (E×0.35+S×0.35+G×0.30), `sdg_tags`, `sdg_names`, `highlight` |
 | `esgScoredAt` | timestamp\|null | When Agent 6 scored the resolved issue |
+| `coordination` | object\|null | Agent 7 autonomous run `{ranAt, ranByUid, actions:[{action,reasoning,observation,at}], summary, rtiDraft?}` |
 | `resolutionPhotoUrl` | string\|null | Inline base64 fix photo |
 | `resolutionVerified` | boolean | Agent 5: genuine && resolved |
 | `resolutionGenuine` | boolean | Agent 5 genuineness |
@@ -917,9 +954,10 @@ All AI routes through `utils/gemini.js → fetchAI()`. **Dispatch order:** n8n A
 - **Model fallback chain** (falls through on 404/429/503):
   `gemini-2.5-flash` → `gemini-2.5-flash-lite` → `gemini-2.0-flash`
 - **Modes:** text (`callGeminiText`), vision (`callGeminiVision`, image compressed to
-  640 px / q0.4), and native **function-calling** (`callGeminiVisionFunction`, `mode: ANY`).
+  640 px / q0.4), and native **function-calling** (`callGeminiFunction` / `callGeminiVisionFunction`,
+  `mode: ANY`) — the latter powers Agent 1's typed analysis and Agent 7's ReAct decision loop.
 - **Config:** `temperature 0.1`. JSON responses fence-stripped (` ```json `) before parse.
-- **Used by:** all 6 agents + `generateRTI`, `generateXCaption`, `generateCityInsights`,
+- **Used by:** all 7 agents + `generateRTI`, `generateXCaption`, `generateCityInsights`,
   `generateCSRReport`, `generatePressRelease`, `generateCorporateESGReport`
   (`callGeminiPlainText` — SEBI-BRSR-style report), and the **voice assistant**
   (`callGeminiPlainText` — raw-text answers over the live civic context).
@@ -1155,7 +1193,7 @@ and are **excluded from `npm test`** (which runs only the deterministic `src/**`
 chains Agent 1 → Agent 3. Vitest config + coverage (`@vitest/coverage-v8`,
 `json-summary`) is in `vite.config.js`.
 
-**Latest run:** 138 deterministic tests passing across 21 files (`npm test` — `src/**`
+**Latest run:** 158 deterministic tests passing across 23 files (`npm test` — `src/**`
 + hand-written `tests/unit`), plus the Gemini-generated tier under `tests/ai/`
 (unit · components · hooks · screen-smoke). Snapshot: `tests/reports/latest.html`.
 

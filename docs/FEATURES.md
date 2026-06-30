@@ -9,7 +9,7 @@ This document catalogues **what JanaShakti does**, **why each feature matters**,
 
 ## 2.1 App Identity
 
-**JanaShakti** (जनशक्ति — *People's Power*) is a mobile-first, installable **Progressive Web App** that turns a single photo of a civic problem — a pothole, an overflowing bin, a dead streetlight — into a fully-formed, AI-analysed, authority-routed, community-verifiable complaint with a legal paper trail and an automatic escalation clock. It closes the loop that every Indian civic-complaint app leaves open: **after you report, nothing happens**. JanaShakti answers that with a 5-agent Gemini pipeline that classifies and drafts the complaint, an automation layer (n8n) that emails the right department and posts to social media, a time-based escalation engine that climbs from Ward Officer → Department Head → Commissioner → Media, and a transparency layer that ranks elected representatives by their actual resolution rate. Once an issue is **Resolved**, a 6th Gemini agent scores its real-world **ESG (Environmental / Social / Governance)** impact and maps it to the UN **Sustainable Development Goals (SDGs)**. It is built **end-to-end on Google's stack** — Gemini, Firebase, Google Maps — with **no custom backend**.
+**JanaShakti** (जनशक्ति — *People's Power*) is a mobile-first, installable **Progressive Web App** that turns a single photo of a civic problem — a pothole, an overflowing bin, a dead streetlight — into a fully-formed, AI-analysed, authority-routed, community-verifiable complaint with a legal paper trail and an automatic escalation clock. It closes the loop that every Indian civic-complaint app leaves open: **after you report, nothing happens**. JanaShakti answers that with a 5-agent Gemini pipeline that classifies and drafts the complaint, an automation layer (n8n) that emails the right department and posts to social media, a time-based escalation engine that climbs from Ward Officer → Department Head → Commissioner → Media, and a transparency layer that ranks elected representatives by their actual resolution rate. Once an issue is **Resolved**, a 6th Gemini agent scores its real-world **ESG (Environmental / Social / Governance)** impact and maps it to the UN **Sustainable Development Goals (SDGs)**. A 7th, **autonomous** agent — the **Resolution Coordinator** — reasons over a stalled issue in a ReAct loop and decides + executes its own next action (escalate / draft RTI / re-route / request verification). It is built **end-to-end on Google's stack** — Gemini, Firebase, Google Maps — with **no custom backend**.
 
 **Target users**
 
@@ -177,6 +177,17 @@ Features no other civic platform has shipped together.
 
 *Why it matters:* it turns a *closed* civic complaint into measurable, framework-aligned impact — proving to citizens, cities, and corporate sponsors that resolutions deliver real environmental and social value mapped to global goals.
 
+### Autonomous Resolution Coordinator (Agent 7)
+
+- **A true agent, not a pipeline step** — `agents/resolutionCoordinator.js` (`coordinateResolution`) runs a bounded **ReAct loop** (reason → act → observe → repeat). Where Agents 1–6 are each one fixed Gemini call, Agent 7 **decides its own next action** each turn, executes it for real, observes the result, and adapts.
+- **Five real tools, all reused** — every turn it chooses one: **escalate** (`checkAndEscalate` — bumps the authority tier + fires n8n), **draft an RTI** (`generateRTI`), **re-route** (`routeToAuthority`), **request community verification** (`markNeedsVerification`), or **wait / done**. No new tool plumbing — it orchestrates the functions the app already ships.
+- **Observe-and-adapt + self-correction** — each tool's real result is fed into the next decision. If escalation can't run (already at the top tier), the agent *sees* that observation and pivots to a different action — visibly, in the trace, instead of silently retrying.
+- **Built on Gemini function-calling** — `callGeminiFunction` returns a typed `{ action, reasoning, expected_outcome }` (JSON-in-prose fallback). The model's **reasoning for every step is shown live** in the UI via the `onStep` stream.
+- **Guardrailed** — each mutating action runs at most once, escalate is skipped when maxed, and the loop is hard-capped at 4 iterations.
+- **Where to run it** — owner-triggered on `IssueDetail` (below the AI Prediction card) and authority-triggered on `AuthorityDashboard` ("AI Coordinator" action). The run is persisted to the issue (`coordination`), traced to `agent_runs`, and counted on the Agents Showcase as the 7th agent.
+
+*Why it matters:* it's the difference between "AI that classifies" and "AI that takes initiative" — an agent that looks at a stuck civic issue and autonomously decides how to push it forward, accountably and on the record.
+
 ---
 
 ### Civic Collaboration Layer ("GitHub for civic issues")
@@ -186,6 +197,7 @@ Features no other civic platform has shipped together.
 - **Community verification** — a contributor marks an issue **Needs Verification**; nearby users vote Yes/Partial/No, **gated to within 2 km (live GPS)** + a **24h-since-join** rule; at the threshold (≥5 votes, ≥70% positive) it flips to **Resolved** (or reopens).
 - **Community Reputation** — extends `civicScore`: +5 join, +15 accepted evidence, +10 update, +5 verify vote, +25 on-close for **active** contributors (**claim-on-view**, no cross-user writes), with penalties for spam/false evidence. New badges: Neighborhood Hero, Road Guardian, Evidence Expert, Community Builder, Top Verifier.
 - **Lead moderation** — the reporter (and Civic-Authority holders) can open/close joining and remove contributors.
+- **Two-sided notifications** — the notification feed is no longer reporter-only: a contributor is now notified about issues they **joined** — resolved (→ open to **claim the +25**), status change, needs-their-verification vote, evidence/updates by other contributors, and removal. Purely client-derived (a second `useIssues` query on `contributedUids` + timeline reads → the pure `utils/notifications.js`), so the bell badge and `/notifications` both light up for contributors with no backend.
 - **Anti-abuse** — Vision evidence check, 5-evidence cap, 24h-to-vote, 2 km geo-gate, reporter-can't-double-earn. (Phone/device-fingerprint defenses are future work.)
 - **Additive & free-plan** — layered on the existing app (representatives/authority/ESG untouched); base64 + subcollections, Lucide icons, Gemini Flash.
 
@@ -283,7 +295,7 @@ Three **Gemini-powered** Node dev agents (`tests/agents/`) that write, run, and 
 
 AI-generated tests live under `tests/ai/**` and are **isolated** from `npm test`, so a flaky AI test can never red the deterministic suite. Models: `gemini-2.5-flash → gemini-2.5-flash-lite → gemini-2.0-flash-lite`.
 
-**Latest run:** 138 deterministic tests passing across 21 files (`npm test`), plus the AI-generated tier under `tests/ai/**` — see `tests/reports/latest.html`.
+**Latest run:** 158 deterministic tests passing across 23 files (`npm test`), plus the AI-generated tier under `tests/ai/**` — see `tests/reports/latest.html`.
 
 ---
 

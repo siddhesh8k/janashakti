@@ -26,7 +26,7 @@
 
 It closes the loop that every Indian civic-complaint app leaves open: **after you report, nothing happens.** JanaShakti answers that with:
 
-- a **5-agent Google Gemini pipeline** that classifies the issue, drafts the complaint, detects duplicates **and recurrences of already-resolved issues**, routes it to the right department, and predicts a resolution timeline — plus a **6th, post-resolution agent** that scores each resolved issue's ESG (Environmental / Social / Governance) impact and maps it to the UN Sustainable Development Goals;
+- a **5-agent Google Gemini pipeline** that classifies the issue, drafts the complaint, detects duplicates **and recurrences of already-resolved issues**, routes it to the right department, and predicts a resolution timeline — plus a **6th, post-resolution agent** that scores each resolved issue's ESG (Environmental / Social / Governance) impact and maps it to the UN Sustainable Development Goals, and a **7th, *autonomous* agent** (Resolution Coordinator) that reasons over a stalled issue in a ReAct loop and decides + executes its own next action (escalate / draft RTI / re-route / request verification);
 - an **n8n automation layer** that emails the department and posts to social media;
 - a **time-based escalation engine** that climbs Ward Officer → Department Head → Commissioner → Media at 7 / 14 / 30 days;
 - a **transparency layer** where ward representatives — corporators, RWAs, volunteers, officers, NGOs, or independents — **self-enrol to represent their ward** and are ranked by their real resolution rate (with a neutral by-role view, never party-vs-party), journalists get story-ready feeds, and companies/colleges adopt civic zones;
@@ -42,7 +42,7 @@ Built **end-to-end on Google's stack** (Gemini · Firebase · Google Maps) with 
 ## Table of Contents
 
 - [Key Features](#-key-features)
-- [The 5-Agent Gemini Pipeline](#-the-5-agent-gemini-pipeline)
+- [The 7-Agent Gemini System](#-the-7-agent-gemini-system)
 - [Tech Stack](#-tech-stack)
 - [Architecture at a Glance](#-architecture-at-a-glance)
 - [Project Structure](#-project-structure)
@@ -141,9 +141,9 @@ Built **end-to-end on Google's stack** (Gemini · Firebase · Google Maps) with 
 
 ---
 
-## 🧠 The 5-Agent Gemini Pipeline
+## 🧠 The 7-Agent Gemini System
 
-All AI routes through `fetchAI()` in [`src/utils/gemini.js`](src/utils/gemini.js). Agents run as a coordinated pipeline (`src/agents/orchestrator.js`) — **each agent's output feeds the next**, and every step streams a live trace to the on-screen overlay.
+All AI routes through `fetchAI()` in [`src/utils/gemini.js`](src/utils/gemini.js). Agents 1–4 run as a coordinated pipeline (`src/agents/orchestrator.js`) — **each agent's output feeds the next** — and every step streams a live trace to the on-screen overlay. Agent 7 is different: a **truly autonomous** agent that reasons and acts in a loop on demand.
 
 ```mermaid
 flowchart LR
@@ -155,6 +155,8 @@ flowchart LR
     A3 -->|routedTo| A4["<b>Agent 4</b><br/>Resolution Predictor<br/>text · uses A3 output"]
     A4 --> Persist[(updateDoc + agent_runs trace)]
     Fix([🛠️ Fix photo]) --> A5["<b>Agent 5</b><br/>Resolution Verifier<br/>Vision · flags never blocks"]
+    Stalled([⏳ Stalled / aged issue]) --> A7["<b>Agent 7</b><br/>Resolution Coordinator<br/>autonomous ReAct loop"]
+    A7 -->|"escalate / RTI / re-route / verify → observe"| A7
 ```
 
 | Agent | File | Gemini mode | Output |
@@ -165,6 +167,7 @@ flowchart LR
 | **4 · Resolution Predictor** | `agents/resolutionPredictor.js` | text | priority score, predicted days, escalation risk, recommendation, factors |
 | **5 · Resolution Verifier** | `agents/resolutionVerifier.js` | Vision | is the fix genuine & resolved? |
 | **6 · ESG Impact Scorer** | `agents/esgScorer.js` | text | post-resolution ESG score across E/S/G + UN SDG mapping |
+| **7 · Resolution Coordinator** *(autonomous)* | `agents/resolutionCoordinator.js` | function-calling **ReAct loop** | reasons over a stalled issue and decides + executes its own next action (escalate / draft RTI / re-route / request verification), observing each result and adapting — capped at 4 turns, reasoning shown live |
 
 **Beyond the agents, Gemini also powers:** RTI applications, press releases, CSR reports, city insights, social captions, the voice assistant, and the 3 AI testing agents.
 **Model fallback chain:** `gemini-2.5-flash → gemini-2.5-flash-lite → gemini-2.0-flash` (falls through on 404/429/503).
@@ -246,7 +249,9 @@ janashakti/
 │   │   ├── duplicateDetector.js # Agent 2 — geo + Gemini text
 │   │   ├── authorityRouter.js   # Agent 3 — Gemini text + n8n email
 │   │   ├── resolutionPredictor.js # Agent 4 — Gemini text
-│   │   └── resolutionVerifier.js  # Agent 5 — Gemini Vision (resolution proof)
+│   │   ├── resolutionVerifier.js  # Agent 5 — Gemini Vision (resolution proof)
+│   │   ├── esgScorer.js           # Agent 6 — Gemini text (ESG + SDG)
+│   │   └── resolutionCoordinator.js # Agent 7 — autonomous ReAct loop (fn-calling)
 │   ├── screens/                 # 12 screens
 │   │   ├── HomeScreen.jsx · ReportScreen.jsx · MapScreen.jsx · ProfileScreen.jsx
 │   │   ├── IssueDetail.jsx · AnalyticsDashboard.jsx · AuthorityDashboard.jsx
@@ -417,7 +422,7 @@ flowchart LR
 2. **Test Analyzer** — runs the suite, classifies failures (`MOCK_ISSUE / IMPORT_ERROR / LOGIC_BUG / TEST_ISSUE`) + health note.
 3. **Report Generator** — runs suite + coverage, Gemini health/risk assessment → branded HTML report.
 
-> **Latest run:** **138 deterministic tests passing** across 21 files (`npm test` — `src/**` + `tests/unit`), plus the Gemini-generated tier under `tests/ai/**`. Testing-agent models: `gemini-2.5-flash → gemini-2.5-flash-lite → gemini-2.0-flash`.
+> **Latest run:** **158 deterministic tests passing** across 23 files (`npm test` — `src/**` + `tests/unit`), plus the Gemini-generated tier under `tests/ai/**`. Testing-agent models: `gemini-2.5-flash → gemini-2.5-flash-lite → gemini-2.0-flash`.
 
 ---
 
@@ -488,7 +493,7 @@ Reference data (wards, representatives, civic baselines) is designed to ingest v
 
 | Google product | Where it powers JanaShakti |
 |---|---|
-| **Gemini 2.5 Flash** (AI Studio) | The entire 5-agent pipeline + RTI, press releases, CSR reports, city insights, social captions, the voice assistant, and the 3 AI testing agents. Uses vision, text & function-calling. |
+| **Gemini 2.5 Flash** (AI Studio) | All 7 agents — the 6-agent report→route→predict→verify→ESG flow **plus the autonomous Resolution Coordinator (Agent 7)** — + RTI, press releases, CSR reports, city insights, social captions, the voice assistant, and the 3 AI testing agents. Uses vision, text & function-calling (incl. a ReAct decision loop). |
 | **Firebase Authentication** | Google · Anonymous · Email sign-in, with auto-created profiles |
 | **Cloud Firestore** | Real-time database of record (9 collections) with offline IndexedDB persistence |
 | **Firebase Hosting** | Global SPA + PWA delivery, SPA rewrites, auth-popup COOP header |

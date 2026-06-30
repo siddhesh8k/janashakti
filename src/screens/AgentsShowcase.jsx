@@ -1,7 +1,7 @@
 import { useState, Fragment } from 'react';
 import { Bot, Search, MailCheck, BarChart3, ChevronRight, ChevronDown,
          Zap, CheckCircle, AlertTriangle, Clock, ShieldCheck, Leaf,
-         Camera, Database, Target } from 'lucide-react';
+         Camera, Database, Target, Workflow } from 'lucide-react';
 import { useAgents } from '../hooks/useAgents';
 import TopNav from '../components/TopNav';
 import StatsCard from '../components/StatsCard';
@@ -40,10 +40,17 @@ const AGENTS = [
     tech: 'Google AI Studio · Gemini 2.5 Flash · UN SDG Framework',
     statText: 'issues ESG scored',
   },
+  {
+    num: 7, key: 'coordinator', icon: Workflow, name: 'Resolution Coordinator', color: '#a855f7',
+    desc: 'An autonomous agent that reasons over a stalled issue in a multi-step loop — deciding, step by step, whether to escalate, draft an RTI, re-route, or request verification. It executes each tool for real, observes the result, and adapts its next move. Built on Gemini function-calling.',
+    statKey: 'coordinated',
+    tech: 'Google AI Studio · Gemini 2.5 Flash · function-calling (ReAct loop)',
+    statText: 'issues coordinated',
+  },
 ];
 
-const AGENT_ICON = { analyzer: Bot, detector: Search, router: MailCheck, predictor: BarChart3 };
-const AGENT_COLOR = { analyzer: '#00d4ff', detector: '#3b82f6', router: '#16a34a', predictor: '#f97316' };
+const AGENT_ICON = { analyzer: Bot, detector: Search, router: MailCheck, predictor: BarChart3, coordinator: Workflow };
+const AGENT_COLOR = { analyzer: '#00d4ff', detector: '#3b82f6', router: '#16a34a', predictor: '#f97316', coordinator: '#a855f7' };
 const FLOW = ['Photo', 'Analyzer', 'Detector', 'Router', 'Predictor', 'Saved', 'Resolved', 'ESG Score', 'SDG Tagged'];
 
 // Icon + colour per pipeline step (drives the scrollable flow rail).
@@ -142,8 +149,9 @@ export default function AgentsShowcase() {
           </p>
         </div>
 
-        {/* Live stats — 3-col grid (2 rows) so every label stays readable + aligned on mobile */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px', marginBottom: '20px' }}>
+        {/* Live stats — 6 in a 3-col grid (2 even rows), then a full-width spotlight tile
+            for the autonomous Agent 7 (balances the grid + highlights the new capability). */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px', marginBottom: '8px' }}>
           <StatsCard label="Analyzed" value={stats.analyzed} color="#00d4ff" />
           <StatsCard label="Dupes" value={stats.duplicatesCaught} color="#3b82f6" />
           <StatsCard label="Routed" value={stats.authoritiesNotified} color="#16a34a" />
@@ -151,15 +159,39 @@ export default function AgentsShowcase() {
           <StatsCard label="Verified" value={stats.resolutionsVerified} color="#8b5cf6" />
           <StatsCard label="ESG Scored" value={stats.esgScored} color="#4C9F38" />
         </div>
+        <div className="lift-card" style={{
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px',
+          backgroundColor: '#0d1b2e', borderRadius: '12px', border: '0.5px solid #a855f766',
+          padding: '12px 14px', marginBottom: '20px',
+          backgroundImage: 'radial-gradient(120% 130% at 100% 0%, #a855f714 0%, transparent 50%)',
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', minWidth: 0 }}>
+            <div style={{
+              width: '34px', height: '34px', borderRadius: '9px', flexShrink: 0,
+              backgroundColor: '#a855f71f', border: '0.5px solid #a855f755',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+            }}>
+              <Workflow size={18} color="#a855f7" strokeWidth={1.6} />
+            </div>
+            <div style={{ minWidth: 0 }}>
+              <div style={{ fontSize: '12px', fontWeight: '700', color: '#f0f6ff' }}>Autonomous Coordinator</div>
+              <div style={{ fontSize: '11px', color: '#4a6280' }}>Agent 7 · reasons &amp; acts in a loop</div>
+            </div>
+          </div>
+          <div style={{ textAlign: 'right', flexShrink: 0 }}>
+            <div style={{ fontSize: '22px', fontWeight: '800', color: '#a855f7', lineHeight: 1 }}>{stats.coordinated}</div>
+            <div style={{ fontSize: '10px', color: '#4a6280' }}>coordinated</div>
+          </div>
+        </div>
 
         {/* Agent Cards — each shows its latest live reasoning */}
         {AGENTS.map(agent => {
           const Icon = agent.icon;
           const last = latestStepFor(agent.key);
           return (
-            <div key={agent.num} style={{
+            <div key={agent.num} className="lift-card" style={{
               backgroundColor: '#0d1b2e', borderRadius: '14px',
-              border: '0.5px solid #1a2f4a', padding: '16px',
+              border: `0.5px solid ${agent.color}26`, padding: '16px',
               marginBottom: '10px',
             }}>
               <div style={{ display: 'flex', justifyContent: 'space-between',
@@ -237,16 +269,17 @@ export default function AgentsShowcase() {
           }}>
             <Bot size={28} color="#4a6280" strokeWidth={1} style={{ margin: '0 auto 8px' }} />
             <p style={{ fontSize: '13px', color: '#4a6280' }}>
-              No pipeline runs yet. Report an issue to watch all 4 agents collaborate.
+              No pipeline runs yet. Report an issue to watch the agents collaborate.
             </p>
           </div>
         ) : (
           recentRuns.map(run => {
             const isOpen = openRun === run.id;
             return (
-              <div key={run.id} style={{
+              <div key={run.id} className="lift-card" style={{
                 backgroundColor: '#0d1b2e', borderRadius: '14px',
-                border: '0.5px solid #1a2f4a', marginBottom: '10px', overflow: 'hidden',
+                border: `0.5px solid ${run.kind === 'coordinator' ? '#a855f766' : '#1a2f4a'}`,
+                marginBottom: '10px', overflow: 'hidden',
               }}>
                 <button onClick={() => setOpenRun(isOpen ? null : run.id)} style={{
                   width: '100%', background: 'none', border: 'none', cursor: 'pointer',
@@ -331,7 +364,7 @@ export default function AgentsShowcase() {
             Powered by Google AI Studio
           </p>
           <p style={{ fontSize: '12px', color: '#86efac' }}>
-            Gemini 2.5 Flash — 4 agents, orchestrated, zero manual effort
+            Gemini 2.5 Flash — 7 agents, orchestrated + autonomous, zero manual effort
           </p>
         </div>
       </div>

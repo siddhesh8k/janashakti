@@ -41,7 +41,11 @@ service cloud.firestore {
               'status', 'statusHistory', 'resolutionPhotoUrl', 'resolutionVerified',
               'resolutionGenuine', 'resolutionConfidence', 'resolutionNote',
               'resolvedAt', 'resolutionCelebrated',
-              'routedTo', 'prediction', 'esgScore', 'esgScoredAt'];
+              'routedTo', 'prediction', 'esgScore', 'esgScoredAt',
+              // ── Resolution Coordinator (Agent 7) ──
+              // `coordination` = the persisted autonomous run; `communityVerification` lets an
+              // authority's request_verification action flip status → Needs Verification.
+              'coordination', 'communityVerification'];
     }
 
     // A story claim is only valid when the issue is currently unclaimed OR the

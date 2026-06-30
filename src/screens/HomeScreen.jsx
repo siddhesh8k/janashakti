@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Bot, Search, MailCheck, BarChart3, AlertTriangle, ChevronRight,
          Eye, LogIn, UserPlus, Shield, ShieldCheck, Trophy, Newspaper,
-         Globe, TrendingUp, TrendingDown, Leaf } from 'lucide-react';
+         Globe, TrendingUp, TrendingDown, Leaf, Workflow } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import { useIssues } from '../hooks/useIssues';
 import { useUser } from '../hooks/useUser';
@@ -198,6 +198,7 @@ export default function HomeScreen() {
     { icon: BarChart3, name: 'Predictor', count: stats.predictionsGenerated, color: '#f97316' },
     { icon: ShieldCheck, name: 'Verifier', count: stats.resolutionsVerified, color: '#8b5cf6' },
     { icon: Leaf, name: 'ESG Scorer', count: stats.esgScored, color: '#4C9F38' },
+    { icon: Workflow, name: 'Coordinator', count: stats.coordinated, color: '#a855f7' },
   ];
 
   return (
@@ -216,7 +217,7 @@ export default function HomeScreen() {
           }}>See all <ChevronRight size={14} strokeWidth={1.5} /></button>
         </div>
         {/* Horizontally-scrollable, color-coded agent chips — full labels stay readable
-            on mobile (no truncation) and the row scales to all 6 agents. */}
+            on mobile (no truncation) and the row scales to all 7 agents. */}
         <div style={{ display: 'flex', gap: '8px', overflowX: 'auto', paddingBottom: '6px',
                       scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch' }}>
           {AGENTS.map(a => (
