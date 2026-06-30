@@ -1,0 +1,32 @@
+# nginx site config for serving the JanaShakti SPA on Cloud Run.
+# ${PORT} is substituted at container start by the nginx entrypoint ($uri etc. are left
+# untouched because they aren't environment variables).
+server {
+    listen       ${PORT};
+    listen       [::]:${PORT};
+    server_name  _;
+
+    root   /usr/share/nginx/html;
+    index  index.html;
+
+    # Firebase Auth popups need this header (mirrors firebase.json hosting config).
+    add_header Cross-Origin-Opener-Policy "same-origin-allow-popups" always;
+
+    gzip on;
+    gzip_types text/css application/javascript application/json image/svg+xml;
+
+    # Hashed build assets are immutable — cache hard.
+    location /assets/ {
+        expires 1y;
+        add_header Cache-Control "public, immutable";
+    }
+
+    # Service worker + manifest must always revalidate.
+    location = /sw.js          { add_header Cache-Control "no-cache, no-store, must-revalidate"; }
+    location = /manifest.json  { add_header Cache-Control "no-cache"; }
+
+    # SPA fallback — every route serves index.html (React Router handles it client-side).
+    location / {
+        try_files $uri $uri/ /index.html;
+    }
+}
